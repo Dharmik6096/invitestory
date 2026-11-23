@@ -2496,8 +2496,9 @@ body::before {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  padding-block:
-    calc(var(--gate-inset) + 160 * var(--u)) calc(var(--gate-inset) + 126 * var(--u));
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--gate-inset);
   overflow: hidden;
   /* The depth the doors swing open in: 2.4 door-widths (each door is half
      the screen). Deep enough for a door's free edge to visibly loom as it
@@ -2927,8 +2928,10 @@ body::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: min(100vw, calc(402 * var(--u)));
+  max-width: 100%;
   min-height: calc(419 * var(--u));
-  margin-block: auto;
+  margin: auto;
   padding: calc(30 * var(--u)) calc(24 * var(--u)) calc(41 * var(--u));
   text-align: center;
   color: var(--royale-ink);
