@@ -350,17 +350,20 @@
     const picker = document.getElementById('admin-user-card-picker');
     if (picker) picker.value = '__NEW__';
 
+    const clientNameInput = document.getElementById('admin-card-client-name');
+    if (clientNameInput) clientNameInput.value = '';
+
     // Update status badge
     const statusEl = document.getElementById('admin-editor-card-status');
     if (statusEl) {
       statusEl.className = 'admin-editor-card-status is-fresh';
-      statusEl.innerHTML = '🟢 <strong>Creating Fresh Card for New User:</strong> Pristine template defaults loaded. No conflict with existing client cards.';
+      statusEl.innerHTML = '<span class="rustic-status-dot"></span> <span id="admin-status-text" class="rustic-status-body"><strong>Mode: Fresh Client Card</strong> · Pristine template defaults loaded. Generates an isolated, conflict-free unique link.</span>';
     }
 
     // Update save button text
     const saveBtn = document.getElementById('admin-save-card-btn');
     if (saveBtn) {
-      saveBtn.innerHTML = '🚀 Save &amp; Generate Unique Link for New User';
+      saveBtn.innerHTML = '⚜️ Save &amp; Generate Unique Link for New User';
     }
 
     switchAdminEditorTab(currentEditingCardId);
@@ -387,11 +390,14 @@
     const picker = document.getElementById('admin-user-card-picker');
     if (picker) picker.value = slug;
 
+    const clientNameInput = document.getElementById('admin-card-client-name');
+    if (clientNameInput) clientNameInput.value = card.names || '';
+
     // Update status badge
     const statusEl = document.getElementById('admin-editor-card-status');
     if (statusEl) {
       statusEl.className = 'admin-editor-card-status is-editing';
-      statusEl.innerHTML = '✏️ <strong>Editing Existing Card:</strong> ' + (card.names || slug) + ' <span class="admin-slug-badge">(' + slug + ')</span> · Changes will update this link directly without affecting any other user.';
+      statusEl.innerHTML = '<span class="rustic-status-dot"></span> <span id="admin-status-text" class="rustic-status-body"><strong>Mode: Editing Saved Archive</strong> · <em>' + (card.names || slug) + '</em> <span class="rustic-slug-pill">' + slug + '</span> · Direct link update without affecting other cards.</span>';
     }
 
     // Update save button text
@@ -625,6 +631,12 @@
       if (time) overrides.time = time;
     }
 
+    var clientTitle = (document.getElementById('admin-card-client-name')?.value || '').trim();
+    if (clientTitle) {
+      coupleNames = clientTitle;
+      overrides.title = clientTitle;
+    }
+
     // Reuse existing slug if editing an existing user card, or generate fresh for a new user
     var isNewUser = !currentEditingCardSlug;
     var finalSlug = currentEditingCardSlug || generateUniqueSlug(slugPrefix);
@@ -702,6 +714,16 @@
     }
 
     var url = meta.folder + 'index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+    window.open(url, '_blank');
+  };
+
+  // Live Preview Invitation in a new tab
+  window.previewAdminLiveCard = function () {
+    var meta = getTemplateMetaById(currentEditingCardId);
+    var slug = currentEditingCardSlug;
+    var url = slug 
+      ? '/invite/?card=' + encodeURIComponent(slug) 
+      : (meta ? meta.folder + 'index.html' : 'cards/102-royal-wedding/index.html');
     window.open(url, '_blank');
   };
 
