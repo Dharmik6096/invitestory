@@ -474,6 +474,18 @@
     return '<h4>Opening invocation</h4>' + invocationBlock() + symbolBlock() + preview;
   }
 
+  const TRADITION_SYMBOLS = {
+    hindu: 'ganesha',
+    swaminarayan: 'swaminarayan',
+    sikh: 'sikh',
+    sindhi: 'sindhi',
+    jain: 'jain',
+    buddhist: 'buddhist',
+    christian: 'christian',
+    parsi: 'parsi',
+    muslim: 'none'
+  };
+
   // ONE delegated listener per popover element, guarded: the pop survives its
   // own innerHTML rebuilds, so re-adding would stack handlers.
   function wireInvocationPop(pop) {
@@ -492,15 +504,25 @@
 
       const opt = e.target.closest('[data-dd-set]');
       if (opt) {
+        if (!cfg.invocation) cfg.invocation = {};
         if (opt.dataset.ddKind === 'symbol') {
           cfg.invocation.symbol = opt.dataset.ddValue;
         } else if (opt.dataset.ddKind === 'inv') {
           const parts = opt.dataset.ddValue.split(':');
           if (parts.length === 1) {
             cfg.invocation.script = parts[0];
+            if (parts[0] !== 'custom') {
+              cfg.invocation.custom = '';
+            }
           } else {
-            cfg.invocation.religion = parts[0];
-            cfg.invocation.script = parts[1];
+            const relKey = parts[0];
+            const scrKey = parts[1];
+            cfg.invocation.religion = relKey;
+            cfg.invocation.script = scrKey;
+            cfg.invocation.custom = '';
+            if (TRADITION_SYMBOLS[relKey]) {
+              cfg.invocation.symbol = TRADITION_SYMBOLS[relKey];
+            }
           }
         }
         kit.saveNow();
@@ -519,7 +541,9 @@
       if (!inp) return;
       // Enforce the cap even on paste - maxlength misses programmatic input.
       if (inp.value.length > INVOCATION_MAX) inp.value = inp.value.slice(0, INVOCATION_MAX);
+      if (!cfg.invocation) cfg.invocation = {};
       cfg.invocation.custom = inp.value;
+      cfg.invocation.script = 'custom';
       kit.saveNow();
       RY.render.invocation();
       const caret = inp.selectionStart;

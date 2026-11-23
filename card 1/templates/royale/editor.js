@@ -474,6 +474,18 @@
     return '<h4>Opening invocation</h4>' + invocationBlock() + symbolBlock() + preview;
   }
 
+  const TRADITION_SYMBOLS = {
+    hindu: 'ganesha',
+    swaminarayan: 'swaminarayan',
+    sikh: 'sikh',
+    sindhi: 'sindhi',
+    jain: 'jain',
+    buddhist: 'buddhist',
+    christian: 'christian',
+    parsi: 'parsi',
+    muslim: 'none'
+  };
+
   // ONE delegated listener per popover element, guarded: the pop survives its
   // own innerHTML rebuilds, so re-adding would stack handlers.
   function wireInvocationPop(pop) {
@@ -492,19 +504,54 @@
 
       const opt = e.target.closest('[data-dd-set]');
       if (opt) {
+        if (!cfg.invocation) cfg.invocation = {};
         if (opt.dataset.ddKind === 'symbol') {
           cfg.invocation.symbol = opt.dataset.ddValue;
         } else if (opt.dataset.ddKind === 'inv') {
           const parts = opt.dataset.ddValue.split(':');
           if (parts.length === 1) {
             cfg.invocation.script = parts[0];
+            if (parts[0] !== 'custom') {
+              cfg.invocation.custom = '';
+            }
           } else {
-            cfg.invocation.religion = parts[0];
-            cfg.invocation.script = parts[1];
+            const relKey = parts[0];
+            const scrKey = parts[1];
+            cfg.invocation.religion = relKey;
+            cfg.invocation.script = scrKey;
+            cfg.invocation.custom = '';
+
+            // Auto-select corresponding tradition symbol
+            if (TRADITION_SYMBOLS[relKey]) {
+              cfg.invocation.symbol = TRADITION_SYMBOLS[relKey];
+            }
+
+            // Sync intro blessing
+            if (cfg.introNote) {
+              if (relKey === 'hindu') {
+                cfg.introNote = cfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'Lord Shree Ganesh')
+                  .replace(/Waheguru Ji/gi, 'Lord Shree Ganesh')
+                  .replace(/God Almighty/gi, 'Lord Shree Ganesh');
+              } else if (relKey === 'swaminarayan') {
+                cfg.introNote = cfg.introNote.replace(/Lord Shree Ganesh/gi, 'Lord Shree Swaminarayan')
+                  .replace(/Waheguru Ji/gi, 'Lord Shree Swaminarayan')
+                  .replace(/God Almighty/gi, 'Lord Shree Swaminarayan');
+              } else if (relKey === 'sikh') {
+                cfg.introNote = cfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'Waheguru Ji')
+                  .replace(/Lord Shree Ganesh/gi, 'Waheguru Ji');
+              } else if (relKey === 'christian') {
+                cfg.introNote = cfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'God Almighty')
+                  .replace(/Lord Shree Ganesh/gi, 'God Almighty');
+              }
+            }
           }
         }
         kit.saveNow();
-        RY.render.invocation();
+        if (RY.render && typeof RY.render.gateCard === 'function') {
+          RY.render.gateCard();
+        } else if (RY.render && typeof RY.render.invocation === 'function') {
+          RY.render.invocation();
+        }
         pop.innerHTML = invocationPopHtml();
         const ci = pop.querySelector('.inv-custom');
         if (ci) ci.focus();
@@ -519,9 +566,13 @@
       if (!inp) return;
       // Enforce the cap even on paste - maxlength misses programmatic input.
       if (inp.value.length > INVOCATION_MAX) inp.value = inp.value.slice(0, INVOCATION_MAX);
+      if (!cfg.invocation) cfg.invocation = {};
       cfg.invocation.custom = inp.value;
+      cfg.invocation.script = 'custom';
       kit.saveNow();
-      RY.render.invocation();
+      if (RY.render && typeof RY.render.invocation === 'function') {
+        RY.render.invocation();
+      }
       const caret = inp.selectionStart;
       pop.innerHTML = invocationPopHtml();
       const next = pop.querySelector('.inv-custom');

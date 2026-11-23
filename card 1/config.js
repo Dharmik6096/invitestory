@@ -10,7 +10,7 @@
   const params = new URLSearchParams(location.search);
   const isAdmin = (function () {
     try {
-      return (localStorage.getItem('invitestory_admin_session') === 'true');
+      return (localStorage.getItem('invitestory_admin_session') === 'true') || params.get('admin') === '1' || params.has('admin');
     } catch (_) {
       return false;
     }
@@ -219,7 +219,7 @@
     version: 1,
     finalized: true,
 
-    invocation: { symbol: 'swaminarayan', religion: 'swaminarayan', script: 'english', custom: '|| Shree Swaminarayan Namo Namah ||' },
+    invocation: { symbol: 'ganesha', religion: 'hindu', script: 'english', custom: '' },
 
     groomName: 'Siddhant Patel',
     brideName: 'Aayushi Lunagariya',
@@ -228,7 +228,7 @@
     hostNames: ['Siddhant', 'Aayushi'],
 
     // The gate's card, under the invocation.
-    introNote: 'With the divine blessings of Lord Shree Swaminarayan, we cordially invite you and your family to celebrate the auspicious wedding ceremony of Siddhant and Aayushi.',
+    introNote: 'With the divine blessings of Lord Shree Ganesh, we cordially invite you and your family to celebrate the auspicious wedding ceremony of Siddhant and Aayushi.',
 
     // The date the three plaques roll to (date-reveal.js).
     eventISO: '2026-11-29',

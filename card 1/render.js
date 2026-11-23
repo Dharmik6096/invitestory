@@ -126,16 +126,27 @@
     if (symEl) {
       symEl.hidden = !sym.src;
       if (sym.src) {
+        symEl.innerHTML = '<img src="' + sym.src + '" alt="' + (sym.label || 'Symbol') + '" class="royale-symbol-img" style="width:100%;height:100%;object-fit:contain;display:block;">';
         symEl.style.webkitMaskImage = "url('" + sym.src + "')";
         symEl.style.maskImage = "url('" + sym.src + "')";
+        symEl.style.webkitMaskSize = "contain";
+        symEl.style.maskSize = "contain";
+        symEl.style.webkitMaskRepeat = "no-repeat";
+        symEl.style.maskRepeat = "no-repeat";
+        symEl.style.webkitMaskPosition = "center";
+        symEl.style.maskPosition = "center";
+      } else {
+        symEl.innerHTML = '';
       }
     }
 
     const line = RY.invocationLines(cfg.invocation);
     const mantra = $('ryInvocation');
     if (mantra) {
-      mantra.textContent = line.text || '';
-      mantra.hidden = !line.text;
+      mantra.textContent = (cfg.invocation && cfg.invocation.script === 'custom' && cfg.invocation.custom)
+        ? cfg.invocation.custom
+        : (line.text || '');
+      mantra.hidden = !mantra.textContent;
       mantra.dir = line.rtl ? 'rtl' : 'ltr';
       mantra.style.fontFamily = (line.isEnglish || line.isCustom || !line.font)
         ? 'var(--font-display)'

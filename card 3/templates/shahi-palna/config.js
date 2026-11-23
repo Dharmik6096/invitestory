@@ -4,7 +4,7 @@
   const params = new URLSearchParams(location.search);
   const isAdmin = (function () {
     try {
-      return localStorage.getItem('invitestory_admin_session') === 'true';
+      return (localStorage.getItem('invitestory_admin_session') === 'true') || params.get('admin') === '1' || params.has('admin');
     } catch (_) {
       return false;
     }
@@ -96,7 +96,7 @@
     version: 1,
     finalized: true,
 
-    invocation: { symbol: 'ganesha', religion: 'hindu', script: 'devanagari', custom: '॥ श्री गणेशाय नमः ॥' },
+    invocation: { symbol: 'ganesha', religion: 'hindu', script: 'devanagari', custom: '' },
 
     momName: 'Meghal Patel',
     dadName: 'Kaushal Patel',

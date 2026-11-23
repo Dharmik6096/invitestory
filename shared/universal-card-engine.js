@@ -226,14 +226,54 @@
       if (elG) elG.textContent = gName;
       const elInv = document.getElementById('ryInvocation');
       if (elInv && cfg.invocation) {
-        elInv.textContent = cfg.invocation.custom || cfg.invocation.text || elInv.textContent;
+        let invText = '';
+        if (typeof cfg.invocation === 'string') {
+          invText = cfg.invocation;
+        } else if (cfg.invocation.script === 'custom' && cfg.invocation.custom) {
+          invText = cfg.invocation.custom;
+        } else if (window.Royale && typeof window.Royale.invocationLines === 'function') {
+          const line = window.Royale.invocationLines(cfg.invocation);
+          invText = line.text;
+        } else if (cfg.invocation.religion === 'hindu') {
+          invText = 'Shri Ganeshaya Namah';
+        } else if (cfg.invocation.religion === 'swaminarayan') {
+          invText = '|| Shree Swaminarayan Namo Namah ||';
+        } else {
+          invText = cfg.invocation.custom || cfg.invocation.text || '';
+        }
+        if (invText) {
+          elInv.textContent = invText;
+          elInv.hidden = false;
+        } else if (cfg.invocation.script === 'blank') {
+          elInv.hidden = true;
+        }
+      }
+      if (cfg.invocation && cfg.invocation.symbol) {
+        const symEl = document.querySelector('.royale-card__symbol');
+        if (symEl && window.Royale && typeof window.Royale.symbolById === 'function') {
+          const sym = window.Royale.symbolById(cfg.invocation.symbol);
+          symEl.hidden = !sym.src;
+          if (sym.src) {
+            symEl.innerHTML = '<img src="' + sym.src + '" alt="' + (sym.label || 'Symbol') + '" class="royale-symbol-img" style="width:100%;height:100%;object-fit:contain;display:block;">';
+            symEl.style.webkitMaskImage = "url('" + sym.src + "')";
+            symEl.style.maskImage = "url('" + sym.src + "')";
+            symEl.style.webkitMaskSize = "contain";
+            symEl.style.maskSize = "contain";
+            symEl.style.webkitMaskRepeat = "no-repeat";
+            symEl.style.maskRepeat = "no-repeat";
+            symEl.style.webkitMaskPosition = "center";
+            symEl.style.maskPosition = "center";
+          } else {
+            symEl.innerHTML = '';
+          }
+        }
       }
       const elNote = document.getElementById('ryIntroNote');
       if (elNote) {
         if (cfg.introNote) {
           elNote.textContent = cfg.introNote;
         } else if (cfg.brideName || cfg.groomName) {
-          elNote.textContent = 'With the divine blessings of Lord Shree Swaminarayan, we cordially invite you and your family to celebrate the auspicious wedding ceremony of ' + gName + ' and ' + bName + '.';
+          elNote.textContent = 'With the divine blessings of Lord Shree Ganesh, we cordially invite you and your family to celebrate the auspicious wedding ceremony of ' + gName + ' and ' + bName + '.';
         }
       }
 
@@ -285,7 +325,25 @@
       if (elG) elG.textContent = gName;
       const elInv = document.getElementById('pcInvocation');
       if (elInv && cfg.invocation) {
-        elInv.textContent = cfg.invocation.custom || cfg.invocation.text || elInv.textContent;
+        let invText = '';
+        if (typeof cfg.invocation === 'string') {
+          invText = cfg.invocation;
+        } else if (cfg.invocation.script === 'custom' && cfg.invocation.custom) {
+          invText = cfg.invocation.custom;
+        } else if (window.Papercut && typeof window.Papercut.invocationLines === 'function') {
+          const line = window.Papercut.invocationLines(cfg.invocation);
+          invText = line.text;
+        } else if (cfg.invocation.religion === 'hindu') {
+          invText = 'Shri Ganeshaya Namah';
+        } else {
+          invText = cfg.invocation.custom || cfg.invocation.text || '';
+        }
+        if (invText) {
+          elInv.textContent = invText;
+          elInv.hidden = false;
+        } else if (cfg.invocation.script === 'blank') {
+          elInv.hidden = true;
+        }
       }
       const elNote = document.getElementById('pcIntroNote');
       if (elNote) {
@@ -1069,7 +1127,7 @@
         </div>
         <div class="ue-form-group">
           <label>Sacred Mantra</label>
-          <input type="text" id="qe-mantra" value="${esc((cfg.invocation && cfg.invocation.custom) || '')}" placeholder="|| Shree Swaminarayan Namo Namah ||" />
+          <input type="text" id="qe-mantra" value="${esc((cfg.invocation && (cfg.invocation.script === 'custom' ? cfg.invocation.custom : (window.Royale && typeof window.Royale.invocationLines === 'function' ? window.Royale.invocationLines(cfg.invocation).text : (cfg.invocation.custom || cfg.invocation.text || '')))) || '')}" placeholder="e.g. Shri Ganeshaya Namah / Shree Swaminarayan Namo Namah" />
         </div>
         <div class="ue-form-group">
           <label>Guest Greeting</label>
@@ -1173,7 +1231,11 @@
         cfg.groomName = (document.getElementById('qe-groom')?.value || '').trim();
         cfg.brideName = (document.getElementById('qe-bride')?.value || '').trim();
         if (!cfg.invocation) cfg.invocation = {};
-        cfg.invocation.custom = (document.getElementById('qe-mantra')?.value || '').trim();
+        const qeMantraText = (document.getElementById('qe-mantra')?.value || '').trim();
+        if (qeMantraText) {
+          cfg.invocation.custom = qeMantraText;
+          cfg.invocation.script = 'custom';
+        }
         cfg.guestGreeting = (document.getElementById('qe-guestgreeting')?.value || '').trim();
         cfg.introNote = (document.getElementById('qe-intronote')?.value || '').trim();
         cfg.eventDateText = (document.getElementById('qe-date')?.value || '').trim();

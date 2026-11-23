@@ -136,13 +136,17 @@
         symEl.style.maskRepeat = "no-repeat";
         symEl.style.webkitMaskPosition = "center";
         symEl.style.maskPosition = "center";
+      } else {
+        symEl.innerHTML = '';
       }
     }
 
     const line = RY.invocationLines(cfg.invocation);
     const mantra = $('ryInvocation');
     if (mantra) {
-      mantra.textContent = (cfg.invocation && cfg.invocation.custom) || line.text || '';
+      mantra.textContent = (cfg.invocation && cfg.invocation.script === 'custom' && cfg.invocation.custom)
+        ? cfg.invocation.custom
+        : (line.text || '');
       mantra.hidden = !mantra.textContent;
       mantra.dir = line.rtl ? 'rtl' : 'ltr';
       mantra.style.fontFamily = (line.isEnglish || line.isCustom || !line.font)
