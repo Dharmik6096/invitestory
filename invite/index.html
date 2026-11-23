@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Wedding Invitation | Live Invitation</title>
+    <meta name="description" content="You are cordially invited to our wedding celebration.">
+    <meta property="og:title" content="Wedding Invitation">
+    <meta property="og:description" content="Open to experience our interactive digital invitation.">
+    <meta property="og:image" content="/card%201/uploads/og/royale-1793891310-vjgsvu.webp">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a000a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #cardFrame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        .guest-banner {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            color: #3b0024;
+            padding: 9px 24px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+            z-index: 10000;
+            display: none;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            border: 1px solid rgba(240, 201, 120, 0.6);
+            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .guest-banner {
+                top: 10px;
+                font-size: 12px;
+                padding: 7px 18px;
+            }
+            .admin-live-edit-pill {
+                bottom: 12px;
+                right: 12px;
+                font-size: 11.5px;
+                padding: 6px 14px;
+            }
+        }
+
+        .admin-live-edit-pill {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1b140e, #2a1f14);
+            border: 1.5px solid #d4af37;
+            color: #f7eedc;
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+            z-index: 9999999;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+        .admin-live-edit-pill:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 12px 35px rgba(212, 175, 55, 0.4);
+            color: #fff;
+            border-color: #f0c978;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="guest-banner" id="guestGreeting"></div>
+
+    <iframe id="cardFrame" allow="autoplay; fullscreen" title="Wedding Invitation" style="width:100%;height:100%;border:0;display:block;"></iframe>
+
+    <script src="/shared/cloud-storage.js"></script>
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+            var slug = params.get('card') || params.get('slug') || hashParams.get('card') || hashParams.get('slug') || '';
+            var guest = params.get('guest') || hashParams.get('guest');
+            var names = params.get('names') || params.get('couple') || hashParams.get('names');
+
+            // Handle unencoded '&' in URL query string for couple names
+            if (!names && window.location.search.indexOf('names=') !== -1) {
+                var m = window.location.search.match(/[?&]names=([^&#]+)/i);
+                if (m) {
+                    try { names = decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch(_) { names = m[1]; }
+                }
+            }
+
+            // Immediately sanitize URL in address bar if legacy #d= or &d= was opened
+            if ((window.location.hash && window.location.hash.indexOf('d=') !== -1) ||
+                (window.location.search && window.location.search.indexOf('&d=') !== -1)) {
+                try {
+                    var cleanUrl = window.location.pathname + '?card=' + encodeURIComponent(slug) + (names ? '&names=' + encodeURIComponent(names) : '');
+                    window.history.replaceState(null, '', cleanUrl);
+                } catch (_) {}
+            }
+
+            // Check if guest name is in URL
+            if (guest) {
+                var pill = document.getElementById('guestGreeting');
+                if (pill) {
+                    pill.textContent = 'Special Invitation for ' + decodeURIComponent(guest);
+                    pill.style.display = 'block';
+                }
+            }
+
+            var frame = document.getElementById('cardFrame');
+
+            // Determine template endpoint
+            function getTemplateBase(cardSlug) {
+                if (cardSlug === '4' || cardSlug === '104' || cardSlug.indexOf('bloom') !== -1 || cardSlug.indexOf('ever-after') !== -1 || cardSlug.indexOf('eab') !== -1) {
+                    return { src: '/card%204/templates/ever-after-bloom/index.html', title: 'Ever After Bloom' };
+                } else if (cardSlug === '3' || cardSlug === '101' || cardSlug.indexOf('palna') !== -1 || cardSlug.indexOf('baby') !== -1 || cardSlug.indexOf('wax') !== -1) {
+                    return { src: '/card%203/templates/shahi-palna/index.html', title: 'Wax Seal Royale Baby Shower' };
+                } else if (cardSlug === '2' || cardSlug === '103' || cardSlug.indexOf('lotus') !== -1 || cardSlug.indexOf('papercut') !== -1) {
+                    return { src: '/card%202/templates/papercut-magenta/index.html', title: 'Papercut Lotus' };
+                } else if (cardSlug === '5' || cardSlug === '105' || cardSlug.indexOf('mithril') !== -1 || cardSlug.indexOf('aabha') !== -1) {
+                    return { src: '/card%205/templates/mithril/index.html', title: 'Aabha (Mithril) Heirloom' };
+                }
+                return { src: '/card%201/templates/royale/index.html', title: 'Shahi Patra' };
+            }
+
+            var tpl = getTemplateBase(slug);
+            if (names) {
+                document.title = decodeURIComponent(names) + ' | ' + tpl.title;
+            } else {
+                document.title = tpl.title + ' | Wedding Invitation';
+            }
+
+            // Immediate zero-latency frame mounting for instant mobile render
+            var initialSearch = slug ? ('?card=' + encodeURIComponent(slug)) : '';
+            if (names) initialSearch += (initialSearch ? '&' : '?') + 'names=' + encodeURIComponent(names);
+            frame.src = tpl.src + initialSearch;
+
+            // Background cloud sync to keep mobile localStorage cache in lockstep
+            if (slug && window.CloudStorage) {
+                window.CloudStorage.getCard(slug).catch(function () {});
+            }
+
+            // If the viewer is authenticated as admin, show floating "Admin: Edit This Card" button
+            try {
+                if (localStorage.getItem('invitestory_admin_session') === 'true') {
+                    var editPill = document.createElement('a');
+                    editPill.id = 'adminLiveEditBtn';
+                    editPill.href = tpl.src + '?edit=1&admin=1&card=' + encodeURIComponent(slug) + (names ? '&names=' + encodeURIComponent(names) : '');
+                    editPill.target = '_blank';
+                    editPill.className = 'admin-live-edit-pill';
+                    editPill.innerHTML = '👑 Admin: Edit This Card';
+                    document.body.appendChild(editPill);
+                }
+            } catch (_) {}
+        })();
+    </script>
+    <script src="/security/anti-theft.js"></script>
+</body>
+
+</html>

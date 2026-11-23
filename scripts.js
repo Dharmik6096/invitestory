@@ -1,0 +1,4310 @@
+/* Catalogue, invitation previews, booking and payment flow. */
+  const askIcon = `<img src="assets/whatsapp.svg" width="18" height="18" alt="" aria-hidden="true">`;
+// --- PAYMENT CONFIGURATION ---
+window.RAZORPAY_KEY_ID = "rzp_live_TPCjiGiPIeo7SN";
+
+// Payment notifications belong in a server-side Razorpay payment.captured webhook.
+
+function getItemPrices(item) {
+  return {
+    priceINR: item.priceINR,
+    priceUSD: item.priceUSD,
+    originalPriceINR: item.originalPriceINR,
+    originalPriceUSD: item.originalPriceUSD
+  };
+}
+
+// --- UTM & GOOGLE ADS CLICK ID ATTRIBUTION TRACKER ---
+/**
+ * Safely captures, normalizes, and persists UTM campaign parameters, Google Click IDs (gclid, gbraid, wbraid),
+ * and Meta click IDs (fbclid) into both sessionStorage and localStorage.
+ */
+function getUtmCampaignParams() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const keys = [
+      "utm_source", "utm_medium", "utm_campaign", "utm_term",
+      "utm_content", "utm_id", "gclid", "gbraid", "wbraid", "fbclid"
+    ];
+    keys.forEach(key => {
+      const val = urlParams.get(key);
+      if (val) {
+        localStorage.setItem("ist_" + key, val);
+        sessionStorage.setItem("ist_" + key, val);
+        localStorage.setItem(key, val);
+      }
+    });
+
+    const getVal = (key) => urlParams.get(key) || sessionStorage.getItem("ist_" + key) || localStorage.getItem("ist_" + key) || localStorage.getItem(key) || "";
+
+    return {
+      utmSource: getVal("utm_source"),
+      utmMedium: getVal("utm_medium"),
+      utmCampaign: getVal("utm_campaign"),
+      utmTerm: getVal("utm_term"), // Keyword
+      utmContent: getVal("utm_content"), // Ad creative
+      utmId: getVal("utm_id"), // Campaign ID
+      gclid: getVal("gclid"), // Google Click ID
+      gbraid: getVal("gbraid"), // Google iOS click ID
+      wbraid: getVal("wbraid"), // Google Web click ID
+      fbclid: getVal("fbclid")
+    };
+  } catch (err) {
+    return { utmSource: "", utmMedium: "", utmCampaign: "", utmTerm: "", utmContent: "", utmId: "", gclid: "", gbraid: "", wbraid: "", fbclid: "" };
+  }
+}
+
+/**
+ * Returns formatted attribution object for Razorpay notes and payment tracking
+ */
+function getAttributionNotes() {
+  const p = getUtmCampaignParams();
+  const notes = {};
+  if (p.utmSource) notes.utm_source = p.utmSource.slice(0, 50);
+  if (p.utmMedium) notes.utm_medium = p.utmMedium.slice(0, 50);
+  if (p.utmCampaign) notes.utm_campaign = p.utmCampaign.slice(0, 50);
+  if (p.utmTerm) notes.utm_term = p.utmTerm.slice(0, 50); // Search keyword
+  if (p.utmContent) notes.utm_content = p.utmContent.slice(0, 50); // Ad creative
+  if (p.utmId) notes.utm_id = p.utmId.slice(0, 50);
+  if (p.gclid) notes.gclid = p.gclid.slice(0, 100); // Google Click ID
+  if (p.gbraid) notes.gbraid = p.gbraid.slice(0, 50);
+  if (p.wbraid) notes.wbraid = p.wbraid.slice(0, 50);
+  return notes;
+}
+
+// Run on load
+getUtmCampaignParams();
+
+/**
+ * Multi-Platform Conversion Tracker for PostHog, GA4, Google Ads, and Meta Pixel.
+ * Configured events:
+ * - purchase: Primary Google Ads conversion with order value and transaction ID
+ * - whatsapp_click: Secondary conversion (observation only, not equal to purchase)
+ * - begin_checkout: Funnel step before payment
+ * - select_design: Template preview / selection event
+ * - view_package: Package card impression / interaction
+ */
+const recordedPostHogPayments = new Set();
+// Meta Pixel dataset: the single business-owned Pixel used everywhere.
+window.META_PIXEL_ID = window.META_PIXEL_ID || "972146648686360";
+const recordedMetaPurchases = new Set();
+const recentMetaEvents = new Map();
+const verifiedPaymentStoragePrefix = "invitestory.verifiedPayment:";
+const pendingPaymentVerificationKey = "invitestory.pendingPaymentVerification";
+
+function pushDataLayerEvent(payload) {
+  try {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(payload);
+  } catch (_) {
+    // Measurement must never interrupt navigation or checkout.
+  }
+}
+
+function pushWhatsAppClickEvent() {
+  pushDataLayerEvent({ event: "whatsapp_click" });
+}
+
+function trackPostPaymentWhatsAppAction(ctaLocation) {
+  const params = { cta_location: ctaLocation };
+  trackPostHogEvent("post_payment_whatsapp", params);
+  try {
+    // Keep fulfilment analytics separate from the pre-sales whatsapp_click conversion.
+    window.gtag?.("event", "post_payment_whatsapp", params);
+  } catch (_) {
+    // Analytics must never interrupt the customer's fulfilment flow.
+  }
+}
+
+function isRapidMetaDuplicate(key, windowMs = 500) {
+  if (!key) return false;
+  const now = Date.now();
+  const last = recentMetaEvents.get(key) || 0;
+  if (now - last < windowMs) return true;
+  recentMetaEvents.set(key, now);
+  if (recentMetaEvents.size > 100) {
+    const firstKey = recentMetaEvents.keys().next().value;
+    recentMetaEvents.delete(firstKey);
+  }
+  return false;
+}
+
+function trackPostHogEvent(eventName, params = {}) {
+  // Use product metadata only; never send form values, names or WhatsApp messages.
+  if (["localhost", "127.0.0.1", "::1", "[::1]"].includes(window.location.hostname)) return;
+  if (typeof window.posthog?.capture !== "function") return;
+  try {
+    const names = {
+      select_design: "template_viewed", view_order: "order_cta_clicked",
+      whatsapp_click: "whatsapp_cta_clicked", begin_checkout: "checkout_started",
+      purchase: "payment_succeeded", save_design: "template_saved",
+      resume_design: "template_resumed", share_shortlist: "shortlist_shared",
+      style_finder_complete: "style_finder_completed", view_package: "collection_viewed"
+    };
+    const ids = params.content_ids || [];
+    const designId = params.design_id || params.item_id || (ids.length === 1 ? ids[0] : null);
+    const item = designId ? TEMPLATE_DATABASE.find(design => design.id === Number(designId)) : null;
+    const tier = item?.tier || params.package_tier;
+    const properties = { source_event: eventName };
+    if (item) Object.assign(properties, {
+      template_id: String(item.id), template_name: item.name,
+      template_slug: getDesignSlug(item), style: item.style
+    });
+    if (tier) properties.collection = packageName(tier);
+    for (const key of ["currency", "value", "cta_location", "filter_type", "filter_value", "result_count", "query_length", "reason", "elapsed_ms", "load_time_ms", "retry_count", "preview_device", "preview_trigger", "preview_ready", "exit_reason", "waiting_reason"]) {
+      if (params[key] !== undefined) properties[key] = params[key];
+    }
+    if (eventName === "whatsapp_click") properties.destination = "whatsapp";
+    if (eventName === "purchase") {
+      if (!params.transaction_id || recordedPostHogPayments.has(params.transaction_id)) return;
+      properties.transaction_id = params.transaction_id;
+      properties.payment_confirmation = "server_verified";
+    }
+    window.posthog.capture(names[eventName] || eventName, properties);
+    if (eventName === "purchase") recordedPostHogPayments.add(params.transaction_id);
+  } catch (_) {
+    // Analytics must never interrupt a preview, enquiry or payment.
+  }
+}
+
+function trackConversionEvent(eventName, params = {}) {
+  if (eventName === "whatsapp_click") pushWhatsAppClickEvent();
+  trackPostHogEvent(eventName, params);
+  try {
+    const contentIds = (params.content_ids || (params.item_id ? [params.item_id] : [])).map(String);
+    const isINR = (typeof currentCurrency !== "undefined" ? currentCurrency : "INR") === "INR";
+    const defaultCurrency = isINR ? "INR" : "USD";
+    const eventCurrency = params.currency || defaultCurrency;
+    const eventValue = typeof params.value === "number" ? params.value : Number(params.value) || 0;
+    const attr = getAttributionNotes();
+
+    // 1. Google Analytics 4 (GA4) Standard & Custom Events
+    if (typeof window.gtag === "function") {
+      // The explicit dataLayer object above is the single GTM conversion event.
+      // Sending the same WhatsApp event through gtag would create a duplicate custom event.
+      const gaEventName = eventName === "whatsapp_click" ? "whatsapp_cta_clicked" : eventName;
+      window.gtag("event", gaEventName, {
+        ...params,
+        ...attr,
+        currency: eventCurrency,
+        value: eventValue,
+        ...(contentIds.length ? { items: contentIds.map(id => ({ item_id: id, item_name: params.item_name || params.content_name })) } : {})
+      });
+
+    }
+
+    // 2. Meta Pixel (fbq) Mapping (single business-owned dataset)
+    if (typeof window.fbq === "function") {
+      const pixelId = window.META_PIXEL_ID || "972146648686360";
+
+      if (eventName === "purchase" || eventName === "Purchase") {
+        const orderId = params.order_id || (params.transaction_id && String(params.transaction_id).startsWith("order_") ? params.transaction_id : "");
+        const resolvedId = orderId || params.transaction_id || "";
+        const dedupeKey = orderId ? `order:${orderId}` : (resolvedId ? `payment:${resolvedId}` : "");
+
+        let alreadyRecorded = false;
+        if (dedupeKey) {
+          if (recordedMetaPurchases.has(dedupeKey)) alreadyRecorded = true;
+          try {
+            if (sessionStorage.getItem(`tracked_meta_purchase_${dedupeKey}`) || (params.transaction_id && sessionStorage.getItem(`tracked_purchase_${params.transaction_id}`))) {
+              alreadyRecorded = true;
+            }
+          } catch (_) {}
+        }
+
+        if (!alreadyRecorded) {
+          if (dedupeKey) {
+            recordedMetaPurchases.add(dedupeKey);
+            try {
+              sessionStorage.setItem(`tracked_meta_purchase_${dedupeKey}`, "1");
+              if (params.transaction_id) sessionStorage.setItem(`tracked_purchase_${params.transaction_id}`, "1");
+              if (orderId) sessionStorage.setItem(`tracked_purchase_${orderId}`, "1");
+            } catch (_) {}
+          }
+
+          const purchasePayload = {
+            value: eventValue,
+            currency: eventCurrency,
+            content_type: "product",
+            content_ids: contentIds,
+            content_name: params.content_name || params.package_name || "Digital Wedding Invitation"
+          };
+          // CAPI alignment: exact stable event ID order:{order_id} matching staff portal Conversions API
+          const eventOptions = resolvedId ? { eventID: `order:${resolvedId}` } : undefined;
+
+          window.fbq("trackSingle", pixelId, "Purchase", purchasePayload, eventOptions);
+        }
+      } else if (eventName === "begin_checkout" || eventName === "InitiateCheckout") {
+        const dedupeKey = `begin_checkout:${contentIds.join(",") || params.content_name || ""}`;
+        if (!isRapidMetaDuplicate(dedupeKey)) {
+          window.fbq("track", "InitiateCheckout", {
+            value: eventValue,
+            currency: eventCurrency,
+            content_type: "product",
+            content_ids: contentIds,
+            content_name: params.content_name || params.package_name || "Digital Wedding Invitation"
+          });
+        }
+      } else if (eventName === "whatsapp_click" || eventName === "Contact" || eventName === "contact") {
+        const dedupeKey = `contact:${contentIds.join(",") || params.design_id || params.item_id || params.design_name || params.content_name || params.cta_location || ""}`;
+        if (!isRapidMetaDuplicate(dedupeKey)) {
+          window.fbq("track", "Contact", {
+            content_name: params.content_name || params.design_name || params.package_name || "WhatsApp Enquiry",
+            value: eventValue,
+            currency: eventCurrency
+          });
+        }
+      } else if (eventName === "lead" || eventName === "Lead") {
+        const dedupeKey = `lead:${contentIds.join(",") || params.design_id || params.item_id || params.design_name || params.content_name || params.cta_location || ""}`;
+        if (!isRapidMetaDuplicate(dedupeKey)) {
+          window.fbq("track", "Lead", {
+            content_name: params.content_name || params.design_name || params.package_name || "Lead Enquiry",
+            value: eventValue,
+            currency: eventCurrency
+          });
+        }
+      } else if (eventName === "select_design" || eventName === "ViewContent") {
+        const dedupeKey = `select_design:${contentIds.join(",") || params.item_id || ""}`;
+        if (!isRapidMetaDuplicate(dedupeKey)) {
+          window.fbq("track", "ViewContent", {
+            content_name: params.item_name || params.content_name,
+            content_ids: contentIds,
+            content_type: "product",
+            value: eventValue,
+            currency: eventCurrency
+          });
+        }
+      } else if (eventName === "save_design") {
+        const dedupeKey = `save_design:${contentIds.join(",") || ""}`;
+        if (!isRapidMetaDuplicate(dedupeKey)) {
+          window.fbq("track", "AddToWishlist", { content_ids: contentIds, content_type: "product", content_name: params.content_name, value: eventValue, currency: eventCurrency });
+        }
+      } else if (["view_order", "style_finder_complete", "share_shortlist", "resume_design", "consider_dearly"].includes(eventName)) {
+        const dedupeKey = `${eventName}:${contentIds.join(",") || ""}`;
+        if (!isRapidMetaDuplicate(dedupeKey)) {
+          window.fbq("trackCustom", eventName, { content_ids: contentIds, content_name: params.content_name, currency: eventCurrency, value: eventValue });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Conversion tracking warning:", err);
+  }
+}
+
+// Backward-compatible alias for legacy calls
+function trackMetaEvent(eventName, params = {}) {
+  // Map legacy event names to standard conversion names
+  let standardName = eventName;
+  if (eventName === "InitiateCheckout") standardName = "begin_checkout";
+  else if (eventName === "Purchase") standardName = "purchase";
+  else if (eventName === "ViewContent") standardName = "select_design";
+  else if (eventName === "Lead" || eventName === "lead") standardName = "lead";
+  else if (eventName === "Contact" || eventName === "contact") standardName = "whatsapp_click";
+  trackConversionEvent(standardName, params);
+}
+
+// --- 1. Template Database ---
+const TEMPLATE_DATABASE = [
+  {
+    id: 101,
+    name: "Meghal’s Baby Shower · Wax Seal Royale",
+    slug: "meghal-baby-shower",
+    image: "assets/preview/card3.webp",
+    tier: 4,
+    collection: "dearly",
+    priceINR: 4999,
+    priceUSD: 75,
+    originalPriceINR: 4999,
+    originalPriceUSD: 75,
+    demoUrl: "/card 3/index.html",
+    localDemoUrl: "/card 3/index.html",
+    editUrl: "/card 3/index.html?edit=1",
+    style: "Baby Shower / Wax Seal Royale",
+    accentColor: "#b59c6b",
+    tags: ["baby-shower", "wax-seal", "dearly", "all"],
+    desc: "Sacred Yashoda-Krishna & Kamadhenu artwork, 3D cracking gold wax seal, living swans lake background, 'Two Tiny Feet' footprints, and Patel family WhatsApp RSVP.",
+    promise: "Wax seal unboxing, living background, music, venue navigation & instant WhatsApp RSVP."
+  },
+  {
+    id: 102,
+    name: "The Royal Darbar 3D Wedding",
+    slug: "royal-darbar-3d",
+    image: "assets/preview/card1.webp",
+    tier: 3,
+    priceINR: 2999,
+    priceUSD: 49,
+    originalPriceINR: 2999,
+    originalPriceUSD: 49,
+    demoUrl: "/card 1/index.html",
+    localDemoUrl: "/card 1/index.html",
+    editUrl: "/card 1/index.html?edit=1",
+    style: "Grand Royal / 3D Palace",
+    accentColor: "#d4af37",
+    tags: ["royal", "wedding", "wax-seal", "all"],
+    desc: "Majestic palace doors swing open with custom gold wax seal, royal shehnai music, live countdown, and comprehensive multi-event itineraries.",
+    promise: "Grand 3D palace opening animation with royal music, countdown & interactive ceremonies."
+  },
+  {
+    id: 103,
+    name: "Lotus Palace & Papercut Royale",
+    slug: "lotus-palace-papercut",
+    image: "assets/preview/card2.webp",
+    tier: 2,
+    priceINR: 1999,
+    priceUSD: 29,
+    originalPriceINR: 1999,
+    originalPriceUSD: 29,
+    demoUrl: "/card 2/index.html",
+    localDemoUrl: "/card 2/index.html",
+    editUrl: "/card 2/index.html?edit=1",
+    style: "Modern Floral / Papercut",
+    accentColor: "#9e1946",
+    tags: ["papercut", "floral", "wedding", "all"],
+    desc: "Layered papercut laser architecture in royal magenta and gold, featuring serene flute & sitar melody and interactive event roadmap.",
+    promise: "Intricate laser-cut paper art aesthetic with ambient music & Google Maps navigation."
+  }
+];
+
+// Detect if on Google Ads dedicated landing page
+const isAdsLandingPage = window.location.pathname.includes("digital-wedding-invitations") || (document.documentElement && document.documentElement.dataset.landing === "ads");
+
+if (isAdsLandingPage) {
+  // Exclude trademarked designs (Grand Line Voyage, Ghibli Selfie, Ghibli Portrait)
+  const trademarkedIds = new Set([13, 14, 15]);
+  for (let i = TEMPLATE_DATABASE.length - 1; i >= 0; i--) {
+    if (trademarkedIds.has(TEMPLATE_DATABASE[i].id)) {
+      TEMPLATE_DATABASE.splice(i, 1);
+    }
+  }
+}
+
+// Designs flagged `hidden` stay reachable by direct link (?design=slug) but are left out of browsing.
+function getListedDesigns() {
+  return TEMPLATE_DATABASE.filter(item => !item.hidden);
+}
+
+// --- 2. State Management ---
+let currentCurrency = "INR"; // "INR" or "USD"
+let activeTierFilter = 0; // 0: All, 2: Premium, 3: Luxury, 4: Dearly
+let activeTagFilter = "all";
+let searchQuery = "";
+
+// DOM Elements
+const templatesGrid = document.getElementById("templates-grid");
+const searchInput = document.getElementById("search-input");
+const clearSearchBtn = document.getElementById("clear-search-btn");
+const filterTagsContainer = document.getElementById("filter-tags");
+
+const tierRadios = document.querySelectorAll("#tier-radio-group input[type=radio]");
+const tierRadioByValue = {};
+tierRadios.forEach(r => { tierRadioByValue[r.value] = r; });
+
+// Per-tier base prices shown in the radio labels (currency-switchable)
+const TIER_BASE_PRICE = {
+  2: { inr: 1999, usd: 29 },
+  3: { inr: 2999, usd: 45 },
+  4: { inr: 4999, usd: 75 }
+};
+
+// Pricing Grid references (to update pricing currency symbols dynamically)
+const pricingSection = document.querySelector(".pricing-section");
+
+// Addon Prices definition
+const ADDONS = {
+  emailRsvp: { name: "Email RSVP", priceINR: 2000, priceUSD: 24 },
+  express: { name: "Express 24h Delivery", priceINR: 799, priceUSD: 9 }
+};
+
+// --- Package-level UPI-first checkout (Premium / Luxury / Dearly) ---
+const PACKAGE_NAMES = { 2: "Premium", 3: "Luxury", 4: "Dearly Exclusive" };
+
+function packageName(tier) {
+  return PACKAGE_NAMES[tier] || "Premium";
+}
+
+function packageBasePrice(tier) {
+  const base = TIER_BASE_PRICE[tier] || TIER_BASE_PRICE[2];
+  return currentCurrency === "INR" ? base.inr : base.usd;
+}
+
+// New purchases use a currency-aware acknowledged contract; saved legacy attempts retain their terms.
+const DELIVERY_SPEEDS = {standard_48h:{hours:48,fee:0,feeUSD:0},express_24h:{hours:24,fee:799,feeUSD:9},express_12h:{hours:12,fee:1499,feeUSD:18}};
+function deliveryRuntimeReady(){return window.deliverySalesVersion===2 && (typeof InviteInteractions==="undefined" || window.deliveryInteractionsVersion===2) && typeof InvitePaidOrder!=="undefined" && InvitePaidOrder.deliveryVersion===2 && ['order-delivery-speeds','delivery-standard_48h','delivery-express_24h','delivery-express_12h'].every(id=>document.getElementById(id));}
+function usesNewDelivery(){return deliveryRuntimeReady() && window.InviteWebsite?.deliveryV2Enabled?.(currentCurrency) === true;}
+let orderDeliveryContract;
+function orderUsesNewDelivery(){return orderDeliveryContract ?? usesNewDelivery();}
+let legacyGatewayConfiguration;
+function legacyDeliveryAvailable(){return window.InviteWebsite?.legacyCheckoutEnabled ? window.InviteWebsite.legacyCheckoutEnabled()===true : legacyGatewayConfiguration?.checkoutEnabled===true&&!legacyGatewayConfiguration.unavailable;}
+// Refresh public offers after capability discovery, without changing an open drawer's agreement.
+window.refreshDeliveryOffers=function(){
+  renderPricingSection();
+  updateTierLabels();
+  const note=document.getElementById('preview-multievent-note');
+  if(note&&!note.hidden&&TEMPLATE_DATABASE[previewState.currentIndex]?.tier===4)note.textContent=usesNewDelivery() ? 'Wax-Seal Unboxing · Email RSVP & Guest List · 48h standard · Optional 24h / 12h' : 'Wax-Seal Unboxing · Email RSVP & Guest List · 24h included';
+};
+function orderDeliverySpeed(){
+  if(orderUsesNewDelivery())return document.querySelector('input[name="order-delivery-speed"]:checked')?.value || 'standard_48h';
+  return orderDrawerState.tier===4||document.getElementById('order-drawer-addon-express')?.checked?'express_24h':'standard_48h';
+}
+function deliveryFeeForOrder(){const speed=DELIVERY_SPEEDS[orderDeliverySpeed()];return currentCurrency==='INR'?speed?.fee||0:speed?.feeUSD||0;}
+function deliveryHoursForOrder(){return DELIVERY_SPEEDS[orderDeliverySpeed()]?.hours || 48;}
+function resetDeliverySpeed(){const input=document.getElementById('delivery-standard_48h');if(input)input.checked=true;}
+function renderCheckoutRetries(){
+ const box=document.getElementById('order-checkout-retries');if(!box)return;box.replaceChildren();
+ try{for(const attempt of window.InviteWebsite?.pendingCheckouts?.()||[]){
+  const r=attempt.request,button=document.createElement('button');button.type='button';button.className='sales-text-button';
+  const hours=r.checkoutVersion===2?DELIVERY_SPEEDS[r.deliverySpeed]?.hours:(r.express||r.tier===4?24:48);
+  button.textContent=`Review saved ${packageName(r.tier)} payment · ${r.currency} · ${hours}h first draft`;
+  button.onclick=()=>resumeSavedCheckout(attempt.clientKey);box.append(button);
+ }}catch{const note=document.createElement('p');note.textContent='Saved payment attempts could not be read. Please contact our team before retrying.';box.append(note);}
+}
+async function resumeSavedCheckout(clientKey){
+ if(orderDrawerCheckoutPending)return;orderDrawerCheckoutPending=true;
+ try{
+  const saved=window.InviteWebsite.pendingCheckouts?.().find(attempt=>attempt.clientKey===clientKey);
+  if(saved?.request.checkoutVersion===2&&!deliveryRuntimeReady())throw new Error('Please refresh this page to load your saved delivery promise before continuing payment.');
+  const secure=await window.InviteWebsite.resumeCheckout(clientKey),r=secure.request;
+  if(!Number.isSafeInteger(secure.amount)||secure.amount<=0||secure.currency!==r.currency)throw new Error('The saved payment amount could not be verified.');
+  const box=document.getElementById('order-checkout-retries');if(!box)return;box.replaceChildren();
+  const hours=secure.deliverySnapshot?.firstDraftHours||(r.express||r.tier===4?24:48),note=document.createElement('p');
+  note.textContent=`Saved ${packageName(r.tier)} payment: ${secure.currency} ${(secure.amount/100).toLocaleString('en-IN')}. First draft within ${hours} hours after payment and complete details. Original price and included services apply.`;box.append(note);
+  const button=document.createElement('button');button.type='button';button.className='pricing-card-cta';button.textContent='Continue this saved payment';button.onclick=()=>proceedFromOrderDrawerToCheckout({secure,request:r});box.append(button);
+ }catch(error){showToast({title:'Saved payment could not open',message:error.message,type:'error'});}
+ finally{orderDrawerCheckoutPending=false;}
+}
+
+function isExpressSelectedForPackage(tier) {
+  const box = document.getElementById(`express-toggle-${tier}`);
+  return !!(box && box.checked);
+}
+
+function packageTotal(tier) {
+  let total = packageBasePrice(tier);
+  if (isExpressSelectedForPackage(tier)) {
+    total += currentCurrency === "INR" ? ADDONS.express.priceINR : ADDONS.express.priceUSD;
+  }
+  return total;
+}
+
+function packageAmountText(tier, total) {
+  const val = (typeof total === "number") ? total : packageTotal(tier);
+  return `${getCurrencySymbol()}${val.toLocaleString("en-IN")}`;
+}
+
+// --- Preview Modal state & DOM refs ---
+
+// Automatically generate clean URL slugs for every template in database
+TEMPLATE_DATABASE.forEach(item => {
+  if (!item.slug) {
+    item.slug = item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+});
+
+const previewState = {
+  currentIndex: -1,
+  lastDesignByTier: {},
+  lastFocusedElement: null,
+  viewMode: "flat" // "3d" or "flat"
+};
+
+// --- Spring-Damped 3D Physics Engine (Heavy Solid Titanium Damping) ---
+const PhonePhysics = {
+  // Resting pose: elegant cinematic angle
+  REST: { rotY: -22, rotX: 5, rotZ: -0.5, scale: 0.95, translateY: 0, opacity: 1 },
+  // Entrance start pose: smooth glide
+  ENTRANCE: { rotY: -24, rotX: 7, rotZ: -0.7, scale: 0.98, translateY: 10, opacity: 1 },
+  // Responsiveness tracking factor
+  LERP_FACTOR: 0.075,
+  // Heavy solid damping factor (kills rubbery oscillation, settles authoritatively)
+  DAMPING: 0.64,
+  // Sleep threshold to stop animating when settled (saves CPU)
+  EPSILON: 0.005,
+
+  // Current interpolated values (what's rendered)
+  current: { rotY: -22, rotX: 5, rotZ: -0.5, scale: 0.95, translateY: 0, opacity: 1 },
+  // Target values (set by mouse/touch/gyro)
+  target: { rotY: -22, rotX: 5, rotZ: -0.5, scale: 0.95, translateY: 0, opacity: 1 },
+  // Velocity for overshoot damping
+  velocity: { rotY: 0, rotX: 0, rotZ: 0, scale: 0, translateY: 0, opacity: 0 },
+
+  // Glare layer targets (each layer responds at different speed)
+  glare: {
+    current: { highlightX: 0, highlightY: 0, rimX: 0, rimY: 0, ambientX: 0, ambientY: 0, highlightOp: 0.75, rimOp: 0.55, ambientOp: 0.5 },
+    target:  { highlightX: 0, highlightY: 0, rimX: 0, rimY: 0, ambientX: 0, ambientY: 0, highlightOp: 0.75, rimOp: 0.55, ambientOp: 0.5 }
+  },
+
+  // Shadow targets
+  shadow: {
+    current: { x: 0, blur: 14, opacity: 1 },
+    target:  { x: 0, blur: 14, opacity: 1 }
+  },
+
+  // rAF handle
+  rafId: null,
+  isRunning: false,
+  // DOM element refs (cached on first start)
+  els: {},
+  // Reduced motion preference
+  reducedMotion: false,
+  // Gyroscope state tracking
+  lastGyroTime: 0,
+  lastNormX: 0,
+  lastNormY: 0,
+  // Low-power mobile & Android optimization flags
+  isAndroid: typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent || ""),
+  isMobile: typeof window !== "undefined" && (window.matchMedia("(max-width: 768px)").matches || (typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "")))
+};
+
+// Tag HTML root with .is-android or .is-mobile-device for high performance CSS rules
+if (typeof document !== "undefined" && document.documentElement) {
+  if (PhonePhysics.isAndroid) document.documentElement.classList.add("is-android");
+  if (PhonePhysics.isMobile) document.documentElement.classList.add("is-mobile-device");
+}
+
+const previewModal      = document.getElementById("preview-modal");
+const previewModalTitle = document.getElementById("preview-modal-title");
+const previewModalTag   = document.querySelector(".preview-modal-style-tag");
+let previewIframe     = document.getElementById("preview-modal-iframe");
+const previewIframeWrap = document.getElementById("preview-modal-iframe-wrap");
+const previewLoader     = document.getElementById("preview-modal-loader");
+const previewTierTabs   = document.querySelectorAll(".preview-tier-tab");
+const previewPrevBtn    = document.getElementById("preview-prev-btn");
+const previewNextBtn    = document.getElementById("preview-next-btn");
+const previewHomeBtn    = document.getElementById("preview-home-btn");
+const previewBuyBtn     = document.getElementById("preview-buy-btn");
+const previewAmbientGlow   = document.getElementById("preview-modal-ambient-glow");
+const previewModalPrice    = document.getElementById("preview-modal-price");
+
+const previewFullscreenBtn = document.getElementById("preview-fullscreen-btn");
+const previewCounterBadge  = document.getElementById("preview-counter-badge");
+const previewSidePrev      = document.getElementById("preview-side-prev");
+const previewSideNext      = document.getElementById("preview-side-next");
+
+// --- Helper Functions ---
+function getCurrencySymbol() {
+  return currentCurrency === "INR" ? "₹" : "$";
+}
+
+function formatPrice(valINR, valUSD) {
+  const sym = getCurrencySymbol();
+  const amt = currentCurrency === "INR" ? valINR : valUSD;
+  return `${sym}${amt.toLocaleString("en-IN")}`;
+}
+
+function hexToRgba(hex, alpha = 0.4) {
+  if (!hex || !hex.startsWith("#")) return `rgba(192, 149, 89, ${alpha})`;
+  let c = hex.substring(1);
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  if (Number.isNaN(num)) return `rgba(192, 149, 89, ${alpha})`;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// --- Distinct Luxury Pattern Engine for Preview Stage ---
+const LUXURY_PATTERNS = {
+  jali: (color) => ({
+    size: "60px 60px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 0 L60 30 L30 60 L0 30 Z M30 10 C38 18 42 22 50 30 C42 38 38 42 30 50 C22 42 18 38 10 30 C18 22 22 18 30 10 Z' fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.4'/><circle cx='30' cy='30' r='3' fill='${color}' fill-opacity='0.45'/></svg>`
+  }),
+  kolam: (color) => ({
+    size: "70px 70px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.4'><path d='M35 5 Q50 20 65 35 Q50 50 35 65 Q20 50 5 35 Q20 20 35 5 Z'/><circle cx='35' cy='35' r='14'/><circle cx='35' cy='35' r='3.5' fill='${color}' fill-opacity='0.45'/><path d='M0 35 Q17.5 17.5 35 35 Q17.5 52.5 0 35 Z M70 35 Q52.5 17.5 35 35 Q52.5 52.5 70 35 Z'/></g></svg>`
+  }),
+  mandala: (color) => ({
+    size: "80px 80px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='${color}' stroke-width='1.1' stroke-opacity='0.4'><circle cx='40' cy='40' r='24'/><circle cx='40' cy='40' r='12'/><circle cx='40' cy='40' r='3' fill='${color}' fill-opacity='0.4'/><path d='M40 0 L40 80 M0 40 L80 40 M12 12 L68 68 M12 68 L68 12'/><path d='M40 16 Q48 28 40 40 Q32 28 40 16 Z M40 40 Q48 52 40 64 Q32 52 40 40 Z M16 40 Q28 48 40 40 Q28 32 16 40 Z M40 40 Q52 48 64 40 Q52 32 40 40 Z'/></g></svg>`
+  }),
+  damask: (color) => ({
+    size: "74px 74px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='74' height='74' viewBox='0 0 74 74'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.4'><path d='M37 10 C45 25 55 25 55 35 C55 45 42 55 37 65 C32 55 19 45 19 35 C19 25 29 25 37 10 Z'/><path d='M37 25 C42 32 46 35 46 40 C46 45 40 50 37 54 C34 50 28 45 28 40 C28 35 32 32 37 25 Z'/><circle cx='37' cy='37' r='3' fill='${color}' fill-opacity='0.4'/></g></svg>`
+  }),
+  arabesque: (color) => ({
+    size: "64px 64px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.4'><path d='M32 0 L42 22 L64 32 L42 42 L32 64 L22 42 L0 32 L22 22 Z'/><path d='M0 0 L15 15 M64 0 L49 15 M64 64 L49 49 M0 64 L15 49'/><rect x='24' y='24' width='16' height='16' transform='rotate(45 32 32)'/></g></svg>`
+  }),
+  botanical: (color) => ({
+    size: "68px 68px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='68' height='68' viewBox='0 0 68 68'><g fill='none' stroke='${color}' stroke-width='1.1' stroke-opacity='0.4'><path d='M10 58 Q34 34 58 10'/><path d='M25 43 Q32 37 34 44 Q28 48 25 43 Z M43 25 Q37 32 44 34 Q48 28 43 25 Z'/><path d='M15 53 Q22 47 24 54 Q18 58 15 53 Z M53 15 Q47 22 54 24 Q58 18 53 15 Z'/><circle cx='58' cy='10' r='2' fill='${color}' fill-opacity='0.5'/></g></svg>`
+  }),
+  waves: (color) => ({
+    size: "60px 40px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='60' height='40' viewBox='0 0 60 40'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.4'><path d='M0 10 Q15 0 30 10 T60 10 M0 30 Q15 20 30 30 T60 30'/><path d='M-15 20 Q0 10 15 20 T45 20 T75 20' stroke-dasharray='3 3'/></g></svg>`
+  }),
+  artdeco: (color) => ({
+    size: "64px 64px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g fill='none' stroke='${color}' stroke-width='1.1' stroke-opacity='0.4'><path d='M32 0 L64 32 L32 64 L0 32 Z'/><path d='M32 10 L54 32 L32 54 L10 32 Z'/><path d='M32 20 L44 32 L32 44 L20 32 Z'/><line x1='0' y1='0' x2='64' y2='64'/><line x1='64' y1='0' x2='0' y2='64'/></g></svg>`
+  }),
+  celestial: (color) => ({
+    size: "72px 72px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'><g fill='none' stroke='${color}' stroke-width='1.1' stroke-opacity='0.4'><path d='M36 12 Q36 28 20 28 Q36 28 36 44 Q36 28 52 28 Q36 28 36 12 Z' fill='${color}' fill-opacity='0.12'/><circle cx='36' cy='28' r='2.5' fill='${color}' fill-opacity='0.5'/><circle cx='10' cy='60' r='1.5' fill='${color}' fill-opacity='0.4'/><circle cx='62' cy='58' r='1.5' fill='${color}' fill-opacity='0.4'/><path d='M10 56 L10 64 M6 60 L14 60'/><path d='M62 54 L62 62 M58 58 L66 58'/></g></svg>`
+  }),
+  whimsical: (color) => ({
+    size: "70px 70px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><g fill='none' stroke='${color}' stroke-width='1.1' stroke-opacity='0.4'><path d='M15 55 C25 55 35 48 35 38 C35 28 25 24 20 28 C15 32 18 40 25 40 C30 40 33 36 33 32'/><circle cx='48' cy='20' r='3' fill='${color}' fill-opacity='0.35'/><path d='M48 20 L58 14 M48 20 L60 20 M48 20 L56 26'/><circle cx='54' cy='52' r='2' fill='${color}' fill-opacity='0.4'/><circle cx='12' cy='18' r='1.5' fill='${color}' fill-opacity='0.4'/></g></svg>`
+  }),
+  paisley: (color) => ({
+    size: "76px 76px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='76' height='76' viewBox='0 0 76 76'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.4'><path d='M38 14 C48 14 56 24 56 36 C56 50 44 60 36 64 C32 66 26 62 24 56 C22 50 26 44 32 42 C38 40 40 34 38 28 C36 22 28 24 26 28'/><circle cx='38' cy='36' r='3' fill='${color}' fill-opacity='0.4'/></g></svg>`
+  }),
+  dearly: (color) => ({
+    size: "80px 80px",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='${color}' stroke-width='1.2' stroke-opacity='0.45'><path d='M40 8 C48 22 58 28 72 40 C58 52 48 58 40 72 C32 58 22 52 8 40 C22 28 32 22 40 8 Z'/><circle cx='40' cy='40' r='18' stroke-dasharray='3 3'/><circle cx='40' cy='40' r='4' fill='${color}' fill-opacity='0.6'/><path d='M40 22 L40 58 M22 40 L58 40'/></g></svg>`
+  })
+};
+
+function getTemplatePatternKey(item) {
+  if (item.tier === 4 || item.collection === "dearly") return "dearly";
+  const str = `${item.name} ${item.style || ""} ${(item.tags || []).join(" ")} ${item.slug || ""}`.toLowerCase();
+
+  if (/ghibli|anime|whimsical|fantasy|fairy/.test(str)) return "whimsical";
+  if (/beach|sea|ocean|coastal|seashell|goa|water/.test(str)) return "waves";
+  if (/nikah|emerald|islamic|noor|desert/.test(str)) return "arabesque";
+  if (/rajasthan|jodhpur|jaipur|udaipur|palace|royal|mewar|haveli/.test(str)) return "jali";
+  if (/telugu|kalyana|mandapam|banana|south-indian|toran/.test(str)) return "kolam";
+  if (/shubha|vivaham|muhurtham|vedic|lamp/.test(str)) return "mandala";
+  if (/sage|parchment|botanical|eucalyptus|minimal/.test(str)) return "botanical";
+  if (/floral|flower|bloom|rose|meadow|bougainvillea/.test(str)) return "damask";
+  if (/modern|contemporary|chic|glam|vogue|artdeco/.test(str)) return "artdeco";
+  if (/star|celestial|night|cosmic|midnight/.test(str)) return "celestial";
+  if (/marigold|bhavan|traditional|paisley/.test(str)) return "paisley";
+
+  const allKeys = Object.keys(LUXURY_PATTERNS);
+  return allKeys[Math.abs(item.id || 0) % allKeys.length];
+}
+
+function applyTemplateLuxuryPattern(item) {
+  const canvas = document.getElementById("preview-pattern-canvas");
+  if (!canvas) return;
+
+  const key = getTemplatePatternKey(item);
+  const generator = LUXURY_PATTERNS[key] || LUXURY_PATTERNS.jali;
+  const accent = item.accentColor || "#c09559";
+
+  const patternData = generator(accent);
+  const encodedSvg = encodeURIComponent(patternData.svg);
+  const dataUri = `url("data:image/svg+xml,${encodedSvg}")`;
+
+  canvas.style.setProperty("--preview-pattern-size", patternData.size);
+  canvas.style.backgroundImage = dataUri;
+  canvas.setAttribute("data-pattern-key", key);
+}
+
+// --- Render Tiers Table in Pricing Section (UPI-first, dual CTA) ---
+function renderPricingSection() {
+  if (!pricingSection) return;
+  const p2 = TIER_BASE_PRICE[2];
+  const p3 = TIER_BASE_PRICE[3];
+  const p4 = TIER_BASE_PRICE[4];
+
+  const checkIcon = `<svg class="pricing-feature-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>`;
+  const expressLabel = currentCurrency === "INR"
+    ? `Express 24h delivery (+₹${ADDONS.express.priceINR})`
+    : `Express 24h delivery (+$${ADDONS.express.priceUSD})`;
+  const askIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.075-2.227-.557-1.848-.762-3.033-2.639-3.125-2.762-.093-.122-.746-.992-.746-1.892 0-.9.471-1.343.639-1.527.168-.184.367-.23.49-.23.123 0 .245.001.352.006.113.006.264-.043.413.315.153.367.521 1.272.568 1.365.046.092.077.2.015.322-.061.123-.092.2-.184.307-.092.108-.194.24-.276.323-.093.092-.19.192-.082.377.108.184.478.788 1.025 1.275.704.628 1.298.822 1.482.914.184.092.291.077.399-.046.108-.123.46-0.537.583-.721.123-.184.246-.153.414-.092.169.061 1.074.507 1.258.6.184.092.307.138.353.215.046.077.046.445-.098.85zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.66 1.434 5.176L2 22l4.957-1.399C8.397 21.493 10.144 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>`;
+
+  pricingSection.innerHTML = `
+    <div class="container">
+      <h2 class="section-title">Choose the invitation that fits your wedding.</h2>
+      <p class="section-subtitle">One-time payment. Personalization and hosting included.</p>
+      <p class="pricing-diff-line">Pick a collection, then choose a design. Each design belongs to one collection.</p>
+      <div class="pricing-selected-design" id="pricing-selected-design" hidden aria-live="polite"></div>
+      <div class="pricing-grid">
+        <!-- Tier 2: Premium (Hero / Couples' favourite) -->
+        <div class="pricing-card featured pricing-card-premium">
+          <div class="pricing-popular-badge">Story, photos & music</div>
+          <div class="pricing-card-header">
+            <h3 class="pricing-card-name">Premium</h3>
+            <div class="pricing-card-price-row">
+              <span class="pricing-card-price">${formatPrice(p2.inr, p2.usd)}</span>
+            </div>
+          </div>
+          <div class="pricing-card-tagline">“Your whole wedding story, beautifully told.”</div>
+          <ul class="pricing-card-features">
+            <li class="pricing-card-feature-item">${checkIcon}<span>Up to 5 events: Haldi, Mehendi, Sangeet, Wedding, Reception</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>Love-story timeline + photo gallery (up to 12)</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>Your music, venue directions + WhatsApp RSVP</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>First draft within 48h</span></li>
+          </ul>
+          <button type="button" class="pricing-card-cta pkg-pay-btn" id="pkg-pay-btn-2" onclick="selectTier(2, true)"><span data-pay-label>Browse Premium designs</span></button>
+          <button type="button" class="pkg-ask-btn" onclick="askPackageOnWhatsApp(2)">${askIcon}<span>Ask about Premium</span></button>
+          <p class="pkg-microcopy">First draft within 48 hours after payment + complete details. Review before final approval. · UPI / GPay / PhonePe</p>
+        </div>
+
+        <!-- Tier 3: Luxury (Prestige) -->
+        <div class="pricing-card pricing-card-luxury">
+          <div class="pricing-card-header">
+            <h3 class="pricing-card-name">Luxury</h3>
+            <div class="pricing-card-price-row">
+              <span class="pricing-card-price">${formatPrice(p3.inr, p3.usd)}</span>
+            </div>
+          </div>
+          <div class="pricing-card-tagline">“Make an unforgettable entrance.”</div>
+          <ul class="pricing-card-features">
+            <li class="pricing-card-feature-item">${checkIcon}<span>Everything in Premium, including WhatsApp RSVP</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>Cinematic opening — envelope &amp; palace reveals</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>All wedding events, with animated transitions</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>${usesNewDelivery() ? (currentCurrency === "USD" ? "First draft within 48h; 24h +$9 / 12h +$18" : "First draft within 48h; 24h +₹799 / 12h +₹1,499") : "First draft within 48h; optional 24h Express"}</span></li>
+          </ul>
+          <button type="button" class="pricing-card-cta pkg-pay-btn" id="pkg-pay-btn-3" onclick="selectTier(3, true)"><span data-pay-label>Browse Luxury designs</span></button>
+          <button type="button" class="pkg-ask-btn" onclick="askPackageOnWhatsApp(3)">${askIcon}<span>Ask about Luxury</span></button>
+          <p class="pkg-microcopy">First draft within 48 hours after payment + complete details. Review before final approval. · UPI / GPay / PhonePe</p>
+        </div>
+
+        <!-- Tier 4: Dearly Exclusive -->
+        <div class="pricing-card pricing-card-dearly">
+          <div class="pricing-popular-badge dearly-badge">Wax-seal collection</div>
+          <div class="pricing-card-header">
+            <h3 class="pricing-card-name">The Dearly Suite</h3>
+            <div class="pricing-card-price-row">
+              <span class="pricing-card-price">${formatPrice(p4.inr, p4.usd)}</span>
+            </div>
+          </div>
+          <div class="pricing-card-tagline">“A floral reveal for your wedding story.”</div>
+          <ul class="pricing-card-features">
+            <li class="pricing-card-feature-item">${checkIcon}<span>Animated wax-seal opening, music, events &amp; venue maps</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>Email RSVP notifications + Excel download from the email, included</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>Photo gallery included on request &amp; botanical motion</span></li>
+            <li class="pricing-card-feature-item">${checkIcon}<span>${usesNewDelivery() ? (currentCurrency === "USD" ? "First draft within 48h; 24h +$9 / 12h +$18" : "First draft within 48h; 24h +₹799 / 12h +₹1,499") : "First draft within 24h, included"}</span></li>
+          </ul>
+          <button type="button" class="pricing-card-cta pkg-pay-btn pricing-cta-dearly" id="pkg-pay-btn-4" onclick="selectTier(4, true)"><span data-pay-label>Browse Dearly designs</span></button>
+          <button type="button" class="pkg-ask-btn" onclick="askPackageOnWhatsApp(4)">${askIcon}<span>Ask about Dearly</span></button>
+          <p class="pkg-microcopy">${usesNewDelivery() ? "First draft within 48h; faster options cost extra" : "First draft within 24h, included"} after payment + complete details. Review before final approval.</p>
+        </div>
+      </div>
+      <div class="pricing-trust-strip" aria-label="Payment reassurance">
+        <span>Secure UPI payment</span><span>Human-built for you</span><span>First draft within 48h</span>
+      </div>
+      <p class="pricing-swipe-hint" id="pricing-swipe-hint">Swipe to compare all three collections</p>
+      <div class="pricing-dots" id="pricing-dots" role="tablist" aria-label="Package cards">
+        <button type="button" class="pricing-dot" data-pricing-dot="0" aria-label="Premium package" aria-current="true"></button>
+        <button type="button" class="pricing-dot" data-pricing-dot="1" aria-label="Luxury package" aria-current="false"></button>
+        <button type="button" class="pricing-dot" data-pricing-dot="2" aria-label="Dearly Exclusive package" aria-current="false"></button>
+      </div>
+
+      <p class="pricing-slot-line">After booking, send your names, dates, venues and photos on WhatsApp. Your draft timeline starts when payment and complete details are received.</p>
+
+      <!-- Reassurance Bar -->
+      <div class="pricing-reassurance">
+        <span class="pricing-reassurance-item">One-time payment</span>
+        <span class="pricing-reassurance-dot" aria-hidden="true"></span>
+        <span class="pricing-reassurance-item">No subscription</span>
+        <span class="pricing-reassurance-dot" aria-hidden="true"></span>
+        <span class="pricing-reassurance-item">Review before sharing</span>
+      </div>
+    </div>
+  `;
+  initPackageViewTracking();
+  if (typeof renderSalesPricing === "function") renderSalesPricing();
+}
+
+let hasTrackedPackageView = false;
+function initPackageViewTracking() {
+  if (hasTrackedPackageView) return;
+  const pricingEl = document.getElementById("pricing");
+  if (!pricingEl || typeof IntersectionObserver === "undefined") return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !hasTrackedPackageView) {
+        hasTrackedPackageView = true;
+        [2, 3, 4].forEach(tier => {
+          const p = TIER_BASE_PRICE[tier];
+          trackConversionEvent("view_package", {
+            package_tier: tier,
+            package_name: packageName(tier),
+            value: currentCurrency === "INR" ? p.inr : p.usd,
+            currency: currentCurrency
+          });
+        });
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.2 });
+
+  observer.observe(pricingEl);
+}
+
+function selectTier(tierNum, smoothScroll = false) {
+  if (typeof resetDiscovery === "function") resetDiscovery();
+  activeTierFilter = tierNum;
+  // Sync the glass radio group — checking the right input triggers the
+  // glider animation and the change listener re-renders the catalogue.
+  const radio = tierRadioByValue[String(tierNum)];
+  if (radio) radio.checked = true;
+  renderCatalogue();
+  if (smoothScroll && typeof gsap !== "undefined") {
+    gsap.to(window, {
+      duration: 0.8,
+      scrollTo: { y: "#catalogue-header", offsetY: 70 },
+      ease: "power2.inOut"
+    });
+  } else if (smoothScroll) {
+    document.getElementById("catalogue-header")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// Dynamically sync floating bottom navigation counts with current TEMPLATE_DATABASE
+function updateTierNavCounts() {
+  const listed = getListedDesigns();
+  const allCount = listed.length;
+  const premiumCount = listed.filter(t => t.tier === 2).length;
+  const luxuryCount = listed.filter(t => t.tier === 3).length;
+  const dearlyCount = listed.filter(t => t.tier === 4).length;
+
+  const labels = document.querySelectorAll("#tier-radio-group label");
+  labels.forEach(label => {
+    const forAttr = label.getAttribute("for");
+    const countSpan = label.querySelector(".tier-meta");
+    if (!countSpan) return;
+    if (forAttr === "glass-all") countSpan.textContent = `(${allCount})`;
+    else if (forAttr === "glass-premium") countSpan.textContent = `(${premiumCount})`;
+    else if (forAttr === "glass-luxury") countSpan.textContent = `(${luxuryCount})`;
+    else if (forAttr === "glass-dearly") countSpan.textContent = `(${dearlyCount})`;
+  });
+}
+
+function getFilteredTemplates() {
+  return getListedDesigns().filter(item => {
+    if (activeTierFilter !== 0 && item.tier !== activeTierFilter) return false;
+    if (activeTagFilter !== "all" && !item.tags.includes(activeTagFilter)) return false;
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      return item.name.toLowerCase().includes(q) ||
+             item.style.toLowerCase().includes(q) ||
+             item.desc.toLowerCase().includes(q) ||
+             item.tags.some(tag => tag.includes(q));
+    }
+    return true;
+  });
+}
+
+// --- Render Catalogue Items as Premium Full-Bleed Image Cards ---
+// One short line that tells similar-looking cards apart: the tradition, or a Dearly design's colour.
+function cardStyleLabel(item) {
+  if (item.collection === "dearly") {
+    const colour = (item.image.match(/dearly[\/-]([a-z]+)[.-]/) || [])[1] || "";
+    if (colour) return `${colour.charAt(0).toUpperCase()}${colour.slice(1)} · Wax-seal opening`;
+    return (item.style || "Wax-seal opening").replace(/\s*\(.*?\)\s*/g, "").trim();
+  }
+  return (item.style || "").replace(/\s*\(.*?\)\s*/g, "").trim();
+}
+
+function renderCatalogue() {
+  if (!templatesGrid) return;
+  updateTierNavCounts();
+
+  let filtered = getFilteredTemplates();
+  if (typeof getDiscoveryDesigns === "function") filtered = getDiscoveryDesigns(filtered);
+  if (typeof renderDiscoveryStatus === "function") renderDiscoveryStatus(filtered.length);
+  if (typeof getFeaturedDesigns === "function") filtered = getFeaturedDesigns(filtered);
+
+  templatesGrid.innerHTML = "";
+
+  if (filtered.length === 0) {
+    templatesGrid.innerHTML = `
+      <div class="no-results">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3>No templates found</h3>
+        <p>Try resetting the search query or tags.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="resetFilters()">Reset All Filters</button>
+      </div>
+    `;
+    if (typeof InviteInteractions !== "undefined") InviteInteractions.afterCatalogue();
+    return;
+  }
+
+  if (document.getElementById("view-mode-match")?.classList.contains("active")) {
+    renderMatchDeck(filtered);
+    return;
+  }
+
+  filtered.forEach(item => {
+    const tierName = item.tier === 4 ? "Dearly Exclusive" : item.tier === 3 ? "Luxury" : "Premium";
+    const tierIcon = "";
+
+    const prices = getItemPrices(item);
+    const priceText = formatPrice(prices.priceINR, prices.priceUSD);
+
+    const card = document.createElement("div");
+    card.className = `template-card tier-card-${item.tier}`;
+    card.id = `template-card-${item.id}`;
+
+    const dbIndex = TEMPLATE_DATABASE.indexOf(item) + 1;
+    const imgSrc = item.image || `assets/preview/${dbIndex}.png`;
+    const initial = item.name.split(/[\s&]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+
+    card.innerHTML = `
+      <div class="template-card-media" data-preview-trigger="${item.id}" role="button" tabindex="0" aria-label="Preview ${item.name} invitation" title="Preview ${item.name}">
+        <img src="${imgSrc}" alt="InviteStory - ${item.name} Digital Wedding Invitation Template" class="template-card-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="template-card-fallback-initial" style="display: none;">${initial}</div>
+        <div class="template-card-overlay" aria-hidden="true"></div>
+        <span class="template-preview-hint" aria-hidden="true">View invitation <span>↗</span></span>
+      </div>
+      ${typeof salesSaveButton === "function" ? salesSaveButton(item) : ""}
+
+      <div class="template-card-content">
+        <div class="template-card-info-side">
+          <div class="template-card-header">
+            <h3 class="template-card-title">${item.name}</h3>
+            <p class="template-card-style">${cardStyleLabel(item)}</p>
+            <div class="template-card-tags">
+              ${item.tier === 4 ? '<span class="template-tag tag-dearly">Dearly Exclusive</span>' : ''}
+              ${item.style ? `<span class="template-tag tag-style">${item.style}</span>` : ''}
+            </div>
+          </div>
+
+          <p class="template-card-desc">${item.desc}</p>
+          <p class="sales-card-included">Personalized for you · ${item.tier === 4 ? "Email" : "WhatsApp"} RSVP included</p>
+        </div>
+
+        <div class="template-card-action-side">
+          <div class="template-card-price-wrap">
+            <span class="template-card-price card-base-price" data-inr="${prices.priceINR}" data-usd="${prices.priceUSD}">${priceText}</span>
+            <span class="template-card-tier-label" aria-label="${tierName} collection">${item.tier === 4 ? "Dearly" : tierName}</span>
+          </div>
+
+          <div class="template-card-actions">
+            <button type="button" class="btn template-btn-pay tier-btn-${item.tier}" onclick="openOrderDrawerForTemplate(${item.id})" aria-label="Choose ${item.name} and review the price">
+              <span>Choose design</span>
+            </button>
+            <button type="button" class="btn template-btn-preview-primary tier-btn-${item.tier}" data-preview-trigger="${item.id}" aria-label="Preview ${item.name} invitation demo">
+              <span>Preview <span class="btn-text-invitation">invitation</span> →</span>
+            </button>
+            <a href="#" class="template-card-wa-link" id="order-btn-${item.id}" onclick="event.preventDefault(); askTemplateOnWhatsApp(${item.id})" aria-label="Ask about ${item.name} on WhatsApp" title="Ask on WhatsApp">
+              <img src="assets/whatsapp.svg" width="18" height="18" alt="" aria-hidden="true">
+              <span class="wa-text-label">Ask about this design</span>
+            </a>
+          </div>
+          ${(typeof isAdminLoggedIn === 'function' && isAdminLoggedIn()) ? `
+            <div style="margin-top: 10px; width: 100%;">
+              <button type="button" class="admin-card-edit-btn" onclick="openAdminEditor(${item.id})">
+                <span>✏️ Edit Card Details</span>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    templatesGrid.appendChild(card);
+  });
+
+  if (typeof InviteInteractions !== "undefined") InviteInteractions.afterCatalogue();
+  // Keep the homepage response immediate; other pages retain their entrance.
+  if (!document.body.classList.contains("browse-home") && typeof gsap !== "undefined") {
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) gsap.fromTo(
+      templatesGrid.querySelectorAll(".template-card"),
+      { opacity: 0, y: 24 },
+      { opacity: 1, y: 0, duration: 0.3, stagger: { amount: 0.18 },
+        ease: "power2.out", overwrite: true }
+    );
+  }
+}
+
+let matchDeckIndex = 0;
+
+function renderMatchDeck(items) {
+  const deck = items.slice(0, 8);
+  matchDeckIndex = Math.min(matchDeckIndex, Math.max(deck.length - 1, 0));
+  templatesGrid.classList.add("match-deck-grid");
+  templatesGrid.innerHTML = `
+    <div class="match-mode-intro">
+      <span class="match-mode-kicker">Find your invitation</span>
+      <h3>Swipe right on the one that feels like you.</h3>
+      <p>Preview a design, or pass until something clicks.</p>
+    </div>
+    <div class="match-deck" aria-live="polite">
+      ${deck.map((item, offset) => {
+        const dbIndex = TEMPLATE_DATABASE.indexOf(item) + 1;
+        const imgSrc = item.image || `assets/preview/${dbIndex}.png`;
+        const behind = offset < matchDeckIndex;
+        return `<article class="match-card ${offset === matchDeckIndex ? "is-current" : ""} ${behind ? "is-passed" : ""}" data-match-index="${offset}" data-template-id="${item.id}" style="--deck-offset:${Math.max(offset - matchDeckIndex, 0)}">
+          <button type="button" class="match-card-media" data-preview-trigger="${item.id}" aria-label="Preview ${item.name}">
+            <img src="${imgSrc}" alt="${item.name} invitation design" loading="lazy">
+            <span class="match-card-preview">Tap to preview</span>
+          </button>
+          <div class="match-card-info"><div><span class="match-card-label">${item.style || "Handcrafted design"}</span><h3>${item.name}</h3><p>${item.desc}</p></div><span class="match-card-count">${offset + 1} / ${deck.length}</span></div>
+          <span class="match-stamp match-stamp-nope">PASS</span><span class="match-stamp match-stamp-like">LIKE</span>
+        </article>`;
+      }).join("")}
+    </div>
+    <div class="match-actions" role="group" aria-label="Match actions">
+      <button type="button" class="match-action match-action-pass" data-match-action="pass" aria-label="Pass on this design">×</button>
+      <button type="button" class="match-action match-action-like" data-match-action="like" aria-label="Like this design"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+    </div>
+    <p class="match-mode-status" id="match-mode-status">${matchDeckIndex >= deck.length ? "You’ve seen every match." : ""}${matchDeckIndex >= deck.length ? '<button type="button" class="match-reset" data-match-reset>Start over</button>' : ""}</p>`;
+  bindMatchDeck(deck);
+}
+
+function bindMatchDeck(deck) {
+  const action = (kind) => {
+    if (!deck.length || matchDeckIndex >= deck.length) return;
+    const card = templatesGrid.querySelector(`.match-card[data-match-index="${matchDeckIndex}"]`);
+    if (card) card.classList.add(kind === "like" ? "swipe-right" : "swipe-left");
+    if (kind === "like") {
+      const item = deck[matchDeckIndex];
+      setTimeout(() => openPreview(item.id), 180);
+    }
+    matchDeckIndex += 1;
+    setTimeout(() => renderMatchDeck(deck), 220);
+  };
+  templatesGrid.querySelectorAll("[data-match-action]").forEach(btn => btn.addEventListener("click", () => action(btn.dataset.matchAction)));
+  const reset = templatesGrid.querySelector("[data-match-reset]");
+  if (reset) reset.addEventListener("click", () => { matchDeckIndex = 0; renderMatchDeck(deck); });
+  const current = templatesGrid.querySelector(".match-card.is-current");
+  if (!current) return;
+  let startX = 0;
+  let startY = 0;
+  let dragging = false;
+  let moved = false;
+  let suppressClick = false;
+  current.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    startX = e.clientX; startY = e.clientY; dragging = true; moved = false;
+    current.classList.add("is-dragging"); current.setPointerCapture(e.pointerId);
+  });
+  current.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX; const dy = e.clientY - startY;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+    const progress = Math.min(Math.abs(dx) / 150, 1);
+    current.style.setProperty("--drag-x", `${dx}px`);
+    current.style.setProperty("--drag-y", `${dy * .18}px`);
+    current.style.setProperty("--drag-rotate", `${dx * .055}deg`);
+    current.style.setProperty("--drag-progress", progress);
+    current.classList.toggle("dragging-right", dx > 12);
+    current.classList.toggle("dragging-left", dx < -12);
+    if (Math.abs(dx) > 8) e.preventDefault();
+  });
+  const finishDrag = e => {
+    if (!dragging) return;
+    dragging = false; current.classList.remove("is-dragging");
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > Math.max(82, current.offsetWidth * .25)) action(dx > 0 ? "like" : "pass");
+    else { current.style.removeProperty("--drag-x"); current.style.removeProperty("--drag-y"); current.style.removeProperty("--drag-rotate"); current.style.removeProperty("--drag-progress"); current.classList.remove("dragging-right", "dragging-left"); }
+    suppressClick = moved;
+  };
+  current.addEventListener("pointerup", finishDrag);
+  current.addEventListener("pointercancel", finishDrag);
+  current.addEventListener("click", e => { if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false; } }, true);
+  current.addEventListener("keydown", e => { if (e.key === "ArrowRight") { e.preventDefault(); action("like"); } if (e.key === "ArrowLeft") { e.preventDefault(); action("pass"); } });
+  current.tabIndex = 0;
+}
+
+/**
+ * "Ask" prefill (no payment yet) — package level.
+ * Spec: Hi! Looking at {{PACKAGE}} (₹{{AMOUNT}}). I have a few questions before paying.
+ */
+function askPackageOnWhatsApp(tier) {
+  const name = packageName(tier);
+  const amountText = packageAmountText(tier);
+  trackConversionEvent("whatsapp_click", {
+    cta_location: "pricing_card",
+    package_tier: tier,
+    package_name: name,
+    content_name: `${name} Package Inquiry (pre-pay)`,
+    value: packageTotal(tier),
+    currency: currentCurrency
+  });
+  const msg = `Hi! Looking at ${name} (${amountText}). I have a few questions before paying.`;
+  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+/**
+ * "Ask" prefill (no payment yet) — single design level.
+ */
+function askTemplateOnWhatsApp(id) {
+  const item = TEMPLATE_DATABASE.find(x => x.id === id);
+  if (!item) return;
+  const prices = getItemPrices(item);
+  const priceText = formatPrice(prices.priceINR, prices.priceUSD);
+  trackConversionEvent("whatsapp_click", {
+    cta_location: "template_card",
+    package_tier: item.tier,
+    design_id: item.id,
+    design_name: item.name,
+    content_name: `${item.name} Inquiry (pre-pay)`,
+    value: currentCurrency === "INR" ? prices.priceINR : prices.priceUSD,
+    currency: currentCurrency
+  });
+  const msg = `Hi! Looking at "${item.name}" (${packageName(item.tier)} · ${priceText}). I have a few questions before paying.`;
+  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+function trackVerifiedPayment(verified, details = {}) {
+  if (!verified || verified.verified !== true || !Number.isSafeInteger(verified.amount) || verified.amount <= 0) return false;
+  if (!/^order_[a-zA-Z0-9]+$/.test(verified.transactionId || "")) return false;
+  if (!/^pay_[a-zA-Z0-9]+$/.test(verified.paymentId || "")) return false;
+  const storageKey = verifiedPaymentStoragePrefix + verified.transactionId;
+  try {
+    if (localStorage.getItem(storageKey)) return false;
+    localStorage.setItem(storageKey, "1");
+  } catch (_) {
+    if (recordedPostHogPayments.has(verified.transactionId)) return false;
+  }
+  const value = verified.amount / 100;
+  if (verified.currency === "INR") {
+    pushDataLayerEvent({
+      event: "payment_success",
+      payment_value: value,
+      transaction_id: verified.transactionId
+    });
+  }
+  trackConversionEvent("purchase", {
+    content_name: details.packageName || "Digital Wedding Invitation",
+    content_ids: Array.isArray(details.contentIds) ? details.contentIds.map(String) : [],
+    package_tier: details.packageTier,
+    value,
+    currency: verified.currency,
+    transaction_id: verified.transactionId,
+    order_id: verified.orderId,
+    payment_id: verified.paymentId
+  });
+  return true;
+}
+
+async function verifyAndTrackPayment(pending) {
+  if (!pending || typeof window.InviteWebsite?.paymentStatus !== "function") return false;
+  try { sessionStorage.setItem(pendingPaymentVerificationKey, JSON.stringify(pending)); } catch (_) {}
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      const verified = await window.InviteWebsite.paymentStatus(pending.clientKey, {
+        paymentId: pending.paymentId,
+        orderId: pending.orderId
+      });
+      if (verified?.verified === true) {
+        trackVerifiedPayment(verified, pending);
+        window.InviteWebsite.paid(pending.clientKey);
+        try { sessionStorage.removeItem(pendingPaymentVerificationKey); } catch (_) {}
+        return true;
+      }
+    } catch (_) {
+      // A delayed webhook or temporary bridge failure stays pending and never becomes a conversion.
+    }
+    if (attempt < 19) await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  return false;
+}
+
+function resumePendingPaymentVerification() {
+  try {
+    const pending = JSON.parse(sessionStorage.getItem(pendingPaymentVerificationKey) || "null");
+    if (pending) void verifyAndTrackPayment(pending);
+  } catch (_) {}
+}
+
+/**
+ * Shared post-payment handler: stores receipt, shows the in-page success
+ * panel (works even if the user never opens WhatsApp), and auto-opens
+ * WhatsApp with the paid details prefill.
+ * Spec: Hi InviteStory! Paid for {{PACKAGE}} (₹{{AMOUNT}}).
+ *       Payment ID: {{RAZORPAY_ID}} / Design I want: {{DESIGN_NAME}} /
+ *       I'll send names, dates, photos, venue next.
+ */
+function handlePaidSuccess(details) {
+  let previewNames = "";
+  try { const names = JSON.parse(sessionStorage.getItem("invitestory.previewNames") || "{}"); previewNames = [names.first, names.second].filter(Boolean).join(" & "); } catch {}
+  const receipt = { ...details, ...getAttributionNotes(), previewNames };
+  window.__lastPayment = receipt;
+  showPaymentSuccess(receipt);
+  const waMsg = InvitePaidOrder.message(receipt);
+  trackPostPaymentWhatsAppAction("payment_success_auto");
+  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(waMsg)}`, "_blank");
+}
+
+function showPaymentSuccess(details) {
+  const modal = document.getElementById("payment-success-modal");
+  if (!modal) return;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set("pay-success-package", details.packageName);
+  set("pay-success-amount", details.amountText);
+  set("pay-success-id", details.paymentId);
+  set("pay-success-design", details.designName || "Any — I'll confirm on WhatsApp");
+  const summary = InvitePaidOrder.summary(details);
+  set("pay-success-addons", summary.addons);
+  set("pay-success-delivery", summary.delivery);
+  const tyLink = document.getElementById("pay-success-thankyou-link");
+  if (tyLink) {
+    const q = new URLSearchParams({
+      package: details.packageName,
+      amount: details.amountText,
+      payment_id: details.paymentId,
+      design: details.designName || "",
+      addons: JSON.stringify(details.addons || []),
+      express: details.express ? "1" : "0",
+      currency: details.currency || "INR",
+      names: details.previewNames || ""
+    });
+    if (details.orderId) q.set("order_id", details.orderId);
+    if(details.checkoutVersion===2 && details.deliverySnapshot){q.set("checkout_version","2");q.set("delivery_snapshot",JSON.stringify(details.deliverySnapshot));}
+    const attr = getAttributionNotes();
+    Object.keys(attr).forEach(k => { if (attr[k]) q.set(k, attr[k]); });
+    tyLink.href = `thank-you.html?${q.toString()}`;
+  }
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closePaymentSuccess() {
+  const modal = document.getElementById("payment-success-modal");
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+/** Primary button inside the success panel — opens WhatsApp with the paid prefill. */
+function sendDetailsOnWhatsApp() {
+  trackPostPaymentWhatsAppAction("payment_success");
+  const d = window.__lastPayment;
+  if (!d) {
+    window.open("https://wa.me/918281583882?text=" + encodeURIComponent("Hi InviteStory! I just paid on the website — here are my wedding details:"), "_blank");
+    return;
+  }
+  const waMsg = InvitePaidOrder.message(d);
+  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(waMsg)}`, "_blank");
+}
+
+// --- Dynamic Order Sheet / Drawer Controller ---
+let orderDrawerState = {
+  template: null,
+  tier: 2,
+  isPackage: false,
+  basePrice: 1999,
+  total: 1999
+};
+
+function openOrderDrawerForTemplate(id) {
+  orderDeliveryContract=usesNewDelivery();
+  let templateId = id;
+  if (!templateId && typeof previewState !== "undefined" && previewState.currentIndex >= 0) {
+    templateId = TEMPLATE_DATABASE[previewState.currentIndex]?.id;
+  }
+  const item = TEMPLATE_DATABASE.find(x => x.id === templateId) || TEMPLATE_DATABASE[0];
+  if (!item) return;
+
+  orderDrawerState.template = item;
+  orderDrawerState.tier = item.tier;
+  orderDrawerState.isPackage = false;
+
+  const modal = document.getElementById("order-drawer-modal");
+  if (!modal) return;
+  modal.setAttribute("data-order-tier", orderDrawerState.tier);
+
+  // Populate visual preview
+  const thumbEl = document.getElementById("order-drawer-thumb");
+  if (thumbEl) {
+    thumbEl.src = item.image || "assets/preview/1.webp";
+    thumbEl.alt = item.name;
+  }
+
+  const nameEl = document.getElementById("order-drawer-item-name");
+  if (nameEl) nameEl.textContent = item.name;
+
+  const styleEl = document.getElementById("order-drawer-item-style");
+  if (styleEl) {
+    styleEl.textContent = item.style
+      ? `${item.style} · Digital Invitation Suite`
+      : "Digital Invitation Suite · Music & Maps";
+  }
+
+  const tierBadge = document.getElementById("order-drawer-tier-badge");
+  if (tierBadge) {
+    tierBadge.textContent = item.tier === 4 ? "Dearly Wax-seal collection" : item.tier === 3 ? "Luxury Collection" : "Premium Collection";
+  }
+
+  const delTag = document.getElementById("order-drawer-delivery-tag");
+  if (delTag) {
+    delTag.textContent = item.tier === 4 ? "First draft within 24h · included" : "First draft within 48h";
+  }
+
+  resetDeliverySpeed();
+  // Setup add-on toggles
+  const expressInput = document.getElementById("order-drawer-addon-express");
+  const expressPrice = document.getElementById("order-addon-express-price");
+  const isDearly = item.tier === 4;
+
+  if (expressInput) {
+    if (isDearly && !orderUsesNewDelivery()) {
+      expressInput.checked = true;
+      expressInput.disabled = true;
+      if (expressPrice) expressPrice.textContent = "Included Free";
+    } else {
+      expressInput.checked = false;
+      expressInput.disabled = false;
+      if (expressPrice) {
+        expressPrice.textContent = currentCurrency === "INR" ? `+₹${ADDONS.express.priceINR}` : `+$${ADDONS.express.priceUSD}`;
+      }
+    }
+  }
+
+  const emailRsvpInput = document.getElementById("order-drawer-addon-email-rsvp");
+  if (emailRsvpInput) {
+    emailRsvpInput.checked = isDearly;
+    emailRsvpInput.disabled = isDearly;
+  }
+  updateOrderDrawerTotal();
+  renderCheckoutRetries();
+  window.InviteWebsite?.ready?.then(config=>{legacyGatewayConfiguration=config;updateOrderDrawerTotal();renderCheckoutRetries();});
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+
+  if (typeof onSalesOrderOpen === "function") onSalesOrderOpen();
+  trackConversionEvent("view_order", {
+    content_name: item.name,
+    content_ids: [String(item.id)],
+    content_type: "product",
+    content_category: item.style || "Digital Wedding Invitation",
+    value: orderDrawerState.total,
+    currency: currentCurrency === "INR" ? "INR" : "USD"
+  });
+}
+
+function openOrderDrawerForPackage(tier) {
+  orderDeliveryContract=usesNewDelivery();
+  const pTier = Number(tier) || 2;
+  const name = packageName(pTier);
+  const isDearly = pTier === 4;
+
+  orderDrawerState.template = null;
+  orderDrawerState.tier = pTier;
+  orderDrawerState.isPackage = true;
+
+  const modal = document.getElementById("order-drawer-modal");
+  if (!modal) return;
+  modal.setAttribute("data-order-tier", orderDrawerState.tier);
+
+  const thumbEl = document.getElementById("order-drawer-thumb");
+  if (thumbEl) {
+    thumbEl.src = isDearly ? "assets/preview/18.webp" : pTier === 3 ? "assets/preview/11.webp" : "assets/preview/1.webp";
+    thumbEl.alt = `${name} Package`;
+  }
+
+  const nameEl = document.getElementById("order-drawer-item-name");
+  if (nameEl) nameEl.textContent = `${name} Invitation Suite`;
+
+  const styleEl = document.getElementById("order-drawer-item-style");
+  if (styleEl) {
+    styleEl.textContent = isDearly
+      ? (orderUsesNewDelivery() ? "Wax-Seal Unboxing · Email RSVP · 48h standard · Optional 24h / 12h" : "Wax-Seal Unboxing · Email RSVP · 24h included")
+      : "Wedding schedule · Venue directions · Music · WhatsApp RSVP";
+  }
+
+  const tierBadge = document.getElementById("order-drawer-tier-badge");
+  if (tierBadge) {
+    tierBadge.textContent = isDearly ? "Dearly Wax-seal collection" : pTier === 3 ? "Luxury Collection" : "Premium Collection";
+  }
+
+  const delTag = document.getElementById("order-drawer-delivery-tag");
+  if (delTag) {
+    delTag.textContent = isDearly ? "First draft within 24h · included" : "First draft within 48h";
+  }
+
+  const expressInput = document.getElementById("order-drawer-addon-express");
+  const expressPrice = document.getElementById("order-addon-express-price");
+  resetDeliverySpeed();
+  const wasCheckedOnCard = isExpressSelectedForPackage(pTier);
+
+  if (expressInput) {
+    if (isDearly && !orderUsesNewDelivery()) {
+      expressInput.checked = true;
+      expressInput.disabled = true;
+      if (expressPrice) expressPrice.textContent = "Included Free";
+    } else {
+      expressInput.checked = wasCheckedOnCard;
+      expressInput.disabled = false;
+      if (expressPrice) {
+        expressPrice.textContent = currentCurrency === "INR" ? `+₹${ADDONS.express.priceINR}` : `+$${ADDONS.express.priceUSD}`;
+      }
+    }
+  }
+
+  const emailRsvpInput = document.getElementById("order-drawer-addon-email-rsvp");
+  if (emailRsvpInput) {
+    emailRsvpInput.checked = isDearly;
+    emailRsvpInput.disabled = isDearly;
+  }
+  updateOrderDrawerTotal();
+  renderCheckoutRetries();
+  window.InviteWebsite?.ready?.then(config=>{legacyGatewayConfiguration=config;updateOrderDrawerTotal();renderCheckoutRetries();});
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+
+  if (typeof onSalesOrderOpen === "function") onSalesOrderOpen();
+  trackConversionEvent("view_order", {
+    content_name: `${name} Package`,
+    content_category: "Package",
+    package_tier: pTier,
+    value: orderDrawerState.total,
+    currency: currentCurrency === "INR" ? "INR" : "USD",
+    num_items: 1
+  });
+}
+
+function closeOrderDrawer(updateHistory = true) {
+  if (typeof InviteInteractions !== "undefined" && InviteInteractions.requestOrderClose(updateHistory)) return;
+  const modal = document.getElementById("order-drawer-modal");
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  if (typeof onSalesOrderClose === "function") onSalesOrderClose();
+}
+
+function setOrderAddonPrice(element, addon, included) {
+  element.replaceChildren();
+  const price = formatPrice(addon.priceINR, addon.priceUSD);
+  if (!included) {
+    element.textContent = `+${price}`;
+    return;
+  }
+  const regularPrice = document.createElement("s");
+  regularPrice.textContent = price;
+  regularPrice.setAttribute("aria-label", `Regular price ${price}`);
+  const includedLabel = document.createElement("span");
+  includedLabel.textContent = "Included";
+  element.append(regularPrice, includedLabel);
+}
+
+let orderDeliveryCurrency;
+function updateOrderDrawerTotal() {
+  const currencyChanged = orderDeliveryCurrency !== currentCurrency;
+  if(orderDeliveryCurrency && orderDeliveryCurrency!==currentCurrency){
+    resetDeliverySpeed();
+    const express=document.getElementById('order-drawer-addon-express');if(express){express.checked=orderDrawerState.tier===4;express.disabled=orderDrawerState.tier===4;}
+  }
+  if(orderDeliveryContract===undefined)orderDeliveryContract=usesNewDelivery();
+  orderDeliveryCurrency=currentCurrency;
+  const v2=orderUsesNewDelivery();
+  const speeds=document.getElementById('order-delivery-speeds');if(speeds)speeds.hidden=!v2;
+  const legacy=document.getElementById('order-addon-express-label');if(legacy)legacy.hidden=v2;
+  const pay=document.getElementById('order-drawer-checkout-btn');if(pay)pay.disabled=false;
+  const modal=document.getElementById('order-drawer-modal');if(modal)modal.classList.remove('is-checkout-unavailable');
+  const ctaText=document.getElementById('order-drawer-cta-text');if(ctaText)ctaText.textContent='Continue to payment';
+  const ctaBadge=document.getElementById('order-drawer-cta-badge');if(ctaBadge)ctaBadge.hidden=false;
+  for(const speed of ['express_24h','express_12h']){const label=document.getElementById('delivery-fee-'+speed);if(label)label.textContent='+'+formatPrice(DELIVERY_SPEEDS[speed].fee,DELIVERY_SPEEDS[speed].feeUSD);}
+  const isINR = currentCurrency === "INR";
+  let basePrice = 1999;
+
+  if (orderDrawerState.isPackage) {
+    basePrice = packageBasePrice(orderDrawerState.tier);
+  } else if (orderDrawerState.template) {
+    const prices = getItemPrices(orderDrawerState.template);
+    basePrice = isINR ? prices.priceINR : prices.priceUSD;
+  }
+
+  let total = basePrice;
+  const isDearly = orderDrawerState.tier === 4;
+
+  const expressChecked = document.getElementById("order-drawer-addon-express")?.checked;
+
+  if (v2) total += deliveryFeeForOrder();
+  else if (expressChecked && !isDearly) total += isINR ? ADDONS.express.priceINR : ADDONS.express.priceUSD;
+
+  const emailRsvpChecked = document.getElementById("order-drawer-addon-email-rsvp")?.checked;
+  if (emailRsvpChecked && !isDearly) {
+    total += isINR ? ADDONS.emailRsvp.priceINR : ADDONS.emailRsvp.priceUSD;
+  }
+  const emailRsvpPriceEl = document.getElementById("order-addon-email-rsvp-price");
+  if (emailRsvpPriceEl) {
+    setOrderAddonPrice(emailRsvpPriceEl, ADDONS.emailRsvp, isDearly);
+  }
+  const emailRsvpSubEl = document.getElementById("order-addon-email-rsvp-sub");
+  if (emailRsvpSubEl) {
+    emailRsvpSubEl.textContent = isDearly ? "Email RSVP notifications and an Excel download option in the email are included at no extra cost" : "WhatsApp RSVP is already included. Add email notifications with guest names and an Excel download option.";
+  }
+
+  orderDrawerState.total = total;
+
+  const formattedBase = isINR ? `₹${basePrice.toLocaleString("en-IN")}` : `$${basePrice} USD`;
+  const formattedTotal = isINR ? `₹${total.toLocaleString("en-IN")}` : `$${total} USD`;
+
+  const basePriceEl = document.getElementById("order-drawer-base-price");
+  if (basePriceEl) basePriceEl.textContent = formattedBase;
+
+  const totalValEl = document.getElementById("order-drawer-total-val");
+  if (totalValEl) totalValEl.textContent = formattedTotal;
+
+  const ctaBadgeEl = document.getElementById("order-drawer-cta-badge");
+  if (ctaBadgeEl) ctaBadgeEl.textContent = isINR ? `₹${total.toLocaleString("en-IN")}` : `$${total}`;
+
+  // Update add-on price labels
+  const expressPriceEl = document.getElementById("order-addon-express-price");
+  if (expressPriceEl) setOrderAddonPrice(expressPriceEl, ADDONS.express, isDearly && !v2);
+  const addonsTitleEl = document.querySelector("#order-drawer-modal .order-addons-title");
+  if (addonsTitleEl) addonsTitleEl.textContent = isDearly ? "Included services" : "Optional upgrades";
+  const includedValueEl = document.getElementById("order-drawer-included-value");
+  if (includedValueEl) {
+    includedValueEl.hidden = !isDearly;
+    includedValueEl.textContent = isDearly
+      ? `${formatPrice((v2 ? 0 : ADDONS.express.priceINR) + ADDONS.emailRsvp.priceINR, (v2 ? 0 : ADDONS.express.priceUSD) + ADDONS.emailRsvp.priceUSD)} in additional services included with your Dearly suite.`
+      : "";
+  }
+  if (typeof updateSalesOrder === "function") updateSalesOrder();
+  if(currencyChanged)renderCheckoutRetries();
+}
+
+let orderDrawerCheckoutPending = false;
+let razorpayLoader;
+function ensureRazorpayLoaded() {
+  if (typeof Razorpay !== "undefined") return Promise.resolve(Razorpay);
+  if (!razorpayLoader) {
+    razorpayLoader = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => window.Razorpay ? resolve(window.Razorpay) : reject(new Error("Payment service did not start."));
+      script.onerror = () => reject(new Error("Payment service could not be loaded. Please check your connection and try again."));
+      document.head.appendChild(script);
+    });
+  }
+  return razorpayLoader;
+}
+async function proceedFromOrderDrawerToCheckout(savedPayment) {
+  if (orderDrawerCheckoutPending) return;
+  orderDrawerCheckoutPending = true;
+  try {
+  const displayedV2=orderUsesNewDelivery();
+  legacyGatewayConfiguration=await window.InviteWebsite?.ready;
+  const resumed=savedPayment?.secure,request=savedPayment?.request;
+  const isINR = (request?.currency || currentCurrency) === "INR";
+  const currencyCode = isINR ? "INR" : "USD";
+  const v2 = resumed ? request.checkoutVersion===2 : displayedV2;
+  if(v2&&!deliveryRuntimeReady())throw new Error('Please refresh this page to load your delivery promise before continuing payment.');
+  if(!resumed && (v2 ? !usesNewDelivery() : !legacyDeliveryAvailable()))throw new Error('Checkout availability changed. Please reopen your order to review its delivery terms, or resume a saved payment.');
+  const totalVal = resumed ? resumed.amount/100 : orderDrawerState.total;
+  const tier = request?.tier || orderDrawerState.tier;
+  const designId = resumed ? request.designId : orderDrawerState.template?.id || null;
+  const paidTemplate = resumed ? TEMPLATE_DATABASE.find(item=>item.id===designId) : orderDrawerState.template;
+  const name = paidTemplate ? paidTemplate.name : `${packageName(tier)} Package`;
+  const speed = resumed ? (v2?request.deliverySpeed:(request.express||tier===4?'express_24h':'standard_48h')) : orderDeliverySpeed();
+  const expressChecked = speed === 'express_24h';
+  let deliverySnapshot = resumed?.deliverySnapshot;
+  const selectedAddons = [];
+  if (speed !== "standard_48h") selectedAddons.push(`Express ${DELIVERY_SPEEDS[speed].hours}h Delivery${tier === 4 && !v2 ? " (included)" : ""}`);
+  const emailRsvpChecked = (resumed ? request.emailRsvp : document.getElementById("order-drawer-addon-email-rsvp")?.checked) || tier === 4;
+  if (emailRsvpChecked) selectedAddons.push(tier === 4 ? "Email RSVP (included)" : "Email RSVP");
+
+  const paidDesignName = paidTemplate?.name || "";
+  const paidAddons = selectedAddons.slice();
+  closeOrderDrawer(false);
+
+  const selectedContentIds = designId ? [String(designId)] : [];
+  let checkoutClientKey;
+
+  const options = {
+    key: window.RAZORPAY_KEY_ID || "rzp_live_YOUR_KEY_HERE",
+    amount: Math.round(totalVal * 100),
+    currency: currencyCode,
+    name: "InviteStory",
+    description: `${name} — Digital Wedding Invitation`,
+    image: "logo/noappicon.png",
+    notes: {
+      package: packageName(tier),
+      template_name: paidTemplate?.name || "",
+      template_id: String(designId || ""),
+      add_ons: selectedAddons.length > 0 ? selectedAddons.join(", ") : "None",
+      express_24h: expressChecked ? "yes" : "no",
+      ...(v2 ? {delivery_speed:speed,checkout_version:"2"} : {}),
+      email_rsvp: emailRsvpChecked ? "yes" : "no",
+      promo_offer: "Standard",
+      ...getAttributionNotes()
+    },
+    theme: { color: "#c09559" },
+    modal: {
+      ondismiss: function () {
+        if (!window.__lastPaymentOk) {
+          trackPostHogEvent("checkout_cancelled", { content_ids: selectedContentIds, package_tier: tier, currency: currencyCode, value: totalVal });
+          const waUrl = `https://wa.me/918281583882?text=${encodeURIComponent(`Hi InviteStory! My checkout for "${name}" (${currencyCode === "INR" ? "₹" : "$"}${totalVal}) was cancelled. Could you please assist me?`)}`;
+          showToast({
+            title: "Payment not completed",
+            message: "You can try again, or contact us on WhatsApp for help.",
+            type: "error",
+            action: { label: "Chat on WhatsApp", url: waUrl }
+          });
+        }
+        window.__lastPaymentOk = false;
+      }
+    },
+    handler: function (response) {
+      window.__lastPaymentOk = true;
+      const paidOrderId = response.razorpay_order_id || options.order_id || "";
+      const paidDetails = {
+        packageName: packageName(tier),
+        amountText: isINR ? `₹${totalVal.toLocaleString("en-IN")}` : `$${totalVal}`,
+        totalVal,
+        currency: currencyCode,
+        paymentId: response.razorpay_payment_id,
+        orderId: paidOrderId,
+        designName: paidDesignName,
+        addons: paidAddons, express: Boolean(expressChecked),
+        ...(v2 ? {checkoutVersion:2,deliverySnapshot} : {})
+      };
+      handlePaidSuccess(paidDetails);
+      void verifyAndTrackPayment({
+        clientKey: checkoutClientKey,
+        paymentId: response.razorpay_payment_id,
+        orderId: paidOrderId,
+        packageName: paidDetails.packageName,
+        packageTier: tier,
+        contentIds: selectedContentIds
+      });
+    }
+  };
+
+  if (window.InviteWebsite) {
+    try {
+      const secure = resumed || await window.InviteWebsite.checkout(v2
+        ? {checkoutVersion:2,deliverySpeed:speed,designId,tier,currency:currencyCode,emailRsvp:Boolean(emailRsvpChecked)}
+        : {designId,tier,currency:currencyCode,express:Boolean(expressChecked),emailRsvp:Boolean(emailRsvpChecked)});
+      if(!secure)throw new Error("Secure checkout is unavailable. Please contact our team before paying.");
+      if(v2 && (!secure || secure.checkoutVersion!==2 || secure.deliverySpeed!==speed || secure.deliverySnapshot?.firstDraftHours!==DELIVERY_SPEEDS[speed].hours))throw new Error("The checkout delivery promise could not be verified. Please contact our team before paying.");
+      if (secure) {
+        if (secure.currency !== currencyCode || secure.amount !== Math.round(totalVal * 100)) {
+          throw new Error("The checkout price differs from your selection. Please contact our team before paying.");
+        }
+        deliverySnapshot=secure.deliverySnapshot;
+        checkoutClientKey=secure.clientKey;
+        options.order_id=secure.orderId;options.key=secure.keyId;options.amount=secure.amount;options.currency=secure.currency;
+      }
+    } catch (error) {
+      trackPostHogEvent("checkout_unavailable", { content_ids: selectedContentIds, package_tier: tier, reason: "gateway_unavailable" });
+      showToast({title:"Checkout could not open",message:error.message||"Please try again or contact us on WhatsApp.",type:"error"});
+      return;
+    }
+  }
+  await ensureRazorpayLoaded();
+  if (typeof Razorpay !== "undefined") {
+    trackConversionEvent("begin_checkout", { content_name: name, content_ids: selectedContentIds, package_tier: tier, content_type: "product", value: totalVal, currency: currencyCode });
+    const rzp = new Razorpay(options);
+    rzp.on("payment.failed", function () {
+      trackPostHogEvent("payment_failed", { content_ids: selectedContentIds, package_tier: tier, currency: currencyCode, value: totalVal });
+      const waUrl = `https://wa.me/918281583882?text=${encodeURIComponent(`Hi InviteStory! My payment for ${name} failed. Can you please assist me?`)}`;
+      showToast({
+        title: "Payment didn’t go through",
+        message: "Try again, or contact us on WhatsApp for help.",
+        type: "error",
+        action: { label: "Chat on WhatsApp", url: waUrl }
+      });
+    });
+    rzp.open();
+  } else {
+    trackPostHogEvent("checkout_unavailable", { content_ids: selectedContentIds, package_tier: tier, reason: "payment_sdk_unavailable" });
+    showToast({
+      title: "Opening checkout",
+      message: "Please wait a moment, then try again.",
+      type: "info"
+    });
+  }
+  } catch(error) {
+    showToast({title:"Checkout could not open",message:error.message,type:"error"});
+  } finally {
+    orderDrawerCheckoutPending = false;
+  }
+}
+
+function askOrderDrawerOnWhatsApp() {
+  const isINR = currentCurrency === "INR";
+  const name = orderDrawerState.template ? `"${orderDrawerState.template.name}" (${packageName(orderDrawerState.tier)} Suite)` : `${packageName(orderDrawerState.tier)} Package`;
+  const price = isINR ? `₹${orderDrawerState.total.toLocaleString("en-IN")}` : `$${orderDrawerState.total}`;
+  trackConversionEvent("whatsapp_click", { cta_location: "order_drawer", content_ids: orderDrawerState.template ? [String(orderDrawerState.template.id)] : [], package_tier: orderDrawerState.tier, content_name: name, value: orderDrawerState.total, currency: currentCurrency });
+  const msg = `Hi InviteStory! I'm on the website looking at ${name} (${price}). I have a few questions about wedding details and delivery before booking. Can you please assist me?`;
+  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+// --- Payment Button UI & Handlers ---
+function updatePaymentButtonsForCurrency() {
+  const currentItem = TEMPLATE_DATABASE[previewState.currentIndex];
+  if (currentItem) {
+    const prices = getItemPrices(currentItem);
+    const priceText = formatPrice(prices.priceINR, prices.priceUSD);
+    if (previewModalPrice) previewModalPrice.textContent = priceText;
+    const sheetPrice = document.getElementById("preview-sheet-price");
+    const payLabel = document.getElementById("preview-pay-label");
+    if (sheetPrice) sheetPrice.textContent = priceText;
+    if (payLabel) payLabel.textContent = `Choose design · ${priceText}`;
+  }
+  const rzpBtn = document.getElementById("preview-instant-pay-btn");
+  if (rzpBtn) {
+    rzpBtn.style.display = "inline-flex";
+  }
+
+  if (typeof updateOrderDrawerTotal === "function") {
+    updateOrderDrawerTotal();
+  }
+}
+
+// --- Preview Modal functions ---
+
+// --- Deep Linking & Social Sharing Helpers ---
+function getDesignSlug(item) {
+  if (!item) return "";
+  if (item.slug) return item.slug;
+  if (item.demoUrl) {
+    const match = item.demoUrl.match(/https?:\/\/([^.]+)\.invitestory\.in/i);
+    if (match && match[1]) return match[1];
+  }
+  return (item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function getDesignShareUrl(item) {
+  const slug = getDesignSlug(item);
+  return `/?design=${slug}`;
+}
+
+function getDesignShareContent(item) {
+  const shareUrl = getDesignShareUrl(item);
+
+  const title = `InviteStory – ${item.name} Wedding Invitation`;
+  const prices = getItemPrices(item);
+  const shareIntro = `What do you think of "${item.name}" for our wedding?\n\n${packageName(item.tier)} · ${formatPrice(prices.priceINR, prices.priceUSD)} one-time, personalized by InviteStory.\nMusic, wedding schedule, venue directions and ${item.tier === 4 ? "Email" : "WhatsApp"} RSVP.\n\nOpen the live preview and help me choose:`;
+  const fullText = `${shareIntro}\n${shareUrl}`;
+
+  return {
+    title,
+    text: fullText,          // Full text with URL for clipboard copying
+    shareText: shareIntro,   // Intro text without URL for navigator.share (avoids duplicate URL)
+    url: shareUrl
+  };
+}
+
+function updateMetaTagsForDesign(item) {
+  if (!item) return;
+  const shareUrl = getDesignShareUrl(item);
+  const imgUrl = item.image.startsWith("http") ? item.image : `${item.image}`;
+  const title = `InviteStory – ${item.name} Wedding Invitation`;
+  const desc = `${item.name} interactive wedding invitation with custom music, animated couple story scenes, 1-tap Google Maps directions & instant guest RSVP.`;
+
+  const setMeta = (attr, name, content) => {
+    let el = document.querySelector(`meta[${attr}="${name}"]`);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute(attr, name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", content);
+  };
+
+  setMeta("property", "og:title", title);
+  setMeta("property", "og:description", desc);
+  setMeta("property", "og:image", imgUrl);
+  setMeta("property", "og:url", shareUrl);
+  setMeta("property", "og:image:alt", title);
+
+  setMeta("name", "twitter:title", title);
+  setMeta("name", "twitter:description", desc);
+  setMeta("name", "twitter:image", imgUrl);
+  setMeta("name", "twitter:url", shareUrl);
+
+  document.title = `${item.name} | Interactive Digital Wedding Invitation – InviteStory`;
+}
+
+function restoreDefaultMetaTags() {
+  const setMeta = (attr, name, content) => {
+    let el = document.querySelector(`meta[${attr}="${name}"]`);
+    if (el) el.setAttribute("content", content);
+  };
+
+  setMeta("property", "og:title", "InviteStory – Digital Wedding Card Templates & Online Invitations");
+  setMeta("property", "og:description", "Choose from 30+ interactive digital wedding invitation templates. Live previews, location maps & personalized first drafts within 48h after payment and complete details.");
+  setMeta("property", "og:image", "assets/logo-header.webp");
+  setMeta("property", "og:url", "/");
+  setMeta("property", "og:image:alt", "InviteStory - Digital Wedding Card Templates & Online Invitations");
+
+  setMeta("name", "twitter:title", "InviteStory – Digital Wedding Card Templates & Online Invitations");
+  setMeta("name", "twitter:description", "Interactive digital wedding cards with venue maps & ambient music. First draft within 48h.");
+  setMeta("name", "twitter:image", "assets/logo-header.webp");
+  if (isAdsLandingPage) {
+    document.title = "Custom Digital Wedding Invitations From ₹999 – InviteStory";
+    setMeta("property", "og:url", "/");
+    setMeta("name", "twitter:url", "/");
+  } else {
+    document.title = "InviteStory – Digital Wedding Card Templates & Online Invitations";
+  }
+}
+
+function copyDesignShareLink(templateId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const item = TEMPLATE_DATABASE.find(x => x.id === templateId);
+  if (!item) return;
+
+  const content = getDesignShareContent(item);
+  const textToCopy = content.text;
+
+  const onCopied = () => {
+    showToast({
+      title: "Link copied",
+      design: item,
+      message: `The link and details for ${item.name} are ready to share.`,
+      type: "success"
+    });
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textToCopy).then(onCopied).catch(() => {
+      fallbackCopyText(textToCopy);
+      onCopied();
+    });
+  } else {
+    fallbackCopyText(textToCopy);
+    onCopied();
+  }
+
+  trackMetaEvent("ShareContent", {
+    content_name: item.name,
+    content_id: String(item.id),
+    content_type: "product"
+  });
+}
+
+function shareCurrentPreview(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  if (previewState.currentIndex < 0) return;
+  const item = TEMPLATE_DATABASE[previewState.currentIndex];
+  if (!item) return;
+
+  const content = getDesignShareContent(item);
+
+  trackMetaEvent("ShareContent", {
+    content_name: item.name,
+    content_id: String(item.id),
+    content_type: "product"
+  });
+
+  if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+    // When using Web Share API, OS share targets (WhatsApp, iOS/Android share sheets)
+    // automatically append the `url` property to `text`.
+    // Using shareText (without URL) prevents the link from appearing twice.
+    navigator.share({
+      title: content.title,
+      text: content.shareText,
+      url: content.url
+    }).catch((err) => {
+      if (err && err.name !== "AbortError") {
+        copyDesignShareLink(item.id);
+      }
+    });
+  } else {
+    copyDesignShareLink(item.id);
+  }
+}
+
+function hideToast() {
+  const toast = document.getElementById("toast-notification");
+  if (!toast) return;
+  toast.classList.remove("is-visible");
+  clearTimeout(window.__toastTimeout);
+  const fill = document.getElementById("toast-progress-fill");
+  if (fill) {
+    fill.style.transition = "none";
+    fill.style.transform = "scaleX(1)";
+  }
+}
+
+function showToast(messageOrOptions, explicitType, options = {}) {
+  let config = {};
+
+  if (typeof messageOrOptions === "object" && messageOrOptions !== null) {
+    config = { ...messageOrOptions };
+  } else {
+    config = {
+      message: String(messageOrOptions || ""),
+      type: explicitType,
+      ...options
+    };
+  }
+
+  const rawMsg = (config.message || "").trim();
+
+  // Smart detection of type and defaults if not explicitly provided
+  let type = config.type;
+  if (!type) {
+    if (/payment.*(didn't|fail|cancel|error)|failed/i.test(rawMsg)) {
+      type = "error";
+    } else if (/loading|please wait/i.test(rawMsg)) {
+      type = "info";
+    } else if (/copi(ed|y)|share|link/i.test(rawMsg)) {
+      type = "success";
+    } else {
+      type = "info";
+    }
+  }
+
+  // Clean raw message of leading emojis
+  let cleanMsg = rawMsg.replace(/^[\u2728\u26A0\u274C\u2139\u2705\uFE0F]+\s*/, "");
+
+  let title = config.title;
+  let action = config.action;
+  let duration = config.duration;
+
+  if (type === "error") {
+    if (!title) title = /payment|checkout/i.test(cleanMsg) ? "Payment not completed" : "Something went wrong";
+    if (!duration) duration = 7000; // Allow enough time for users to tap WhatsApp
+    if (!action && /payment/i.test(cleanMsg)) {
+      const waText = encodeURIComponent("Hi InviteStory! My payment didn't go through on the website. Can you please help me complete my order?");
+      action = {
+        label: "Chat on WhatsApp",
+        url: `https://wa.me/918281583882?text=${waText}`,
+        target: "_blank"
+      };
+    }
+  } else if (type === "success") {
+    if (!title) title = /copi(ed|y)|share|link/i.test(cleanMsg) ? "Link copied" : "Done";
+    if (!duration) duration = 3800;
+  } else {
+    // info
+    if (!title) {
+      if (/loading/i.test(cleanMsg)) {
+        title = "Opening checkout";
+      } else {
+        title = "Notice";
+      }
+    }
+    if (!duration) duration = 4000;
+  }
+
+  let toast = document.getElementById("toast-notification");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast-notification";
+    toast.className = `toast-notification toast-${type}`;
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    toast.innerHTML = `
+      <div class="toast-badge" id="toast-badge"><span class="toast-icon" id="toast-icon"></span></div>
+      <div class="toast-content">
+        <div id="toast-title" class="toast-title"></div>
+        <div id="toast-message" class="toast-message"></div>
+        <div id="toast-action-container" class="toast-action-container" style="display:none;"></div>
+      </div>
+      <button type="button" class="toast-close-btn" id="toast-close-btn" aria-label="Dismiss notification" onclick="hideToast()">&times;</button>
+      <div class="toast-progress-track">
+        <div id="toast-progress-fill" class="toast-progress-fill"></div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+  }
+
+  // Set type class
+  toast.className = `toast-notification toast-${type}`;
+  // Use the active design's action accent on a shared readable surface.
+  if (typeof PreviewThemes !== "undefined") {
+    const orderOpen = document.getElementById("order-drawer-modal")?.classList.contains("is-open");
+    const previewOpen = document.getElementById("preview-modal")?.classList.contains("is-open");
+    const design = config.design || (orderOpen && !orderDrawerState.isPackage ? orderDrawerState.template : null)
+      || (!orderOpen && previewOpen ? TEMPLATE_DATABASE[previewState.currentIndex] : null);
+    const theme = PreviewThemes.themeFor(design?.id);
+    toast.style.setProperty("--toast-accent", theme.accent);
+    toast.style.setProperty("--toast-on-accent", theme.onAccent);
+  }
+
+  // Set icon
+  const iconEl = document.getElementById("toast-icon");
+  if (iconEl) {
+    if (type === "success") {
+      iconEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    } else if (type === "error") {
+      iconEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+    } else {
+      if (/loading/i.test(cleanMsg)) {
+        iconEl.innerHTML = `<svg class="toast-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>`;
+      } else {
+        iconEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="8"></line><line x1="12" y1="12" x2="12" y2="16"></line></svg>`;
+      }
+    }
+  }
+
+  // Set Title & Message
+  const titleEl = document.getElementById("toast-title");
+  const msgEl = document.getElementById("toast-message");
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = cleanMsg;
+
+  // Set Action (e.g. WhatsApp button)
+  const actionContainer = document.getElementById("toast-action-container");
+  if (actionContainer) {
+    actionContainer.innerHTML = "";
+    if (action && action.label) {
+      actionContainer.style.display = "block";
+      const btn = document.createElement("a");
+      btn.className = "toast-action-btn";
+      btn.textContent = action.label;
+      if (action.url) {
+        btn.href = action.url;
+        btn.target = action.target || "_blank";
+        btn.rel = "noopener";
+      }
+      if (typeof action.onClick === "function") {
+        btn.onclick = (e) => {
+          action.onClick(e);
+          hideToast();
+        };
+      }
+      actionContainer.appendChild(btn);
+    } else {
+      actionContainer.style.display = "none";
+    }
+  }
+
+  // Reset Progress Bar
+  const progressFill = document.getElementById("toast-progress-fill");
+  if (progressFill) {
+    progressFill.style.transition = "none";
+    progressFill.style.transform = "scaleX(1)";
+  }
+
+  // Display Toast
+  toast.classList.add("is-visible");
+
+  // Animate Progress Bar
+  if (progressFill) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        progressFill.style.transition = `transform ${duration}ms linear`;
+        progressFill.style.transform = "scaleX(0)";
+      });
+    });
+  }
+
+  // Hover handlers to pause auto-dismiss
+  if (!toast.__hasHover) {
+    toast.__hasHover = true;
+    toast.addEventListener("mouseenter", () => {
+      clearTimeout(window.__toastTimeout);
+    });
+    toast.addEventListener("mouseleave", () => {
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => {
+        hideToast();
+      }, 2500);
+    });
+  }
+
+  // Handle Timeout
+  clearTimeout(window.__toastTimeout);
+  window.__toastTimeout = setTimeout(() => {
+    hideToast();
+  }, duration);
+}
+
+function fallbackCopyText(text) {
+  try {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.top = "-9999px";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+  } catch (err) {
+    console.warn("Fallback clipboard copy error:", err);
+  }
+}
+
+function findTemplateByQuery(query) {
+  if (!query) return null;
+  const q = String(query).trim().toLowerCase();
+  const numId = parseInt(q, 10);
+  if (!isNaN(numId)) {
+    const byId = TEMPLATE_DATABASE.find(x => x.id === numId);
+    if (byId) return byId;
+  }
+  const bySlug = TEMPLATE_DATABASE.find(x => (x.slug === q || getDesignSlug(x) === q));
+  if (bySlug) return bySlug;
+  const byName = TEMPLATE_DATABASE.find(x => x.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === q || x.name.toLowerCase() === q);
+  if (byName) return byName;
+  return null;
+}
+
+function handleInitialUrlRoute() {
+  const params = new URLSearchParams(window.location.search);
+  const designQuery = params.get("design") || params.get("preview") || params.get("id") || params.get("template");
+  if (designQuery) {
+    const matched = findTemplateByQuery(designQuery);
+    if (matched) {
+      // Find card element in catalogue if available and cache target scroll position
+      // so closing the modal cleanly lands on the card without scroll-fighting on Android
+      const card = document.getElementById(`template-card-${matched.id}`);
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        const targetY = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+        previewState.savedScrollY = Math.max(0, targetY);
+      }
+      // Open preview modal cleanly without competing smooth scrolls against overflow:hidden
+      openPreview(matched.id, false);
+    }
+  }
+}
+
+// 3D View Angle vs Flat View Rig Switching
+function setPreviewViewMode(mode) {
+  previewState.viewMode = mode;
+  if (mode === "3d" && !PhonePhysics.reducedMotion) {
+    phonePhysicsEnableGyroscope();
+  } else {
+    phonePhysicsDisableGyroscope();
+  }
+  syncPreviewViewRig();
+}
+
+function syncPreviewViewRig() {
+  // Don't composite a live mobile invitation as a rotating phone texture.
+  if(window.matchMedia('(max-width: 760px), (pointer: coarse)').matches){
+    previewState.viewMode='flat';
+    phonePhysicsDisableGyroscope();
+  }
+  const rig = document.getElementById("preview-phone-3d-rig");
+  const btn3D = document.getElementById("view-mode-3d");
+  const btnFlat = document.getElementById("view-mode-flat");
+  if (!rig) return;
+  if (btn3D) btn3D.setAttribute("aria-pressed", String(previewState.viewMode === "3d"));
+  if (btnFlat) btnFlat.setAttribute("aria-pressed", String(previewState.viewMode === "flat"));
+
+  if (previewState.viewMode === "3d") {
+    rig.classList.add("is-3d-mode");
+    rig.classList.remove("is-flat-mode");
+    // Reset physics target to resting 3D pose
+    Object.assign(PhonePhysics.target, PhonePhysics.REST);
+    phonePhysicsResetGlare();
+    phonePhysicsStart();
+    if (btn3D) btn3D.classList.add("active");
+    if (btnFlat) btnFlat.classList.remove("active");
+  } else {
+    rig.classList.remove("is-3d-mode");
+    rig.classList.add("is-flat-mode");
+    // Flat mode: CSS transition handles the snap, pause physics immediately and clear inline transforms
+    phonePhysicsStop();
+    phonePhysicsEnsureEls();
+    if (PhonePhysics.els.rig) {
+      PhonePhysics.els.rig.style.transform = "";
+      PhonePhysics.els.rig.style.opacity = "";
+    }
+    if (PhonePhysics.els.shadow) {
+      PhonePhysics.els.shadow.style.transform = "";
+      PhonePhysics.els.shadow.style.filter = "";
+      PhonePhysics.els.shadow.style.opacity = "";
+    }
+    if (btn3D) btn3D.classList.remove("active");
+    if (btnFlat) btnFlat.classList.add("active");
+  }
+}
+
+// --- Preview Modal functions ---
+
+// Favourites are a local viewer preference; ordering and template data stay unchanged.
+const previewFavourites = new Set();
+try {
+  const stored = JSON.parse(localStorage.getItem("invitestory_favourites") || "[]");
+  if (Array.isArray(stored)) stored.forEach(id => previewFavourites.add(id));
+} catch (e) {}
+
+function syncPreviewFavourite() {
+  const item = TEMPLATE_DATABASE[previewState.currentIndex];
+  const button = document.getElementById("preview-favourite-btn");
+  if (!item || !button) return;
+  const saved = previewFavourites.has(item.id);
+  const label = button.querySelector("[data-favourite-label]");
+  if (label) label.textContent = saved ? "Saved" : "Save";
+  button.setAttribute("aria-pressed", String(saved));
+  button.setAttribute("aria-label", saved ? "Remove design from favourites" : "Save design to favourites");
+}
+
+function togglePreviewFavourite() {
+  const item = TEMPLATE_DATABASE[previewState.currentIndex];
+  if (!item) return;
+  if (typeof toggleSavedDesign === "function") toggleSavedDesign(item.id);
+  else {
+    if (previewFavourites.has(item.id)) previewFavourites.delete(item.id);
+    else previewFavourites.add(item.id);
+    try { localStorage.setItem("invitestory_favourites", JSON.stringify([...previewFavourites])); } catch (e) {}
+    syncPreviewFavourite();
+  }
+}
+
+// Open the in-page preview modal for a given template id.
+function openPreview(id, updateUrl = true) {
+  if (typeof InviteInteractions !== "undefined") InviteInteractions.beforePreview(id);
+  const idx = TEMPLATE_DATABASE.findIndex(x => x.id === id);
+  if (idx === -1) return;
+
+  const item = TEMPLATE_DATABASE[idx];
+  if (typeof updateSelectedDesignNote === "function") updateSelectedDesignNote(item);
+  try { localStorage.setItem("invitestory_selected_design", JSON.stringify({ id: item.id, name: item.name })); } catch (e) {}
+  previewState.currentIndex = idx;
+  if (typeof syncSalesPreview === "function") syncSalesPreview(item);
+  previewState.lastDesignByTier[item.tier] = item.id;
+  if (!previewModal.classList.contains("is-open")) {
+    previewState.lastFocusedElement = document.activeElement;
+  }
+
+  // Seamlessly update browser URL without refresh so user can share link directly
+  if (updateUrl && window.history && window.history.replaceState) {
+    const url = new URL(window.location.href);
+    const slug = item.slug || getDesignSlug(item);
+    url.searchParams.set("design", slug);
+    url.searchParams.delete("preview");
+    url.searchParams.delete("id");
+    if (!(typeof InviteInteractions !== "undefined" && document.body.classList.contains("browse-home") && InviteInteractions.previewHistory(item))) window.history.replaceState({ modalOpen: true, templateId: item.id }, "", url.toString());
+  }
+
+  // Update Open Graph and Twitter card meta tags for this specific preview
+  updateMetaTagsForDesign(item);
+
+  const prices = getItemPrices(item);
+  trackConversionEvent("select_design", {
+    item_id: String(item.id),
+    item_name: item.name,
+    content_name: item.name,
+    content_ids: [String(item.id)],
+    content_type: "product",
+    content_category: item.style || "Digital Wedding Invitation",
+    value: currentCurrency === "INR" ? prices.priceINR : prices.priceUSD,
+    currency: currentCurrency
+  });
+
+  // Update header, tags, price & counter badges
+  if (previewModalTitle) previewModalTitle.textContent = item.name;
+  if (previewModalTag)   previewModalTag.textContent = item.style;
+  if (previewModalPrice) {
+    previewModalPrice.textContent = formatPrice(prices.priceINR, prices.priceUSD);
+  }
+  // Tier badge (Classic / Premium / Luxury / Wax-seal collection)
+  const tierBadge = document.getElementById("preview-modal-tier");
+  if (tierBadge) {
+    const tierLabel = item.tier === 4 ? "Dearly" : item.tier === 3 ? "Luxury" : "Premium";
+    tierBadge.textContent = `${tierLabel} Collection`;
+    const collectionLabel = document.getElementById("preview-sheet-collection");
+    if (collectionLabel) collectionLabel.textContent = tierLabel;
+    tierBadge.setAttribute("data-tier", String(item.tier));
+  }
+  const sheetTitle = document.getElementById("preview-sheet-title");
+  const sheetPrice = document.getElementById("preview-sheet-price");
+  if (sheetTitle) sheetTitle.textContent = item.name;
+  if (sheetPrice) sheetPrice.textContent = formatPrice(prices.priceINR, prices.priceUSD);
+  syncPreviewFavourite();
+  // Dual CTA labels: primary Pay, secondary Ask
+  const payLabel = document.getElementById("preview-pay-label");
+  if (payLabel) {
+    payLabel.textContent = `Choose design · ${formatPrice(prices.priceINR, prices.priceUSD)}`;
+  }
+  const askLabel = document.getElementById("preview-ask-label");
+  if (askLabel) askLabel.textContent = "WhatsApp";
+  // Multi-event / Couture callout on previews
+  const multiNote = document.getElementById("preview-multievent-note");
+  if (multiNote) {
+    if (item.tier === 4) {
+      multiNote.textContent = (usesNewDelivery() ? "Wax-seal collection Suite · Wax-Seal Unboxing · Email RSVP & Guest List · 48h standard · Optional 24h / 12h" : "Wax-seal collection Suite · Wax-Seal Unboxing · Email RSVP & Guest List · 24h included");
+      multiNote.hidden = false;
+    } else if (item.tier === 2 || item.tier === 3) {
+      multiNote.textContent = "Multi-event ready: Haldi · Mehendi · Sangeet · Wedding · Reception";
+      multiNote.hidden = false;
+    } else {
+      multiNote.hidden = true;
+    }
+  }
+  updatePaymentButtonsForCurrency();
+  if (previewCounterBadge) {
+    const listed = getListedDesigns();
+    previewCounterBadge.textContent = item.hidden ? "Private design" : `Design ${listed.indexOf(item) + 1} of ${listed.length}`;
+    if (window.PreviewGallery) window.PreviewGallery.render(item);
+  }
+  if (previewFullscreenBtn) {
+    let targetUrl = item.demoUrl;
+    if (!targetUrl || targetUrl.includes('invitestory.in')) {
+      if (item.tags && item.tags.includes('storybook')) {
+        targetUrl = '/card 4/index.html';
+      } else if (item.collection === 'dearly' || (item.tags && item.tags.includes('wax-seal')) || (item.tags && item.tags.includes('baby-shower'))) {
+        targetUrl = '/card 3/index.html';
+      } else if (item.tags && (item.tags.includes('botanical') || item.tags.includes('papercut'))) {
+        targetUrl = '/card 2/index.html';
+      } else {
+        targetUrl = '/card 1/index.html';
+      }
+    }
+    previewFullscreenBtn.href = targetUrl;
+  }
+
+  // Update dynamic ambient theme backdrop color & glow
+  const accent = item.accentColor || "#c09559";
+  const glowRgba = hexToRgba(accent, 0.45);
+
+  if (previewModal) {
+    previewModal.setAttribute("data-preview-tier", item.tier);
+    previewModal.style.setProperty('--theme-accent-color', accent);
+    previewModal.style.setProperty('--theme-accent-glow', glowRgba);
+  }
+  if (previewAmbientGlow) {
+    previewAmbientGlow.style.setProperty('--theme-accent-glow', glowRgba);
+  }
+
+  // Apply distinct bespoke luxury pattern & palette for this template
+  applyTemplateLuxuryPattern(item);
+  if (typeof PreviewThemes !== "undefined") PreviewThemes.apply(previewModal, item);
+
+  // Reset iframe load state and start loading the new demo
+  previewIframe.classList.remove("is-loaded");
+  previewLoader.classList.remove("is-hidden");
+  startLoaderPulse();
+  if (typeof PreviewController !== "undefined" && PreviewController) PreviewController.open(item);
+  else previewIframe.src = item.collection === 'dearly' ? item.demoUrl : (item.localDemoUrl || item.demoUrl);
+
+  // Sync tier-tab active state to current template
+  updatePreviewTierTabs(item.tier);
+
+  // Sync view mode (3D or Flat)
+  syncPreviewViewRig();
+
+  // Show modal & update device scale to fit available viewport seamlessly
+  previewModal.classList.add("is-open");
+  previewModal.setAttribute("aria-hidden", "false");
+
+  // Store current scroll position to avoid jumping to top while locking (preserve pre-calculated scroll from direct link)
+  if (typeof previewState.savedScrollY !== "number" || previewState.savedScrollY < 0) {
+    previewState.savedScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+  }
+  document.documentElement.classList.add("preview-modal-open");
+  document.body.classList.add("preview-modal-open");
+
+  schedulePreviewScale();
+
+  // Trigger cinematic entrance animation (spring from dramatic pose to rest)
+  phonePhysicsTriggerEntrance();
+
+  // Move focus to the close button for keyboard users
+  const closeBtn = previewModal.querySelector(".preview-modal-close");
+  if (closeBtn) closeBtn.focus({preventScroll:true});
+  if (typeof InviteInteractions !== "undefined") InviteInteractions.afterPreview(item);
+}
+
+// Throttled requestAnimationFrame scheduler to prevent layout thrashing on mobile resize/orientation changes
+let updateScaleRaf = null;
+function schedulePreviewScale() {
+  if (updateScaleRaf) return;
+  updateScaleRaf = requestAnimationFrame(() => {
+    updateScaleRaf = null;
+    updatePreviewScale();
+  });
+}
+
+// Dynamically scale the iPhone 17 Pro mockup frame (405x864, 393x852 screen) to fit available body height/width
+function updatePreviewScale() {
+  if (!previewIframeWrap || !previewModal || !previewModal.classList.contains("is-open")) return;
+  const body = previewModal.querySelector(".preview-modal-body");
+  if (!body) return;
+
+  // Keep templates at their original mobile resolution as the phone resizes.
+  const screen = document.getElementById("phone-screen-viewport");
+  if (!screen) return;
+  const galleryStage = previewModal.querySelector(".preview-gallery-stage");
+  if (galleryStage) {
+    const pillSpace = parseFloat(getComputedStyle(galleryStage).getPropertyValue("--preview-pill-space"));
+    const scale = Math.max(0, Math.min((galleryStage.clientWidth - 96) / 390, (galleryStage.clientHeight - pillSpace - 8) / 844));
+    galleryStage.style.setProperty("--preview-width", `${390 * scale}px`);
+    galleryStage.style.setProperty("--preview-height", `${844 * scale}px`);
+    galleryStage.style.setProperty("--preview-scale", scale);
+    screen.style.transform = `scale(${scale})`;
+    previewIframeWrap.style.transform = "none";
+    return;
+  }
+  if (window.matchMedia("(max-width: 760px)").matches) {
+    syncPreviewViewRig();
+    // Let the external invitation respond to the real phone width, without shrinking its text.
+    screen.style.transform = "none";
+    previewIframeWrap.style.transform = "";
+    return;
+  }
+  const scale = Math.min(body.clientWidth / 393, body.clientHeight / 852);
+  screen.style.transform = `scale(${scale})`;
+  previewIframeWrap.style.transform = "";
+}
+
+// Close the preview modal and restore body scroll + focus.
+function closePreview(updateUrl = true) {
+  if (!previewModal.classList.contains("is-open")) return;
+  if (typeof InviteInteractions !== "undefined") InviteInteractions.beforePreviewClose();
+
+  if (document.activeElement && previewModal.contains(document.activeElement)) {
+    document.activeElement.blur();
+  }
+
+  // Restore default Open Graph tags
+  restoreDefaultMetaTags();
+
+  previewModal.classList.remove("is-open");
+  previewModal.setAttribute("aria-hidden", "true");
+  document.documentElement.classList.remove("preview-modal-open");
+  document.body.classList.remove("preview-modal-open");
+  if (typeof updateMobileBookingBar === "function") updateMobileBookingBar();
+  if (typeof previewState.savedScrollY === "number" && previewState.savedScrollY >= 0) {
+    window.scrollTo(0, previewState.savedScrollY);
+    previewState.savedScrollY = -1;
+  }
+  stopLoaderPulse();
+
+  // Detach iframe src after the close transition so we don't keep a network
+  // request alive for a demo the user already saw.
+  if (typeof PreviewController !== "undefined" && PreviewController) PreviewController.close();
+  else setTimeout(() => {
+    if (previewModal.classList.contains("is-open")) return;
+    previewIframe.src = "about:blank";
+    previewIframe.classList.remove("is-loaded");
+    previewLoader.classList.remove("is-hidden");
+  }, 350);
+
+  previewState.currentIndex = -1;
+
+  // Stop 3D physics rAF loop and disable gyroscope
+  phonePhysicsStop();
+  phonePhysicsDisableGyroscope();
+
+  // Restore focus to the originating trigger
+  if (previewState.lastFocusedElement && typeof previewState.lastFocusedElement.focus === "function") {
+    previewState.lastFocusedElement.focus({preventScroll:true});
+  }
+
+  // Close FAQ popup if open
+  closePreviewFaq();
+
+  // Remove ?design= from browser URL cleanly without refreshing
+  if (updateUrl && window.history && window.history.replaceState) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("design");
+    url.searchParams.delete("preview");
+    url.searchParams.delete("id");
+    window.history.replaceState({ ...window.history.state, modalOpen: false, storyOverlay: null }, "", url.toString());
+  }
+
+}
+
+// --- Preview Modal FAQ Functions ---
+let previewFaqPreviousFocus = null;
+let previewFaqInertElements = [];
+function openPreviewFaq(e) {
+  if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+  const faqBackdrop = document.getElementById("preview-faq-backdrop");
+  if (faqBackdrop) {
+    if (faqBackdrop.classList.contains("is-open")) return;
+    previewFaqPreviousFocus = document.activeElement;
+    previewFaqInertElements = Array.from(previewModal.children)
+      .filter(element => element !== faqBackdrop && !element.inert);
+    previewFaqInertElements.forEach(element => { element.inert = true; });
+    faqBackdrop.inert = false;
+    faqBackdrop.classList.add("is-open");
+    faqBackdrop.setAttribute("aria-hidden", "false");
+    previewModal.classList.add("is-faq-open");
+    faqBackdrop.querySelector(".preview-faq-list").scrollTop = 0;
+    faqBackdrop.querySelector(".preview-faq-close").focus();
+  }
+}
+
+function closePreviewFaq() {
+  const faqBackdrop = document.getElementById("preview-faq-backdrop");
+  if (faqBackdrop) {
+    const wasOpen = faqBackdrop.classList.contains("is-open");
+    faqBackdrop.classList.remove("is-open");
+    faqBackdrop.setAttribute("aria-hidden", "true");
+    faqBackdrop.inert = true;
+    previewModal.classList.remove("is-faq-open");
+    previewFaqInertElements.forEach(element => { element.inert = false; });
+    previewFaqInertElements = [];
+    if (wasOpen && previewModal.classList.contains("is-open")) previewFaqPreviousFocus?.focus();
+    previewFaqPreviousFocus = null;
+  }
+}
+
+// --- Phone Physics Functions ---
+
+function phonePhysicsEnsureEls() {
+  if (!PhonePhysics.els.rig) {
+    const stage = document.getElementById("preview-3d-stage");
+    const rig = document.getElementById("preview-phone-3d-rig");
+    if (rig) {
+      PhonePhysics.els = {
+        stage: stage,
+        rig: rig,
+        shadow: rig.closest(".preview-device-row")?.querySelector(".preview-studio-shadow") || rig.querySelector(".phone-shadow-3d"),
+        glareHighlight: document.getElementById("glare-highlight"),
+        glareRim: document.getElementById("glare-rim"),
+        glareAmbient: document.getElementById("glare-ambient")
+      };
+    }
+  }
+}
+
+function phonePhysicsStart() {
+  if (PhonePhysics.isRunning || PhonePhysics.reducedMotion) return;
+  phonePhysicsEnsureEls();
+  PhonePhysics.isRunning = true;
+  PhonePhysics.rafId = requestAnimationFrame(phonePhysicsLoop);
+}
+
+function phonePhysicsStop() {
+  PhonePhysics.isRunning = false;
+  if (PhonePhysics.rafId) {
+    cancelAnimationFrame(PhonePhysics.rafId);
+    PhonePhysics.rafId = null;
+  }
+}
+
+function phonePhysicsLoop() {
+  if (!PhonePhysics.isRunning) return;
+  if (previewState.viewMode !== "3d" || !previewModal || !previewModal.classList.contains("is-open")) {
+    phonePhysicsStop();
+    return;
+  }
+
+  const { current, target, velocity, LERP_FACTOR, DAMPING, EPSILON, glare, shadow, els } = PhonePhysics;
+
+  // Spring physics interpolation for phone rig with heavy titanium damping
+  const keys = ["rotY", "rotX", "rotZ", "scale", "translateY", "opacity"];
+  let maxDelta = 0;
+  let maxVel = 0;
+
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const diff = target[k] - current[k];
+    velocity[k] = (velocity[k] + diff * LERP_FACTOR) * DAMPING;
+    current[k] += velocity[k];
+
+    const absDiff = Math.abs(diff);
+    const absVel = Math.abs(velocity[k]);
+    if (absDiff > maxDelta) maxDelta = absDiff;
+    if (absVel > maxVel) maxVel = absVel;
+  }
+
+  // Glare interpolation
+  const gKeys = ["highlightX", "highlightY", "rimX", "rimY", "ambientX", "ambientY", "highlightOp", "rimOp", "ambientOp"];
+  let maxGlareDelta = 0;
+  for (let i = 0; i < gKeys.length; i++) {
+    const gk = gKeys[i];
+    const gDiff = glare.target[gk] - glare.current[gk];
+    glare.current[gk] += gDiff * 0.14;
+    const absGDiff = Math.abs(gDiff);
+    if (absGDiff > maxGlareDelta) maxGlareDelta = absGDiff;
+  }
+
+  // Shadow interpolation
+  const sXDiff = shadow.target.x - shadow.current.x;
+  const sBDiff = shadow.target.blur - shadow.current.blur;
+  const sODiff = shadow.target.opacity - shadow.current.opacity;
+  shadow.current.x += sXDiff * 0.14;
+  shadow.current.blur += sBDiff * 0.14;
+  shadow.current.opacity += sODiff * 0.14;
+  const maxShadowDelta = Math.max(Math.abs(sXDiff), Math.abs(sBDiff), Math.abs(sODiff));
+
+  // Check if system has settled into rest pose (Saves battery and GPU/CPU cycles on mobile)
+  const isSettled = maxDelta < EPSILON && maxVel < EPSILON && maxGlareDelta < 0.008 && maxShadowDelta < 0.008;
+  if (isSettled) {
+    // Snap to exact targets to prevent float drift
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      current[k] = target[k];
+      velocity[k] = 0;
+    }
+    for (let i = 0; i < gKeys.length; i++) {
+      const gk = gKeys[i];
+      glare.current[gk] = glare.target[gk];
+    }
+    shadow.current.x = shadow.target.x;
+    shadow.current.blur = shadow.target.blur;
+    shadow.current.opacity = shadow.target.opacity;
+  }
+
+  // Apply to DOM
+  if (els.rig) {
+    els.rig.style.transform = `translate3d(0, ${current.translateY.toFixed(1)}px, 0) rotateY(${current.rotY.toFixed(2)}deg) rotateX(${current.rotX.toFixed(2)}deg) rotateZ(${current.rotZ.toFixed(2)}deg) scale(${current.scale.toFixed(3)})`;
+    // Opacity below 1 would flatten the chassis into a single surface.
+    els.rig.style.opacity = "1";
+    els.rig.style.setProperty("--glass-x", `${glare.current.highlightX.toFixed(1)}px`);
+  }
+
+  if (els.shadow) {
+    els.shadow.style.transform = els.shadow.classList.contains("preview-studio-shadow")
+      ? `translateX(${shadow.current.x.toFixed(1)}px)`
+      : `rotateX(85deg) translateZ(-40px) translateX(${shadow.current.x.toFixed(1)}px)`;
+    els.shadow.style.opacity = shadow.current.opacity.toFixed(2);
+    // On non-Android or desktop, adjust blur filter; on Android, radial gradient handles blur without expensive filter
+    if (!PhonePhysics.isAndroid) {
+      els.shadow.style.filter = `blur(${shadow.current.blur.toFixed(1)}px)`;
+    }
+  }
+
+  if (els.glareHighlight) {
+    els.glareHighlight.style.transform = `translate3d(${glare.current.highlightX.toFixed(1)}px, ${glare.current.highlightY.toFixed(1)}px, 0)`;
+    els.glareHighlight.style.opacity = glare.current.highlightOp.toFixed(2);
+  }
+
+  if (els.glareRim) {
+    els.glareRim.style.transform = `translate3d(${glare.current.rimX.toFixed(1)}px, ${glare.current.rimY.toFixed(1)}px, 0)`;
+    els.glareRim.style.opacity = glare.current.rimOp.toFixed(2);
+  }
+
+  if (els.glareAmbient) {
+    els.glareAmbient.style.transform = `translate3d(${glare.current.ambientX.toFixed(1)}px, ${glare.current.ambientY.toFixed(1)}px, 0)`;
+    els.glareAmbient.style.opacity = glare.current.ambientOp.toFixed(2);
+  }
+
+  if (isSettled) {
+    phonePhysicsStop();
+    return;
+  }
+
+  PhonePhysics.rafId = requestAnimationFrame(phonePhysicsLoop);
+}
+
+function phonePhysicsSetMouseTarget(normX, normY) {
+  // normX, normY are typically between -0.5 and 0.5
+  const clampedX = Math.max(-0.55, Math.min(0.55, normX));
+  const clampedY = Math.max(-0.55, Math.min(0.55, normY));
+
+  // Phone rig target angles: realistic titanium hardware weight, controlled range
+  PhonePhysics.target.rotY = PhonePhysics.REST.rotY + (clampedX * 12);
+  PhonePhysics.target.rotX = PhonePhysics.REST.rotX - (clampedY * 6);
+  PhonePhysics.target.rotZ = PhonePhysics.REST.rotZ + (clampedX * 0.4);
+  PhonePhysics.target.scale = PhonePhysics.REST.scale;
+  PhonePhysics.target.translateY = 0;
+  PhonePhysics.target.opacity = 1;
+
+  // Glare multi-layer targets (subtle, authentic ceramic shield reflections)
+  PhonePhysics.glare.target.highlightX = clampedX * 65;
+  PhonePhysics.glare.target.highlightY = clampedY * 50;
+  PhonePhysics.glare.target.highlightOp = Math.max(0.25, Math.min(0.85, 0.65 - clampedX * 0.25));
+
+  PhonePhysics.glare.target.rimX = -clampedX * 45;
+  PhonePhysics.glare.target.rimY = -clampedY * 35;
+  PhonePhysics.glare.target.rimOp = Math.max(0.18, Math.min(0.75, 0.45 + clampedX * 0.25));
+
+  PhonePhysics.glare.target.ambientX = clampedX * 20;
+  PhonePhysics.glare.target.ambientY = clampedY * 16;
+
+  // Reactive shadow: moves opposite to tilt
+  PhonePhysics.shadow.target.x = -clampedX * 24;
+  PhonePhysics.shadow.target.blur = 16 + Math.abs(clampedX) * 8;
+  PhonePhysics.shadow.target.opacity = Math.max(0.6, 1 - Math.abs(clampedX) * 0.25);
+
+  phonePhysicsStart();
+}
+
+function phonePhysicsResetTarget() {
+  Object.assign(PhonePhysics.target, PhonePhysics.REST);
+  phonePhysicsResetGlare();
+  phonePhysicsStart();
+}
+
+function phonePhysicsResetGlare() {
+  PhonePhysics.glare.target.highlightX = 0;
+  PhonePhysics.glare.target.highlightY = 0;
+  PhonePhysics.glare.target.highlightOp = 0.65;
+
+  PhonePhysics.glare.target.rimX = 0;
+  PhonePhysics.glare.target.rimY = 0;
+  PhonePhysics.glare.target.rimOp = 0.45;
+
+  PhonePhysics.glare.target.ambientX = 0;
+  PhonePhysics.glare.target.ambientY = 0;
+  PhonePhysics.glare.target.ambientOp = 0.45;
+
+  PhonePhysics.shadow.target.x = 0;
+  PhonePhysics.shadow.target.blur = 16;
+  PhonePhysics.shadow.target.opacity = 1;
+}
+
+function phonePhysicsTriggerEntrance() {
+  if (previewState.viewMode !== "3d" || PhonePhysics.reducedMotion) {
+    Object.assign(PhonePhysics.current, PhonePhysics.REST);
+    Object.assign(PhonePhysics.target, PhonePhysics.REST);
+    return;
+  }
+
+  phonePhysicsEnsureEls();
+
+  // Smooth entrance without rubbery overshoot
+  Object.assign(PhonePhysics.current, PhonePhysics.ENTRANCE);
+  Object.assign(PhonePhysics.target, PhonePhysics.REST);
+
+  PhonePhysics.velocity = { rotY: 0, rotX: 0, rotZ: 0, scale: 0, translateY: 0, opacity: 0 };
+
+  phonePhysicsResetGlare();
+
+  // Initial glare light sweep
+  PhonePhysics.glare.current.highlightX = -90;
+  PhonePhysics.glare.current.highlightOp = 0;
+  PhonePhysics.glare.target.highlightX = 0;
+  PhonePhysics.glare.target.highlightOp = 0.65;
+
+  phonePhysicsStart();
+}
+
+// Motion & Orientation tracking: only requested and active when user explicitly clicks/taps 3D switcher
+let isGyroListenerAttached = false;
+let isGyroPermissionRequested = false;
+
+function phonePhysicsHandleOrientation(e) {
+  if (!previewModal || !previewModal.classList.contains("is-open")) return;
+  if (previewState.viewMode !== "3d") return;
+  if (e.gamma === null || e.beta === null) return;
+
+  // Rate-limit gyro events to max ~25-30fps to avoid swamping main thread and rAF on Android
+  const now = performance.now();
+  const interval = PhonePhysics.isAndroid ? 45 : 30; // 22Hz on Android, 33Hz on iOS
+  if (now - PhonePhysics.lastGyroTime < interval) return;
+  PhonePhysics.lastGyroTime = now;
+
+  // gamma: left-to-right tilt in degrees [-90, 90]
+  // beta: front-to-back tilt in degrees [-180, 180], phone usually held at ~45deg
+  const normX = Math.max(-0.5, Math.min(0.5, e.gamma / 50));
+  const normY = Math.max(-0.5, Math.min(0.5, (e.beta - 45) / 50));
+
+  // Deadzone check: ignore tiny sensor jitter (crucial on noisy Android accelerometer/gyro)
+  if (Math.abs(normX - PhonePhysics.lastNormX) < 0.012 && Math.abs(normY - PhonePhysics.lastNormY) < 0.012) {
+    return;
+  }
+  PhonePhysics.lastNormX = normX;
+  PhonePhysics.lastNormY = normY;
+
+  phonePhysicsSetMouseTarget(normX, normY);
+}
+
+function phonePhysicsEnableGyroscope() {
+  if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) return;
+  if (isGyroListenerAttached) return;
+
+  // iOS 13+ permission flow — MUST only be triggered from an explicit user tap on the 3D toggle button
+  if (typeof DeviceOrientationEvent.requestPermission === "function") {
+    if (!isGyroPermissionRequested) {
+      isGyroPermissionRequested = true;
+      DeviceOrientationEvent.requestPermission()
+        .then((state) => {
+          if (state === "granted") {
+            isGyroListenerAttached = true;
+            window.addEventListener("deviceorientation", phonePhysicsHandleOrientation, { passive: true });
+          }
+        })
+        .catch(() => {});
+    }
+  } else {
+    // Android or standard devices: attach only while 3D view mode is actively turned on
+    isGyroListenerAttached = true;
+    window.addEventListener("deviceorientation", phonePhysicsHandleOrientation, { passive: true });
+  }
+}
+
+function phonePhysicsDisableGyroscope() {
+  if (isGyroListenerAttached) {
+    window.removeEventListener("deviceorientation", phonePhysicsHandleOrientation);
+    isGyroListenerAttached = false;
+  }
+}
+
+// Browse the listed catalogue in order, wrapping at either end. A hidden design opened by
+// direct link keeps its place so next/prev lead into the listed designs around it.
+function previewNavigate(direction) {
+  if (window.PreviewGallery) return window.PreviewGallery.navigate(direction);
+  const item = TEMPLATE_DATABASE[previewState.currentIndex];
+  if (!item) return;
+  const catalogue = TEMPLATE_DATABASE.filter(t => !t.hidden || t.id === item.id);
+  const index = catalogue.indexOf(item);
+  const next = typeof PreviewController !== "undefined" && PreviewController
+    ? PreviewController.adjacent(catalogue,item.id,direction)
+    : catalogue[(index + direction + catalogue.length) % catalogue.length];
+  if (next) openPreview(next.id);
+}
+function previewNext() { previewNavigate(1); }
+function previewPrev() { previewNavigate(-1); }
+
+// Return to the last design viewed in this collection during the session.
+function previewJumpTier(tier) {
+  const item = TEMPLATE_DATABASE.find(template => template.id === previewState.lastDesignByTier[tier] && template.tier === tier)
+    || getListedDesigns().find(template => template.tier === tier);
+  if (!item || TEMPLATE_DATABASE[previewState.currentIndex]?.id === item.id) return;
+  openPreview(item.id);
+}
+
+// "Ask on WhatsApp" for the currently previewed template (no payment yet).
+function previewBuyNow() {
+  if (previewState.currentIndex < 0) return;
+  const id = TEMPLATE_DATABASE[previewState.currentIndex].id;
+  askTemplateOnWhatsApp(id);
+}
+
+// Close the modal and scroll the page to the top.
+function previewHome() {
+  closePreview();
+  // Defer scroll-to-top until after the close transition starts so it feels
+  // like one fluid motion rather than the page jumping under the fading modal.
+  setTimeout(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, 150);
+}
+
+// Highlight the tier tab that matches the currently previewed template.
+function updatePreviewTierTabs(activeTier) {
+  const collectionSelect = document.getElementById("preview-collection-select");
+  if (collectionSelect) collectionSelect.value = String(activeTier);
+  previewTierTabs.forEach(tab => {
+    const tier = parseInt(tab.getAttribute("data-preview-tier"), 10);
+    const isActive = tier === activeTier;
+    tab.classList.toggle("is-active", isActive);
+    tab.setAttribute("aria-pressed", String(isActive));
+    if (isActive) tab.closest(".preview-collection-switcher")?.setAttribute("data-selected-tier", String(tier));
+  });
+}
+
+// Loader dot pulse — uses transform/opacity transitions instead of @keyframes,
+// per project convention.
+let loaderPulseTimer = null;
+function startLoaderPulse() {
+  const dots = previewLoader.querySelectorAll(".preview-modal-loader-dot");
+  if (dots.length < 3) return;
+  let step = 0;
+  stopLoaderPulse(); // clear any prior interval
+  loaderPulseTimer = setInterval(() => {
+    dots.forEach(d => d.classList.remove("is-pulse-1", "is-pulse-2", "is-pulse-3"));
+    dots[step % 3].classList.add("is-pulse-1");
+    dots[(step + 1) % 3].classList.add("is-pulse-2");
+    dots[(step + 2) % 3].classList.add("is-pulse-3");
+    step++;
+  }, 220);
+}
+function stopLoaderPulse() {
+  if (loaderPulseTimer) {
+    clearInterval(loaderPulseTimer);
+    loaderPulseTimer = null;
+  }
+  const dots = previewLoader.querySelectorAll(".preview-modal-loader-dot");
+  dots.forEach(d => d.classList.remove("is-pulse-1", "is-pulse-2", "is-pulse-3"));
+}
+
+function resetFilters() {
+  if (typeof resetDiscovery === "function") resetDiscovery();
+  if (searchInput) searchInput.value = "";
+  if (clearSearchBtn) clearSearchBtn.style.display = "none";
+  searchQuery = "";
+  activeTierFilter = 0;
+  activeTagFilter = "all";
+
+  const allRadio = tierRadioByValue["0"];
+  if (allRadio) allRadio.checked = true;
+
+  updateTagFilterButtons();
+  renderCatalogue();
+}
+
+function updateTagFilterButtons() {
+  if (!filterTagsContainer) return;
+  const buttons = filterTagsContainer.querySelectorAll(".filter-tag");
+  buttons.forEach(btn => {
+    if (btn.getAttribute("data-tag") === activeTagFilter) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+}
+
+// Setup currency changer segmented toggle
+// Refresh the prices shown inside the glass-radio-group labels
+
+function updateTierLabels() {
+  document.querySelectorAll("[data-tier-price]").forEach(el => {
+    const tier = parseInt(el.getAttribute("data-tier-price"), 10);
+    const base = TIER_BASE_PRICE[tier];
+    if (!base) return;
+    el.textContent = formatPrice(base.inr, base.usd);
+  });
+
+  // Sync Dearly Showroom price elements
+  const dearlyAmount = document.querySelector(".dearly-price-amount");
+  const dearlyNote = document.querySelector(".dearly-price-note");
+  if (dearlyAmount) {
+    dearlyAmount.textContent = formatPrice(TIER_BASE_PRICE[4].inr, TIER_BASE_PRICE[4].usd);
+  }
+  if (dearlyNote) {
+    dearlyNote.textContent = !usesNewDelivery() ? "per invitation · First draft within 24h after payment + complete details" : currentCurrency === "USD" ? "per invitation · 48h first draft; 24h +$9 / 12h +$18 when available at checkout. After payment + complete details." : "per invitation · 48h first draft; 24h +₹799 / 12h +₹1,499 when available at checkout. After payment + complete details.";
+  }
+  document.querySelectorAll(".dearly-card-price-pill").forEach(el => {
+    el.textContent = formatPrice(TIER_BASE_PRICE[4].inr, TIER_BASE_PRICE[4].usd);
+  });
+}
+
+// Fixed quote: ₹12,000 converted at ₹97.006/USD (7 Oct 2026 close),
+// with a 30% USD premium, rounded up to a whole dollar. Review FX before repricing.
+// Source: https://www.investing.com/currencies/usd-inr-historical-data
+const BESPOKE_PRICING = { inr: 12000, inrPerUSD: 97.006, usdPremium: 0.30 };
+BESPOKE_PRICING.usd = Math.ceil(BESPOKE_PRICING.inr * (1 + BESPOKE_PRICING.usdPremium) / BESPOKE_PRICING.inrPerUSD);
+
+function updateHeaderCtaText() {
+  const priceText = `from ${formatPrice(BESPOKE_PRICING.inr, BESPOKE_PRICING.usd)}`;
+  const shortPriceText = currentCurrency === "INR" ? "Bespoke (₹12k)" : `Bespoke ($${BESPOKE_PRICING.usd})`;
+  document.querySelectorAll(".header-cta").forEach(cta => {
+    cta.innerHTML = `<span class="cta-text-full">Bespoke Invitations (${priceText})</span><span class="cta-text-short">${shortPriceText}</span>`;
+    cta.title = `Bespoke invitations start at ₹12,000 ($${BESPOKE_PRICING.usd} USD)`;
+  });
+}
+
+function initCurrencyDetection() {
+  const saved = localStorage.getItem("invitestory_currency");
+  if (saved === "INR" || saved === "USD") {
+    currentCurrency = saved;
+  } else {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const isIndia = tz === "Asia/Kolkata" || tz === "Asia/Calcutta";
+      currentCurrency = isIndia ? "INR" : "USD";
+    } catch (e) {
+      currentCurrency = "INR";
+    }
+  }
+
+  const inrBtn = document.getElementById("currency-inr");
+  const usdBtn = document.getElementById("currency-usd");
+  if (inrBtn && usdBtn) {
+    if (currentCurrency === "USD") {
+      usdBtn.classList.add("active");
+      inrBtn.classList.remove("active");
+    } else {
+      inrBtn.classList.add("active");
+      usdBtn.classList.remove("active");
+    }
+  }
+  updatePaymentButtonsForCurrency();
+}
+
+function setupCurrencySwitcher() {
+  const inrBtn = document.getElementById("currency-inr");
+  const usdBtn = document.getElementById("currency-usd");
+
+  if (inrBtn && usdBtn) {
+    inrBtn.addEventListener("click", () => {
+      if (currentCurrency === "INR") return;
+      currentCurrency = "INR";
+      localStorage.setItem("invitestory_currency", "INR");
+      inrBtn.classList.add("active");
+      usdBtn.classList.remove("active");
+
+      // Re-render components
+
+      updateTierLabels();
+      updateHeaderCtaText();
+      renderPricingSection();
+      setupMobilePricingCarousel();
+      renderCatalogue();
+      updatePaymentButtonsForCurrency();
+    });
+
+    usdBtn.addEventListener("click", () => {
+      if (currentCurrency === "USD") return;
+      currentCurrency = "USD";
+      localStorage.setItem("invitestory_currency", "USD");
+      usdBtn.classList.add("active");
+      inrBtn.classList.remove("active");
+
+      // Re-render components
+
+      updateTierLabels();
+      updateHeaderCtaText();
+      renderPricingSection();
+      setupMobilePricingCarousel();
+      renderCatalogue();
+      updatePaymentButtonsForCurrency();
+    });
+  }
+}
+
+// Setup inputs and tabs handlers
+function setupCatalogueHandlers() {
+  if (searchInput) {
+    let searchTrackingTimer;
+    searchInput.addEventListener("input", (e) => {
+      if (typeof resetDiscovery === "function") resetDiscovery();
+      searchQuery = e.target.value;
+      if (searchQuery.length > 0) {
+        clearSearchBtn.style.display = "flex";
+      } else {
+        clearSearchBtn.style.display = "none";
+      }
+      renderCatalogue();
+      clearTimeout(searchTrackingTimer);
+      searchTrackingTimer = setTimeout(() => {
+        if (!searchQuery.trim()) return;
+        trackPostHogEvent("catalogue_searched", {
+          query_length: searchQuery.trim().length,
+          result_count: getFilteredTemplates().length
+        });
+      }, 650);
+    });
+  }
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      searchQuery = "";
+      clearSearchBtn.style.display = "none";
+      renderCatalogue();
+    });
+  }
+
+  tierRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      if (typeof resetDiscovery === "function") resetDiscovery();
+      activeTierFilter = parseInt(radio.value, 10);
+      renderCatalogue();
+      trackPostHogEvent("catalogue_filtered", { filter_type: "collection", filter_value: activeTierFilter === 0 ? "All" : packageName(activeTierFilter), result_count: getFilteredTemplates().length });
+
+      // Smooth-scroll the catalogue into view so users see the filtered
+      // templates immediately after tapping a tier in the floating glider.
+      // Skip when already in view (avoid jarring scroll loops).
+      const catalogue = document.getElementById("catalogue-header");
+      if (catalogue) {
+        const rect = catalogue.getBoundingClientRect();
+        const inView = rect.top >= -40 && rect.bottom <= (window.innerHeight + 40);
+        if (!inView) {
+          catalogue.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+
+      // Dispatch public custom event so external listeners can react
+      // without needing to know internal catalogue state.
+      // Usage: document.addEventListener('filterTier', e => console.log(e.detail.tier));
+      const tierNames = { "0": "all", "2": "premium", "3": "luxury", "4": "dearly" };
+      document.dispatchEvent(new CustomEvent("filterTier", {
+        bubbles: true,
+        detail: { tier: tierNames[radio.value] ?? radio.value, value: radio.value }
+      }));
+    });
+  });
+
+  if (filterTagsContainer) {
+    filterTagsContainer.addEventListener("click", (e) => {
+      const tagBtn = e.target.closest(".filter-tag");
+      if (!tagBtn) return;
+
+      activeTagFilter = tagBtn.getAttribute("data-tag");
+      if (typeof resetDiscovery === "function") resetDiscovery();
+
+      const buttons = filterTagsContainer.querySelectorAll(".filter-tag");
+      buttons.forEach(b => {
+        if (b === tagBtn) {
+          b.classList.add("active");
+        } else {
+          b.classList.remove("active");
+        }
+      });
+
+      renderCatalogue();
+      trackPostHogEvent("catalogue_filtered", { filter_type: "style", filter_value: activeTagFilter, result_count: getFilteredTemplates().length });
+    });
+  }
+
+  // Delegated Preview button click — survives re-renders from currency,
+  // search, and tier-filter changes. Persistent listener on templatesGrid.
+  if (templatesGrid) {
+    templatesGrid.addEventListener("click", (e) => {
+      const trigger = e.target.closest("[data-preview-trigger]");
+      if (!trigger) return;
+      const id = parseInt(trigger.getAttribute("data-preview-trigger"), 10);
+      if (!Number.isNaN(id)) openPreview(id);
+    });
+    templatesGrid.addEventListener("keydown", (e) => {
+      const trigger = e.target.closest('[data-preview-trigger][role="button"]');
+      if (!trigger || !["Enter", " "].includes(e.key)) return;
+      e.preventDefault();
+      openPreview(Number(trigger.dataset.previewTrigger));
+    });
+  }
+
+  // --- View Mode (Card Grid vs Compact List) ---
+  const viewModeGridBtn = document.getElementById("view-mode-grid");
+  const viewModeListBtn = document.getElementById("view-mode-list");
+  const viewModeMatchBtn = document.getElementById("view-mode-match");
+
+  function setViewMode(mode) {
+    if (!templatesGrid) return;
+    if (mode === "list") {
+      templatesGrid.classList.add("view-list");
+      templatesGrid.classList.remove("match-deck-grid");
+      if (viewModeListBtn) viewModeListBtn.classList.add("active");
+      if (viewModeGridBtn) viewModeGridBtn.classList.remove("active");
+      if (viewModeMatchBtn) viewModeMatchBtn.classList.remove("active");
+    } else if (mode === "match") {
+      templatesGrid.classList.remove("view-list");
+      templatesGrid.classList.add("match-deck-grid");
+      if (viewModeMatchBtn) viewModeMatchBtn.classList.add("active");
+      if (viewModeGridBtn) viewModeGridBtn.classList.remove("active");
+      if (viewModeListBtn) viewModeListBtn.classList.remove("active");
+    } else {
+      templatesGrid.classList.remove("view-list");
+      templatesGrid.classList.remove("match-deck-grid");
+      if (viewModeGridBtn) viewModeGridBtn.classList.add("active");
+      if (viewModeListBtn) viewModeListBtn.classList.remove("active");
+      if (viewModeMatchBtn) viewModeMatchBtn.classList.remove("active");
+    }
+    try {
+      localStorage.setItem("invitestory_view_mode", mode);
+    } catch(e) {}
+  }
+
+  try {
+    const savedMode = viewModeGridBtn ? localStorage.getItem("invitestory_view_mode") : "grid";
+    if (savedMode === "list") {
+      setViewMode("list");
+    }
+  } catch(e) {}
+
+  if (viewModeGridBtn) {
+    viewModeGridBtn.addEventListener("click", () => setViewMode("grid"));
+  }
+  if (viewModeListBtn) {
+    viewModeListBtn.addEventListener("click", () => setViewMode("list"));
+  }
+  if (viewModeMatchBtn) {
+    viewModeMatchBtn.addEventListener("click", () => { matchDeckIndex = 0; setViewMode("match"); renderCatalogue(); });
+  }
+}
+
+// --- Preview Modal init/wiring ---
+function setupPreviewModal() {
+  if (!previewModal) return;
+
+  // Iframe load → fade in iframe, hide loader
+  const boundPreviewFrames = new WeakSet();
+  function bindPreviewFrame() {
+    const frame = previewIframe;
+    if (boundPreviewFrames.has(frame)) return;
+    boundPreviewFrames.add(frame);
+    frame.addEventListener("load", onPreviewFrameLoad);
+    onPreviewFrameLoad();
+  }
+  function onPreviewFrameLoad(event) {
+    if (event && event.target !== previewIframe) return;
+    // Skip the initial about:blank load
+    if (previewIframe.src === "about:blank" || previewIframe.src === window.location.href + "about:blank") return;
+    // The preview controller owns readiness and the loading screen.
+    if (typeof PreviewController === "undefined" || !PreviewController) {
+      previewIframe.classList.add("is-loaded");
+      previewLoader.classList.add("is-hidden");
+      stopLoaderPulse();
+    }
+    // Pointer events inside a same-origin invitation do not bubble to the viewer.
+    // Listen without preventing any invitation click or scrolling gesture.
+    try {
+      const invitation = previewIframe.contentWindow;
+      invitation.document.addEventListener("pointermove", (event) => {
+        if (event.pointerType !== "mouse" || previewState.viewMode !== "3d" || PhonePhysics.reducedMotion) return;
+        phonePhysicsSetMouseTarget(event.clientX / invitation.innerWidth - 0.5,
+          event.clientY / invitation.innerHeight - 0.5);
+      }, { passive: true });
+      invitation.document.addEventListener("mouseleave", () => {
+        if (previewState.viewMode === "3d") phonePhysicsResetTarget();
+      }, { passive: true });
+    } catch (e) {
+      // External invitations retain the outer-frame tilt controls.
+    }
+  }
+  bindPreviewFrame();
+  document.addEventListener('previewframechange', bindPreviewFrame);
+
+  // Delegated close: any element with [data-preview-close] inside the modal
+  previewModal.addEventListener("click", (e) => {
+    if (e.target.closest("[data-preview-close]")) {
+      closePreview();
+    }
+  });
+
+  // Prevent background scroll bleed/chaining on mobile touch and desktop wheel
+  // When interacting with the modal backdrop, scrim, or modal controls, don't let it scroll the underlying window.
+  previewModal.addEventListener("touchmove", (e) => {
+    if (!previewModal.classList.contains("is-open")) return;
+    if (e.target.closest(".preview-faq-list, .preview-modal-toolbar")) return;
+    // Allow touch scrolling ONLY inside the phone iframe viewport
+    if (e.target && (e.target.closest("#preview-modal-iframe-wrap") || e.target.closest(".phone-screen-viewport") || e.target.closest("#preview-modal-iframe"))) {
+      return;
+    }
+    // Block any scroll gesture on modal scrim/body backdrop from bubbling to the background page
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  previewModal.addEventListener("wheel", (e) => {
+    if (!previewModal.classList.contains("is-open")) return;
+    if (e.target.closest(".preview-faq-list, .preview-modal-toolbar")) return;
+    // If the wheel event is not directly inside the iframe wrap, cancel it to protect the background page
+    if (e.target && (e.target.closest("#preview-modal-iframe-wrap") || e.target.closest(".phone-screen-viewport") || e.target.closest("#preview-modal-iframe"))) {
+      return;
+    }
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Navigation buttons & side arrows
+  if (previewPrevBtn) previewPrevBtn.addEventListener("click", previewPrev);
+  if (previewNextBtn) previewNextBtn.addEventListener("click", previewNext);
+  if (previewSidePrev) previewSidePrev.addEventListener("click", previewPrev);
+  if (previewSideNext) previewSideNext.addEventListener("click", previewNext);
+  if (previewHomeBtn) previewHomeBtn.addEventListener("click", previewHome);
+  if (previewBuyBtn)  previewBuyBtn.addEventListener("click", previewBuyNow);
+
+  // Tier tabs
+  document.getElementById("preview-collection-select")?.addEventListener("change", event => {
+    previewJumpTier(Number(event.target.value));
+    event.target.focus({preventScroll:true});
+  });
+  previewTierTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      const tier = parseInt(tab.getAttribute("data-preview-tier"), 10);
+      previewJumpTier(tier);
+      tab.focus();
+    });
+    tab.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      const availableTabs = Array.from(previewTierTabs).filter(button => !button.disabled);
+      const current = availableTabs.indexOf(tab);
+      if (current < 0 || !availableTabs.length) return;
+      event.preventDefault();
+      const next = event.key === "Home" ? 0
+        : event.key === "End" ? availableTabs.length - 1
+        : (current + (event.key === "ArrowRight" ? 1 : -1) + availableTabs.length) % availableTabs.length;
+      availableTabs[next].focus();
+    });
+  });
+
+  // Responsive device scaling on window resize / orientation change (throttled via rAF)
+  window.addEventListener("resize", schedulePreviewScale, { passive: true });
+  window.addEventListener("orientationchange", schedulePreviewScale, { passive: true });
+
+  // Escape key closes the modal, order drawer, payment success, or FAQ popup
+  document.addEventListener("keydown", (e) => {
+    if (document.querySelector(".interaction-sheet[open]")) return;
+    if (document.getElementById("wa-lightbox")?.classList.contains("active")) return;
+    const openFaq = document.querySelector("#preview-faq-backdrop.is-open");
+    if (openFaq && e.key === "Tab") {
+      const targets = openFaq.querySelectorAll("button, [tabindex='0']");
+      const first = targets[0];
+      const last = targets[targets.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    if (e.key === "Tab" && previewModal.classList.contains("is-open") && !openFaq && !document.querySelector("#order-drawer-modal.is-open, #payment-success-modal.is-open")) {
+      const targets = Array.from(previewModal.querySelectorAll("button:not(:disabled), select:not(:disabled), a[href], iframe, summary, [tabindex='0']")).filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== "hidden");
+      const first = targets[0];
+      const last = targets[targets.length - 1];
+      if (first && e.shiftKey && (document.activeElement === first || !previewModal.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (last && !e.shiftKey && (document.activeElement === last || !previewModal.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
+      }
+    }
+    if (e.key === "Escape") {
+      const orderDrawer = document.getElementById("order-drawer-modal");
+      if (orderDrawer && orderDrawer.classList.contains("is-open")) {
+        closeOrderDrawer();
+        return;
+      }
+      const successModal = document.getElementById("payment-success-modal");
+      if (successModal && successModal.classList.contains("is-open")) {
+        closePaymentSuccess();
+        return;
+      }
+      const faqBackdrop = document.getElementById("preview-faq-backdrop");
+      if (faqBackdrop && faqBackdrop.classList.contains("is-open")) {
+        closePreviewFaq();
+        return;
+      }
+      if (previewModal.classList.contains("is-open")) {
+        closePreview();
+      }
+    }
+  });
+
+  // --- Spring-Damped 3D Physics System ---
+  // Detect prefers-reduced-motion
+  PhonePhysics.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const stage = document.getElementById("preview-3d-stage");
+  const rig = document.getElementById("preview-phone-3d-rig");
+  if (stage && rig) {
+    const tiltSurface = rig.closest(".preview-device-row") || stage;
+    // Cache DOM elements for the physics loop (avoid per-frame lookups)
+    PhonePhysics.els = {
+      stage: stage,
+      rig: rig,
+      shadow: rig.closest(".preview-device-row")?.querySelector(".preview-studio-shadow") || rig.querySelector(".phone-shadow-3d"),
+      glareHighlight: document.getElementById("glare-highlight"),
+      glareRim: document.getElementById("glare-rim"),
+      glareAmbient: document.getElementById("glare-ambient")
+    };
+
+    // Mouse → set physics targets (NO direct DOM writes)
+    tiltSurface.addEventListener("mousemove", (e) => {
+      if (!previewModal.classList.contains("is-open")) return;
+      if (previewState.viewMode !== "3d") return;
+      const rect = tiltSurface.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      phonePhysicsSetMouseTarget(x, y);
+    });
+
+    tiltSurface.addEventListener("mouseleave", () => {
+      if (previewState.viewMode === "3d") {
+        phonePhysicsResetTarget();
+      }
+    });
+
+    // Touch parallax for mobile (outer stage only; does not interfere with template scrolling inside iframe)
+    let lastTouchTime = 0;
+    stage.addEventListener("touchstart", (e) => {
+      if (previewState.viewMode !== "3d") return;
+    }, { passive: true });
+
+    stage.addEventListener("touchmove", (e) => {
+      if (!previewModal.classList.contains("is-open")) return;
+      if (previewState.viewMode !== "3d") return;
+
+      // If user is interacting directly inside the iframe wrap, don't tilt the phone
+      if (e.target && (e.target.closest("#preview-modal-iframe-wrap") || e.target.closest(".phone-screen-viewport"))) {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastTouchTime < 32) return; // limit to ~30Hz
+      lastTouchTime = now;
+
+      const t = e.touches[0];
+      const rect = stage.getBoundingClientRect();
+      const x = (t.clientX - rect.left) / rect.width - 0.5;
+      const y = (t.clientY - rect.top) / rect.height - 0.5;
+      phonePhysicsSetMouseTarget(x * 0.65, y * 0.65); // comfortable mobile sensitivity
+    }, { passive: true });
+
+    stage.addEventListener("touchend", () => {
+      if (previewState.viewMode === "3d") {
+        phonePhysicsResetTarget();
+      }
+    }, { passive: true });
+  }
+
+  // Handle browser Back/Forward navigation smoothly
+  window.addEventListener("popstate", (e) => {
+    if (typeof InviteInteractions !== "undefined" && document.body.classList.contains("browse-home")) { InviteInteractions.handlePop(e); return; }
+    if (e.state && e.state.modalOpen && e.state.templateId) {
+      openPreview(e.state.templateId, false);
+    } else if (previewModal && previewModal.classList.contains("is-open")) {
+      closePreview(false);
+    }
+  });
+}
+
+// --- GSAP Animations (ScrollTrigger, ScrollToPlugin) ---
+// Guard against the CDN failing to load.
+function initAnimations() {
+  if (typeof gsap === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  gsap.registerPlugin(window.ScrollTrigger, window.ScrollToPlugin);
+
+  // Keep the browsing heading stable from the first paint.
+  if (!document.body.classList.contains("browse-home")) {
+    // --- Hero entrance (runs once on page load) ---
+    if (document.querySelector(".hero-headline")) {
+      gsap.from(".hero-headline", {
+        y: 28, duration: 1, ease: "power3.out"
+      });
+    }
+    if (document.querySelector(".hero-subheadline")) {
+      gsap.from(".hero-subheadline", {
+        y: 18, duration: 0.8, delay: 0.15, ease: "power3.out"
+      });
+    }
+    if (document.querySelector(".hero-process-line")) {
+      gsap.from(".hero-process-line", {
+        y: 14, duration: 0.7, delay: 0.25, ease: "power3.out"
+      });
+    }
+    if (document.querySelector(".hero-action-wrapper")) {
+      gsap.from(".hero-action-wrapper", {
+        y: 16, duration: 0.7, delay: 0.35, ease: "power3.out"
+      });
+    }
+    if (document.querySelector(".hero-proof-strip")) {
+      gsap.from(".hero-proof-strip", {
+        y: 14, duration: 0.65, delay: 0.45, ease: "power3.out"
+      });
+    }
+    if (document.querySelector(".hero-design-marquee, .hero-showroom-showcase")) {
+      const heroDesignTargets = document.querySelectorAll(".showroom-card");
+      if (heroDesignTargets.length) {
+        gsap.from(heroDesignTargets, {
+          y: 30, duration: 0.8, stagger: 0.1, delay: 0.55, ease: "power3.out"
+        });
+      }
+    }
+
+  }
+
+  // --- Pricing cards stagger as they scroll into view ---
+  // immediateRender:false keeps cards visible if ScrollTrigger never fires
+  // (e.g., the user already scrolled past before GSAP loaded).
+  if (document.querySelector(".pricing-grid")) {
+    gsap.from(".pricing-card", {
+      y: 36, opacity: 0, duration: 0.75, stagger: 0.12, ease: "power3.out",
+      immediateRender: false,
+      scrollTrigger: {
+        trigger: ".pricing-grid",
+        start: "top 85%",
+        once: true
+      }
+    });
+  }
+
+  // --- Floating tier nav slides up from below on load ---
+  // Horizontal centering is handled cleanly by CSS (left: 0; right: 0; margin: 0 auto)
+  if (document.querySelector(".tier-floating-nav")) {
+    gsap.fromTo(".tier-floating-nav",
+      { y: 60, opacity: 0 },
+      { y: 0,  opacity: 1, duration: 0.8, delay: 0.4, ease: "power3.out" }
+    );
+  }
+
+  // --- Floating WhatsApp button pops in ---
+  if (document.querySelector(".floating-whatsapp")) {
+    gsap.from(".floating-whatsapp", {
+      scale: 0.8, opacity: 0, duration: 0.5, delay: 0.3, ease: "back.out(1.7)", immediateRender: false
+    });
+  }
+
+  // --- "How it works" steps stagger in ---
+  if (document.querySelector(".how-steps")) {
+    gsap.from(".how-step", {
+      y: 24, opacity: 0, duration: 0.7, stagger: 0.12, ease: "power3.out",
+      immediateRender: false,
+      scrollTrigger: { trigger: ".how-steps", start: "top 88%", once: true }
+    });
+  }
+
+  // --- Testimonials fade-up stagger ---
+  if (document.querySelector(".testimonials-grid")) {
+    gsap.from(".testimonial-card", {
+      y: 20, opacity: 0, duration: 0.6, stagger: 0.08, ease: "power2.out",
+      immediateRender: false,
+      scrollTrigger: { trigger: ".testimonials-grid", start: "top 90%", once: true }
+    });
+  }
+
+  // --- FAQ section title + first item fade in ---
+  if (document.querySelector(".faq-list")) {
+    gsap.from(".faq-section .section-title, .faq-section .section-subtitle, .faq-list .faq-item", {
+      y: 16, opacity: 0, duration: 0.55, stagger: 0.06, ease: "power2.out",
+      immediateRender: false,
+      scrollTrigger: { trigger: ".faq-list", start: "top 90%", once: true }
+    });
+  }
+
+  // --- Template cards: animated in renderCatalogue() via gsap.from() ---
+  // We intentionally do NOT use ScrollTrigger.batch here — see renderCatalogue()
+  // comment for the reason.
+}
+
+// Refresh ScrollTrigger after catalogue re-renders so newly inserted
+// template cards are picked up by the batch reveal.
+function refreshScrollTriggers() {
+  if (typeof ScrollTrigger !== "undefined") {
+    ScrollTrigger.refresh();
+  }
+}
+
+// --- Testimonials data ---
+const TESTIMONIALS = [
+  {
+    name: "Vibhore & Shalini",
+    wedding: "Verified Order · Luxury Invitation",
+    lang: "English",
+    quote: "Got our preview link on WhatsApp the same day. Two quick wording updates and the final link was ready. Relatives opened it on phone and loved the music & animations."
+  },
+  {
+    name: "Punam & Jagdish",
+    wedding: "Verified Order · Classic Mandapam",
+    lang: "English",
+    quote: "Paid online, shared our event dates and venue on WhatsApp. Everything was set up seamlessly — the integrated Google Maps link saved us dozens of phone calls."
+  },
+  {
+    name: "Sumeet & Shikha",
+    wedding: "Verified Order · Premium Celebration",
+    lang: "English",
+    quote: "The interactive love timeline gave our family goosebumps. We shared our link in every WhatsApp group and got nonstop compliments from guests."
+  },
+  {
+    name: "Rahul & Priya",
+    wedding: "Delhi · Luxury (Rajwada Royale)",
+    lang: "English",
+    quote: "The palace-door opening gave everyone goosebumps. Guests kept asking where we got it made. Worth every rupee."
+  },
+  {
+    name: "Vivek & Sneha",
+    wedding: "Bangalore · Luxury (Wax Seal Royale)",
+    lang: "English",
+    quote: "Breaking the wax seal on screen felt like opening a real letter. Payment took a minute and the team collected our details the same evening."
+  },
+  {
+    name: "Cyril & Anjali",
+    wedding: "Kochi · Premium (Saga of Love)",
+    lang: "English",
+    quote: "Our love-story timeline made my grandmother tear up. Two small text fixes and it was perfect — delivered in under 24 hours."
+  }
+];
+
+function renderTestimonials() {
+  const grid = document.getElementById("testimonials-grid");
+  if (!grid) return;
+  grid.innerHTML = TESTIMONIALS.map(t => `
+    <article class="testimonial-card">
+      <p class="testimonial-quote">${t.quote}</p>
+      <div class="testimonial-meta">
+        <div class="testimonial-author">
+          <span class="testimonial-author-name">${t.name}</span>
+          <span class="testimonial-author-wedding">${t.wedding}</span>
+        </div>
+      </div>
+    </article>
+  `).join("");
+}
+
+// Wire the prev/next overlay buttons on the testimonials carousel.
+function setupTestimonialsNav() {
+  const grid = document.getElementById("testimonials-grid");
+  const prevBtn = document.getElementById("testimonials-prev");
+  const nextBtn = document.getElementById("testimonials-next");
+  if (!grid || !prevBtn || !nextBtn) return;
+
+  const scrollStep = () => {
+    const card = grid.querySelector(".testimonial-card");
+    if (!card) return 300;
+    return card.getBoundingClientRect().width + 14;
+  };
+
+  prevBtn.addEventListener("click", () => {
+    grid.scrollBy({ left: -scrollStep(), behavior: "smooth" });
+  });
+  nextBtn.addEventListener("click", () => {
+    grid.scrollBy({ left: scrollStep(), behavior: "smooth" });
+  });
+
+  const updateDisabled = () => {
+    const maxScroll = grid.scrollWidth - grid.clientWidth;
+    prevBtn.disabled = grid.scrollLeft <= 1;
+    nextBtn.disabled = grid.scrollLeft >= maxScroll - 1;
+  };
+  grid.addEventListener("scroll", updateDisabled, { passive: true });
+  window.addEventListener("resize", updateDisabled);
+  updateDisabled();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REAL WHATSAPP CUSTOMER REVIEWS DATA & LIGHTBOX
+// ═══════════════════════════════════════════════════════════════
+
+const WA_REVIEWS = [
+  {
+    id: 1,
+    file: "review-07",
+    alt: "InviteStory WhatsApp review: Thank You Mam for making this invitation beautiful",
+    highlight: "“Thank You Mam for making this invitation beautiful”",
+    tag: "Delighted Bride"
+  },
+  {
+    id: 2,
+    file: "review-06",
+    alt: "InviteStory WhatsApp review: Mene mom dad ko bhej diya... Sir everyone like it",
+    highlight: "“Mene mom dad ko bhej diya... Sir everyone like it”",
+    tag: "Family Approved"
+  },
+  {
+    id: 3,
+    file: "review-09",
+    alt: "InviteStory WhatsApp review: Thank you sir! I appreciate your work!",
+    highlight: "“Thank you sir! I appreciate your work!”",
+    tag: "Happy Couple"
+  }
+];
+
+let currentLightboxIndex = 0;
+
+function renderWhatsAppReviews() {
+  const track = document.getElementById("wa-reviews-track");
+  if (!track) return;
+
+  track.innerHTML = WA_REVIEWS.map((rev, index) => `
+    <article class="wa-card" data-review-index="${index}" role="button" tabindex="0" aria-label="View review screenshot ${index + 1}: ${rev.tag}">
+      <div class="wa-card-media">
+        <picture>
+          <source srcset="assets/reviews/${rev.file}.webp" type="image/webp">
+          <img src="assets/reviews/${rev.file}.webp" alt="${rev.alt}" loading="lazy" width="250" height="312" />
+        </picture>
+        <div class="wa-card-overlay" aria-hidden="true">
+          <span class="wa-card-zoom-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            Tap to zoom
+          </span>
+        </div>
+      </div>
+      <div class="wa-card-footer">
+        <span class="wa-card-tag">${rev.tag}</span>
+        <p class="wa-card-highlight">${rev.highlight}</p>
+      </div>
+    </article>
+  `).join("");
+}
+
+function setupWhatsAppReviewsNav() {
+  const track = document.getElementById("wa-reviews-track");
+  const prevBtn = document.getElementById("wa-reviews-prev");
+  const nextBtn = document.getElementById("wa-reviews-next");
+  if (!track || !prevBtn || !nextBtn) return;
+
+  const scrollStep = () => {
+    const card = track.querySelector(".wa-card");
+    if (!card) return 260;
+    return card.getBoundingClientRect().width + 16;
+  };
+
+  prevBtn.addEventListener("click", () => {
+    track.scrollBy({ left: -scrollStep(), behavior: "smooth" });
+  });
+  nextBtn.addEventListener("click", () => {
+    track.scrollBy({ left: scrollStep(), behavior: "smooth" });
+  });
+
+  const updateDisabled = () => {
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    prevBtn.disabled = track.scrollLeft <= 2;
+    nextBtn.disabled = track.scrollLeft >= maxScroll - 2;
+  };
+  track.addEventListener("scroll", updateDisabled, { passive: true });
+  window.addEventListener("resize", updateDisabled);
+  updateDisabled();
+}
+
+let lightboxReturnFocus = null;
+
+function openLightbox(index) {
+  if (index < 0 || index >= WA_REVIEWS.length) return;
+  currentLightboxIndex = index;
+  const rev = WA_REVIEWS[index];
+
+  const modal = document.getElementById("wa-lightbox");
+  const source = document.getElementById("wa-lightbox-source");
+  const img = document.getElementById("wa-lightbox-img");
+  const tag = document.getElementById("wa-lightbox-tag");
+  const highlight = document.getElementById("wa-lightbox-highlight");
+  const counter = document.getElementById("wa-lightbox-counter");
+
+  if (!modal || !img) return;
+  if (!modal.classList.contains("active")) lightboxReturnFocus = document.activeElement;
+
+  if (source) source.srcset = `assets/reviews/${rev.file}.webp`;
+  img.src = `assets/reviews/${rev.file}.webp`;
+  img.alt = rev.alt;
+  if (tag) tag.textContent = rev.tag;
+  if (highlight) highlight.textContent = rev.highlight;
+  if (counter) counter.textContent = `${index + 1} of ${WA_REVIEWS.length}`;
+
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  document.getElementById("wa-lightbox-close")?.focus();
+}
+
+function closeLightbox() {
+  const modal = document.getElementById("wa-lightbox");
+  if (!modal) return;
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  if (lightboxReturnFocus?.isConnected) lightboxReturnFocus.focus();
+}
+
+function setupWhatsAppLightbox() {
+  const modal = document.getElementById("wa-lightbox");
+  const backdrop = document.getElementById("wa-lightbox-backdrop");
+  const closeBtn = document.getElementById("wa-lightbox-close");
+  const prevBtn = document.getElementById("wa-lightbox-prev");
+  const nextBtn = document.getElementById("wa-lightbox-next");
+  const track = document.getElementById("wa-reviews-track");
+
+  if (!modal) return;
+
+  if (track) {
+    track.addEventListener("click", (e) => {
+      const card = e.target.closest(".wa-card");
+      if (!card) return;
+      const index = parseInt(card.getAttribute("data-review-index"), 10);
+      if (!isNaN(index)) openLightbox(index);
+    });
+
+    track.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        const card = e.target.closest(".wa-card");
+        if (card) {
+          e.preventDefault();
+          const index = parseInt(card.getAttribute("data-review-index"), 10);
+          if (!isNaN(index)) openLightbox(index);
+        }
+      }
+    });
+  }
+
+  if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
+  if (backdrop) backdrop.addEventListener("click", closeLightbox);
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const prev = (currentLightboxIndex - 1 + WA_REVIEWS.length) % WA_REVIEWS.length;
+      openLightbox(prev);
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const next = (currentLightboxIndex + 1) % WA_REVIEWS.length;
+      openLightbox(next);
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (!modal.classList.contains("active")) return;
+    if (e.key === "Tab") {
+      const targets = [...modal.querySelectorAll("button:not(:disabled)")].filter(button => button.getClientRects().length);
+      const first = targets[0];
+      const last = targets[targets.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    } else if (e.key === "Escape") closeLightbox();
+    else if (e.key === "ArrowLeft") {
+      const prev = (currentLightboxIndex - 1 + WA_REVIEWS.length) % WA_REVIEWS.length;
+      openLightbox(prev);
+    } else if (e.key === "ArrowRight") {
+      const next = (currentLightboxIndex + 1) % WA_REVIEWS.length;
+      openLightbox(next);
+    }
+  });
+}
+
+// Trust marquee — clone the .trust-marquee-set so the track contains two
+// identical sets; CSS animates translateX(0 → -50%) for a seamless loop.
+function setupTrustMarquee() {
+  const track = document.getElementById("trust-marquee-track");
+  if (!track) return;
+  const set = track.querySelector(".trust-marquee-set");
+  if (!set) return;
+  const clone = set.cloneNode(true);
+  clone.setAttribute("aria-hidden", "true");
+  track.appendChild(clone);
+}
+
+// --- FAQ data ---
+const FAQS = [
+  {
+    q: "Can I request special features?",
+    a: "Special features beyond your selected package are available on request and cost extra based on your requirements. Contact us on WhatsApp for a quote before booking. We confirm the scope, additional price and any change to delivery timing before starting the custom work."
+  },
+  {
+    q: "How do I pay?",
+    a: "Right on this site via Razorpay — UPI (GPay, PhonePe, Paytm, BHIM), cards or netbanking. One-time payment, no subscription. After you pay, we WhatsApp you a short checklist to collect your details."
+  },
+  {
+    q: "When do you start work on my invite?",
+    a: "We start customization after payment and receipt of complete names, dates, venues and photos on WhatsApp. Your first-draft timeline starts when both are ready."
+  },
+  {
+    q: "Can I see a demo before I pay?",
+    a: "Absolutely. Tap any \"Preview Invitation →\" button on this page and the demo loads inside an in-page mobile-frame viewer — exactly as your guests will experience it. No payment needed to preview."
+  },
+  {
+    q: "Can I see a draft before it's final?",
+    a: "Yes — we share a preview link of your customised invite before finalising. Nothing goes final without your OK."
+  },
+  {
+    q: "How does the revision process work?",
+    a: "Free revision requests for 24 hours after your first draft is delivered. Detail edits, text updates, Google Maps links, and photo swaps are made quickly upon request via WhatsApp."
+  },
+  {
+    q: "We have multiple functions (Haldi, Mehendi, Sangeet…). Is that covered?",
+    a: "Premium includes up to five events. Luxury and Dearly cover all your wedding events, with schedules and venue directions in one invitation link."
+  },
+  {
+    q: "How long does customisation take?",
+    a: "Review your first-draft timing, included benefits and any delivery fee before payment. Email RSVP is included with Dearly. Timing starts after payment and complete details, including overnight. Existing order promises are unchanged. Review and approve the draft before sharing."
+  },
+  {
+    q: "How long is my invitation link live?",
+    a: "Your invitestory.in link stays live until 1 month after your event end date (event end date + 1 month validity). You can easily extend it upon request if you'd like to keep the memories alive longer."
+  },
+  {
+    q: "Which packages include photos and music?",
+    a: "Premium and Luxury include your photos, a gallery of up to 12 photos, your love-story timeline and background music. Dearly includes music and a photo gallery at no extra cost when requested. We collect the photos and track you want to use on WhatsApp."
+  },
+  {
+    q: "What about refunds?",
+    a: "Please see our <a href=\"refund-and-editing-policy.html\" class=\"gold-text\" style=\"font-weight: 600; text-decoration: underline;\">Refund & Editing Policy</a> — all sales are final once customization begins. Free revision requests for 24 hours after your first draft is delivered to ensure all details are accurate."
+  },
+  {
+    q: "Do you have budget options or a DIY editor?",
+    a: "Yes! Design your own card with our DIY Editor at <a href=\"#pricing\" target=\"_blank\" rel=\"noopener\" class=\"gold-text\" style=\"font-weight: 600; text-decoration: underline;\">diy.invitestory.in</a> for ₹999. For single-page reveal cards, explore <a href=\"#catalogue-header\" target=\"_blank\" rel=\"noopener\" class=\"gold-text\" style=\"font-weight: 600; text-decoration: underline;\">reveals.invitestory.in</a> starting from ₹999."
+  }
+];
+
+if (isAdsLandingPage) {
+  const downsellIdx = FAQS.findIndex(f => f.a && f.a.includes("reveals.invitestory.in"));
+  if (downsellIdx !== -1) {
+    FAQS.splice(downsellIdx, 1);
+  }
+}
+
+function renderFaqs() {
+  const list = document.getElementById("faq-list");
+  if (!list) return;
+  list.innerHTML = FAQS.map((f, i) => `
+    <div class="faq-item" data-faq-index="${i}">
+      <button type="button" class="faq-question" aria-expanded="false" aria-controls="faq-answer-${i}">
+        <span>${f.q}</span>
+        <span class="faq-toggle-icon" aria-hidden="true">+</span>
+      </button>
+      <div class="faq-answer" id="faq-answer-${i}" hidden>
+        <div class="faq-answer-inner">${f.a}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// "How It Works" toggle — collapsed by default. Clicking the button
+// adds .is-open to the wrapper, which the CSS grid-rows trick animates
+// from 0fr to 1fr for a smooth height reveal. Button label flips
+// between "Show steps" / "Hide steps".
+function setupHowItWorksToggle() {
+  const toggle = document.getElementById("how-it-works-toggle");
+  const wrap   = document.getElementById("how-steps-wrap");
+  if (!toggle || !wrap) return;
+
+  const textEl = toggle.querySelector(".how-toggle-text");
+  // Ensure ARIA defaults are correct on load
+  toggle.setAttribute("aria-expanded", "false");
+  wrap.setAttribute("aria-hidden", "true");
+
+  toggle.addEventListener("click", () => {
+    const isOpen = wrap.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    wrap.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    if (textEl) textEl.textContent = isOpen ? "Hide steps" : "Show steps";
+  });
+}
+
+function setupFaqHandlers() {
+  const list = document.getElementById("faq-list");
+  if (!list) return;
+  list.addEventListener("click", event => {
+    const question = event.target.closest(".faq-question");
+    if (!question) return;
+    const item = question.closest(".faq-item");
+    const answer = item.querySelector(".faq-answer");
+    const open = question.getAttribute("aria-expanded") !== "true";
+    question.setAttribute("aria-expanded", String(open));
+    item.classList.toggle("is-open", open);
+    answer.hidden = !open;
+  });
+}
+
+function trackWhatsAppLinkClick(e) {
+  const waLink = e.target.closest('a[href*="wa.me"]');
+  if (!waLink || waLink.id === "floating-whatsapp") return;
+  // The bespoke handler owns tracking and preserves its price metadata.
+  if (waLink.id === "custom-modal-wa-btn" && typeof waLink.onclick === "function") return;
+  const location = waLink.dataset.ctaLocation || (waLink.closest("header") ? "header"
+    : waLink.closest("footer") ? "footer"
+    : waLink.closest(".final-cta-section") ? "final_cta"
+    : waLink.closest("#custom-modal") ? "custom_modal"
+    : waLink.closest(".hero-section, .studio-hero") ? "hero"
+    : "page_link");
+  trackConversionEvent("whatsapp_click", {
+    cta_location: location,
+    content_name: waLink.getAttribute("aria-label") || waLink.title || waLink.innerText.trim().slice(0, 50) || "WhatsApp Link"
+  });
+}
+
+function openCustomModal() {
+  const modal = document.getElementById("custom-modal");
+  if (!modal) return;
+
+  const isINR = currentCurrency === "INR";
+  const priceText = formatPrice(BESPOKE_PRICING.inr, BESPOKE_PRICING.usd);
+  const priceEl = document.getElementById("custom-modal-price");
+  if (priceEl) priceEl.textContent = priceText;
+
+  const waBtn = document.getElementById("custom-modal-wa-btn");
+  if (waBtn) {
+    const message = `Hi InviteStory, I would like to order Bespoke Design (starting at ${priceText}). Please share details!`;
+    waBtn.href = `https://wa.me/918281583882?text=${encodeURIComponent(message)}`;
+    waBtn.onclick = () => {
+      trackConversionEvent("whatsapp_click", {
+        cta_location: "custom_modal",
+        content_name: "Bespoke Customization Inquiry",
+        value: isINR ? BESPOKE_PRICING.inr : BESPOKE_PRICING.usd,
+        currency: currentCurrency
+      });
+      closeCustomModal();
+    };
+  }
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.documentElement.classList.add("preview-modal-open");
+  document.body.classList.add("preview-modal-open");
+}
+
+function closeCustomModal() {
+  const modal = document.getElementById("custom-modal");
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.documentElement.classList.remove("preview-modal-open");
+  document.body.classList.remove("preview-modal-open");
+}
+
+function setupHeaderCtaHandlers() {
+  const headerCtas = document.querySelectorAll(".header-cta");
+  headerCtas.forEach(cta => {
+    cta.addEventListener("click", (e) => {
+      if (document.getElementById("custom-modal")) {
+        e.preventDefault();
+        openCustomModal();
+      }
+    });
+  });
+
+  const customModal = document.getElementById("custom-modal");
+  if (customModal) {
+    customModal.addEventListener("click", (e) => {
+      if (e.target.closest("[data-custom-close]")) {
+        closeCustomModal();
+      }
+    });
+  }
+}
+
+// Init
+document.addEventListener("DOMContentLoaded", () => {
+  initCurrencyDetection();
+  setupCurrencySwitcher();
+  setupCatalogueHandlers();
+  setupPreviewModal();
+  setupFaqHandlers();
+  setupHowItWorksToggle();
+
+  setupTestimonialsNav();
+  setupWhatsAppReviewsNav();
+  setupWhatsAppLightbox();
+  setupTrustMarquee();
+  setupResponsivePlaceholder();
+  setupHeaderCtaHandlers();
+  resumePendingPaymentVerification();
+  if (typeof IntersectionObserver !== "undefined") {
+    const sections = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        trackPostHogEvent(entry.target.id === "pricing" ? "pricing_viewed" : "catalogue_viewed");
+        sections.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -80px 0px" });
+    ["catalogue-header", "pricing"].forEach(id => {
+      const section = document.getElementById(id);
+      if (section) sections.observe(section);
+    });
+  }
+  document.getElementById("hero-explore-btn")?.addEventListener("click", () => trackPostHogEvent("catalogue_cta_clicked", { cta_location: "hero" }));
+
+  // Initial draw
+  updateTierLabels();
+  renderPricingSection();
+  setupMobilePricingCarousel();
+  renderCatalogue();
+  handleInitialUrlRoute();
+  renderTestimonials();
+  renderWhatsAppReviews();
+  renderFaqs();
+
+  // GSAP animations after the first paint so initial positions are valid
+  initAnimations();
+  refreshScrollTriggers();
+
+  // Global and Floating WhatsApp Click Tracking (Secondary Conversion)
+  const floatingWa = document.getElementById("floating-whatsapp");
+  if (floatingWa) {
+    floatingWa.addEventListener("click", () => {
+      trackConversionEvent("whatsapp_click", {
+        cta_location: "floating_button",
+        content_name: "Floating WhatsApp Support Chat"
+      });
+    });
+  }
+
+  document.addEventListener("click", trackWhatsAppLinkClick, { passive: true });
+
+  // Show the floating tier nav on all viewports.
+  // (Previously it was removed from the DOM on mobile — now it stays.)
+  showFloatingNav();
+  window.addEventListener("resize", showFloatingNav);
+  setupTierNavVisibility();
+});
+
+function showFloatingNav() {
+  const nav = document.querySelector(".tier-floating-nav");
+  if (!nav) return;
+  // Always keep the nav visible — it's designed to work on all screen sizes
+  nav.style.display = "";
+}
+
+// Swap the search input placeholder at the mobile breakpoint so the
+// long desktop example list doesn't get truncated on small viewports.
+function setupResponsivePlaceholder() {
+  const input = document.getElementById("search-input");
+  if (!input) return;
+  const DESKTOP_PLACEHOLDER = isAdsLandingPage
+    ? "Search templates (e.g. Telugu, Royal, Nikah, Floral)"
+    : "Search templates (e.g. Telugu, Ghibli, Nikah, Floral)";
+  const MOBILE_PLACEHOLDER  = "Search templates…";
+  const mq = window.matchMedia("(max-width: 768px)");
+  const apply = () => {
+    input.placeholder = document.body.classList.contains("browse-home") ? "Search a design or tradition" : mq.matches ? MOBILE_PLACEHOLDER : DESKTOP_PLACEHOLDER;
+  };
+  apply();
+  if (mq.addEventListener) mq.addEventListener("change", apply);
+  else if (mq.addListener) mq.addListener(apply);    // legacy Safari
+}
+
+// Hero offer card — scratch-to-reveal price interaction.
+// Paints a rich metallic gold foil surface over the price, then erases it
+// as the user drags (mouse or touch), emitting live sparkle dust particles.
+// When ~38% of the surface is revealed, the foil smoothly dissolves with a
+
+function setupMobilePricingCarousel() {
+  const grid = document.querySelector(".pricing-grid");
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll(".pricing-card"));
+  if (cards.length < 2) return;
+
+  // Avoid stacking duplicate listeners when currency re-renders
+  if (grid.dataset.carouselBound === "1") {
+    // Still re-snap after re-render
+  } else {
+    grid.dataset.carouselBound = "1";
+  }
+
+  const dotsWrap = document.getElementById("pricing-dots");
+  const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll("[data-pricing-dot]")) : [];
+  const premium =
+    grid.querySelector(".pricing-card.featured, .pricing-card-premium") ||
+    cards[Math.min(1, cards.length - 1)];
+
+  const mq = window.matchMedia("(max-width: 768px)");
+
+  const setActive = (index) => {
+    dots.forEach((d, i) => d.setAttribute("aria-current", i === index ? "true" : "false"));
+  };
+
+  const cardCenterInGrid = (card) => {
+    // Use positions relative to the scroll container, not offsetParent quirks
+    const gRect = grid.getBoundingClientRect();
+    const cRect = card.getBoundingClientRect();
+    return grid.scrollLeft + (cRect.left - gRect.left) + cRect.width / 2;
+  };
+
+  const nearestIndex = () => {
+    const mid = grid.scrollLeft + grid.clientWidth / 2;
+    let best = 0;
+    let bestDist = Infinity;
+    cards.forEach((card, i) => {
+      const dist = Math.abs(cardCenterInGrid(card) - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    return best;
+  };
+
+  const scrollToCard = (card, smooth) => {
+    if (!card || !mq.matches) return;
+    const gRect = grid.getBoundingClientRect();
+    const cRect = card.getBoundingClientRect();
+    const delta = (cRect.left + cRect.width / 2) - (gRect.left + gRect.width / 2);
+    const left = Math.max(0, grid.scrollLeft + delta);
+    grid.scrollTo({ left, behavior: smooth ? "smooth" : "auto" });
+  };
+
+  const snapPremium = (smooth) => {
+    if (!mq.matches) return;
+    // Re-query in case DOM was replaced
+    const liveGrid = document.querySelector(".pricing-grid");
+    const livePremium =
+      liveGrid?.querySelector(".pricing-card.featured, .pricing-card-premium") ||
+      premium;
+    if (!livePremium || !liveGrid) return;
+    const liveCards = Array.from(liveGrid.querySelectorAll(".pricing-card"));
+    scrollToCard(livePremium, smooth);
+    const idx = liveCards.indexOf(livePremium);
+    if (idx >= 0) setActive(idx);
+  };
+
+  if (grid.dataset.carouselListeners !== "1") {
+    grid.dataset.carouselListeners = "1";
+    let ticking = false;
+    grid.addEventListener(
+      "scroll",
+      () => {
+        if (!mq.matches) return;
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          setActive(nearestIndex());
+          ticking = false;
+        });
+      },
+      { passive: true }
+    );
+
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        const liveCards = Array.from(
+          document.querySelectorAll(".pricing-grid .pricing-card")
+        );
+        const i = Number(dot.getAttribute("data-pricing-dot"));
+        if (!Number.isNaN(i) && liveCards[i]) {
+          scrollToCard(liveCards[i], true);
+          setActive(i);
+        }
+      });
+    });
+
+    mq.addEventListener("change", () => {
+      setTimeout(() => snapPremium(false), 80);
+    });
+  }
+
+  // Snap after layout: rAF cascade beats fonts/images shifting widths
+  const run = () => snapPremium(false);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(run);
+  });
+  setTimeout(run, 50);
+  setTimeout(run, 200);
+  setTimeout(() => snapPremium(true), 500);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => setTimeout(run, 30));
+  }
+  window.addEventListener("load", () => setTimeout(run, 30), { once: true });
+}
+
+// The collection filter only means something while the catalogue fills the screen.
+function isCatalogueInView() {
+  const cat = document.getElementById("catalogue-header");
+  if (!cat) return false;
+  const rect = cat.getBoundingClientRect();
+  const vh = window.innerHeight || 0;
+  return rect.top < vh * 0.6 && rect.bottom > vh * 0.4;
+}
+
+function setupTierNavVisibility() {
+  const nav = document.querySelector(".tier-floating-nav");
+  const catalogue = document.querySelector(".catalogue-section, #catalogue, #catalogue-header");
+  const pricing = document.querySelector(".pricing-section, #pricing");
+  if (!nav) return;
+
+  const mq = window.matchMedia("(max-width: 768px)");
+
+  const update = () => {
+    if (nav.classList.contains("home-collection-nav")) {
+      const show = isCatalogueInView();
+      nav.classList.toggle("is-outside-catalogue", !show);
+      nav.setAttribute("aria-hidden", String(!show));
+      nav.inert = !show;
+      if (typeof updateMobileBookingBar === "function") updateMobileBookingBar();
+      return;
+    }
+    if (nav.classList.contains("sales-inline-tiers")) {
+      nav.classList.remove("is-hidden-for-pricing");
+      nav.style.opacity = "";
+      nav.style.transform = "";
+      nav.style.pointerEvents = "";
+      nav.setAttribute("aria-hidden", "false");
+      return;
+    }
+    if (!mq.matches) {
+      nav.classList.remove("is-hidden-for-pricing");
+      nav.style.display = "";
+      nav.style.opacity = "";
+      nav.style.transform = "";
+      nav.style.pointerEvents = "";
+      nav.setAttribute("aria-hidden", "false");
+      return;
+    }
+    // Hide over pricing / hero; show when catalogue is the focus
+    const cat = catalogue || document.querySelector(".templates-grid");
+    if (!cat) return;
+    const catRect = cat.getBoundingClientRect();
+    const pricingEl = pricing || document.querySelector("#pricing");
+    const pricingRect = pricingEl ? pricingEl.getBoundingClientRect() : null;
+    const vh = window.innerHeight || 0;
+
+    const catalogueVisible = catRect.top < vh * 0.85 && catRect.bottom > vh * 0.25;
+    const pricingDominant =
+      pricingRect &&
+      pricingRect.top < vh * 0.55 &&
+      pricingRect.bottom > vh * 0.35;
+
+    if (pricingDominant && !catalogueVisible) {
+      nav.classList.add("is-hidden-for-pricing");
+      nav.style.opacity = "0";
+      nav.style.transform = "translateY(16px)";
+      nav.style.pointerEvents = "none";
+      nav.setAttribute("aria-hidden", "true");
+    } else if (catalogueVisible) {
+      nav.classList.remove("is-hidden-for-pricing");
+      nav.style.opacity = "";
+      nav.style.transform = "";
+      nav.style.pointerEvents = "";
+      nav.setAttribute("aria-hidden", "false");
+    } else {
+      // hero / footer / etc — keep out of the way
+      nav.classList.add("is-hidden-for-pricing");
+      nav.style.opacity = "0";
+      nav.style.transform = "translateY(16px)";
+      nav.style.pointerEvents = "none";
+      nav.setAttribute("aria-hidden", "true");
+    }
+  };
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  mq.addEventListener("change", update);
+}

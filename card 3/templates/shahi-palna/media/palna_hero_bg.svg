@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Sky Background Gradient -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1c0722"/>
+      <stop offset="35%" stop-color="#2a0d33"/>
+      <stop offset="65%" stop-color="#3d123e"/>
+      <stop offset="85%" stop-color="#541b44"/>
+      <stop offset="100%" stop-color="#2c0b24"/>
+    </linearGradient>
+
+    <!-- Golden Gradients -->
+    <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff5cc"/>
+      <stop offset="40%" stop-color="#ffd56b"/>
+      <stop offset="70%" stop-color="#d49b35"/>
+      <stop offset="100%" stop-color="#8c5816"/>
+    </linearGradient>
+
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffce8" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#ffd97a" stop-opacity="0.5"/>
+      <stop offset="80%" stop-color="#f3a93b" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#3d123e" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="starHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#ffd56b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#3d123e" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- Sky Canvas -->
+  <rect width="1000" height="1200" fill="url(#skyGrad)"/>
+
+  <!-- Celestial Glow Behind Palace Arch -->
+  <circle cx="500" cy="380" r="320" fill="url(#moonGlow)"/>
+
+  <!-- Hanging Fairy Lights Strings -->
+  <g stroke="url(#goldGlow)" stroke-width="1.2" opacity="0.6">
+    <path d="M 0,40 Q 250,90 500,40 Q 750,90 1000,40" fill="none"/>
+    <path d="M 0,70 Q 250,130 500,70 Q 750,130 1000,70" fill="none"/>
+    <path d="M 0,100 Q 250,170 500,100 Q 750,170 1000,100" fill="none"/>
+  </g>
+
+  <!-- Twinkling Fairy Light Bulbs / Stars -->
+  <g fill="url(#goldGlow)">
+    <circle cx="120" cy="65" r="3"/>
+    <circle cx="220" cy="80" r="4"/>
+    <circle cx="340" cy="78" r="3"/>
+    <circle cx="480" cy="62" r="4.5"/>
+    <circle cx="620" cy="74" r="3.5"/>
+    <circle cx="760" cy="82" r="4"/>
+    <circle cx="890" cy="65" r="3"/>
+
+    <circle cx="160" cy="115" r="3.5"/>
+    <circle cx="290" cy="128" r="4"/>
+    <circle cx="430" cy="112" r="3"/>
+    <circle cx="580" cy="118" r="4"/>
+    <circle cx="720" cy="126" r="3"/>
+    <circle cx="840" cy="110" r="3.5"/>
+  </g>
+
+  <!-- Golden Hanging Crescent Moon (Top Left) -->
+  <g transform="translate(180, 190) scale(0.9)">
+    <!-- Hanging Chain -->
+    <line x1="0" y1="-190" x2="0" y2="0" stroke="url(#goldGlow)" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- Moon Halo -->
+    <circle cx="0" cy="30" r="70" fill="url(#moonGlow)"/>
+    <!-- Crescent Moon Path -->
+    <path d="M 25,-25 C -35,5 -30,75 25,95 C -10,75 -15,10 25,-25 Z" fill="url(#goldGlow)" filter="drop-shadow(0 4px 12px rgba(255,213,107,0.5))"/>
+    <!-- Little hanging star from moon tip -->
+    <line x1="10" y1="90" x2="10" y2="120" stroke="url(#goldGlow)" stroke-width="1"/>
+    <polygon points="10,120 13,128 21,128 15,133 17,141 10,136 3,141 5,133 -1,128 7,128" fill="url(#goldGlow)"/>
+  </g>
+
+  <!-- Hanging Golden Lantern (Top Right) -->
+  <g transform="translate(820, 180) scale(0.85)">
+    <line x1="0" y1="-180" x2="0" y2="0" stroke="url(#goldGlow)" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <circle cx="0" cy="35" r="50" fill="url(#moonGlow)"/>
+    <!-- Moroccan/Royal Lantern Outline -->
+    <polygon points="0,-10 -15,10 15,10" fill="url(#goldGlow)"/>
+    <rect x="-18" y="10" width="36" height="42" rx="6" fill="#ffd56b" opacity="0.85"/>
+    <polygon points="-18,52 0,72 18,52" fill="url(#goldGlow)"/>
+    <circle cx="0" cy="76" r="3" fill="url(#goldGlow)"/>
+    <!-- Lantern Cutouts -->
+    <line x1="-18" y1="10" x2="18" y2="52" stroke="#8c5816" stroke-width="1.5"/>
+    <line x1="18" y1="10" x2="-18" y2="52" stroke="#8c5816" stroke-width="1.5"/>
+  </g>
+
+  <!-- Ornate Royal Palace Jharokha / Arch Silhouette in Background -->
+  <g fill="none" stroke="url(#goldGlow)" stroke-width="2" opacity="0.35">
+    <!-- Big Outer Arch -->
+    <path d="M 120,680 L 120,380 Q 120,180 500,160 Q 880,180 880,380 L 880,680"/>
+    <!-- Inner Scalloped Mughal/Rajput Arch -->
+    <path d="M 170,680 L 170,410 C 170,300 240,240 330,220 C 410,210 470,180 500,170 C 530,180 590,210 670,220 C 760,240 830,300 830,410 L 830,680"/>
+  </g>
+
+  <!-- Floating Dreamy Clouds (Layer 1 - Deep) -->
+  <g fill="#421445" opacity="0.45" filter="url(#softBlur)">
+    <ellipse cx="200" cy="480" rx="220" ry="80"/>
+    <ellipse cx="800" cy="460" rx="240" ry="90"/>
+    <ellipse cx="500" cy="510" rx="300" ry="90"/>
+  </g>
+
+  <!-- Floating Dreamy Clouds (Layer 2 - Soft Pastel Glow) -->
+  <g fill="#5d1e57" opacity="0.4" filter="url(#softBlur)">
+    <ellipse cx="140" cy="520" rx="180" ry="70"/>
+    <ellipse cx="860" cy="500" rx="200" ry="75"/>
+    <ellipse cx="500" cy="550" rx="260" ry="75"/>
+  </g>
+
+  <!-- Auspicious Marigold & Jasmine Garland Arch at Top -->
+  <g id="topGarlands">
+    <!-- Green Mango Leaf Strings (Toran) -->
+    <path d="M 80,120 Q 500,240 920,120" fill="none" stroke="#2e7d32" stroke-width="3"/>
+    <!-- Marigold Flower Beads -->
+    <path d="M 80,125 Q 500,245 920,125" fill="none" stroke="#f57c00" stroke-width="9" stroke-linecap="round" stroke-dasharray="14,16"/>
+    <path d="M 80,125 Q 500,245 920,125" fill="none" stroke="#fbc02d" stroke-width="6" stroke-linecap="round" stroke-dasharray="10,20"/>
+    <path d="M 80,125 Q 500,245 920,125" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,24"/>
+  </g>
+
+  <!-- Golden Stars Scattered Across Sky -->
+  <g fill="url(#goldGlow)" opacity="0.85">
+    <!-- Star 1 -->
+    <polygon points="260,260 263,267 270,267 264,271 266,278 260,274 254,278 256,271 250,267 257,267" transform="scale(0.8)"/>
+    <!-- Star 2 -->
+    <polygon points="720,240 723,247 730,247 724,251 726,258 720,254 714,258 716,251 710,247 717,247" transform="scale(0.8)"/>
+    <!-- Star 3 -->
+    <polygon points="380,140 382,145 387,145 383,148 384,153 380,150 376,153 377,148 373,145 378,145" transform="scale(0.9)"/>
+    <!-- Star 4 -->
+    <polygon points="640,150 642,155 647,155 643,158 644,163 640,160 636,163 637,158 633,155 638,155" transform="scale(0.9)"/>
+  </g>
+</svg>

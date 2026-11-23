@@ -1,0 +1,93 @@
+{
+  "trailingSlash": true,
+  "rewrites": [
+    {
+      "source": "/api/website/config/",
+      "destination": "/api/website/config.js"
+    },
+    {
+      "source": "/api/website/config",
+      "destination": "/api/website/config.js"
+    },
+    {
+      "source": "/api/card/",
+      "destination": "/api/card.js"
+    },
+    {
+      "source": "/api/card",
+      "destination": "/api/card.js"
+    },
+    {
+      "source": "/api/upload/",
+      "destination": "/api/upload.js"
+    },
+    {
+      "source": "/api/upload",
+      "destination": "/api/upload.js"
+    },
+    {
+      "source": "/invite/:path*",
+      "destination": "/invite/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(mp3|mp4|webp|svg|woff2|woff|otf|png|jpg)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/cards/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/invite/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(html|js|json)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
+}

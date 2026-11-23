@@ -1,0 +1,161 @@
+{
+  "version": 4,
+  "finalized": true,
+  "invocation": {
+    "symbol": "ganesha",
+    "religion": "hindu",
+    "script": "custom",
+    "custom": "|| Shree Swaminarayan Namo Namah ||"
+  },
+  "brideName": "Aayushi Lunagariya",
+  "groomName": "Siddhant Patel",
+  "title": "Siddhant & Aayushi",
+  "hostNames": [
+    "Siddhant",
+    "Aayushi"
+  ],
+  "introNote": "With the divine blessings of Lord Shree Swaminarayan, we cordially invite you and your family to celebrate the auspicious wedding ceremony of Siddhant and Aayushi.",
+  "eventISO": "2026-11-29",
+  "revealButton": "Reveal the Date",
+  "revealAfter": "Save the Date • 29-11-2026",
+  "groomFamily": {
+    "enabled": true,
+    "name": "Chi. Siddhant Patel",
+    "relLabel": "Son of",
+    "parentA": "Shri Pravinbhai P. Patel",
+    "parentB": "Smt. Kavitaben Patel",
+    "parentJoin": "&",
+    "grandLabel": "Grandson of (With Blessings of)",
+    "grandA": "Late Shri Pragjibhai G. Patel",
+    "grandB": "Late Smt. Madhuben Patel",
+    "grandJoin": "&"
+  },
+  "brideFamily": {
+    "enabled": true,
+    "name": "Chi. Aayushi Lunagariya",
+    "relLabel": "Daughter of",
+    "parentA": "Shri Sanjaybhai G. Lunagariya",
+    "parentB": "Smt. Dakshaben Lunagariya",
+    "parentJoin": "&",
+    "grandLabel": "Granddaughter of (With Blessings of)",
+    "grandA": "Late Shri Tribhovandas G. Patel",
+    "grandB": "Late Smt. Champaben Patel",
+    "grandJoin": "&"
+  },
+  "gallery": {
+    "enabled": true,
+    "items": [
+      {
+        "type": "portrait",
+        "image": "https://5bp5y1wstf0j3wd4.public.blob.vercel-storage.com/images/shahi_photo_1.jpg",
+        "placeholder": false,
+        "caption": "#SiddhantWedsAayushi",
+        "hang": 118,
+        "zoom": 1,
+        "posX": 50,
+        "posY": 50
+      },
+      {
+        "type": "story",
+        "text": "A joyful celebration of love, union, and togetherness. Two families united with the divine blessings of Lord Shree Swaminarayan.",
+        "hang": 86
+      },
+      {
+        "type": "landscape",
+        "image": "https://5bp5y1wstf0j3wd4.public.blob.vercel-storage.com/images/shahi_photo_2.jpg",
+        "placeholder": false,
+        "caption": "#ShubhVivah",
+        "hang": 150,
+        "posY": 47.603305785123965,
+        "zoom": 1.08,
+        "posX": 60.05291005291006
+      },
+      {
+        "type": "story",
+        "text": "As we embark on this sacred journey of seven vows and lifelong companionship, we request the honor of your presence and heartfelt blessings.",
+        "hang": 120
+      },
+      {
+        "type": "portrait",
+        "image": "https://5bp5y1wstf0j3wd4.public.blob.vercel-storage.com/images/shahi_photo_3.jpg",
+        "placeholder": false,
+        "caption": "#TogetherForever",
+        "hang": 100,
+        "zoom": 1,
+        "posX": 50,
+        "posY": 50
+      }
+    ]
+  },
+  "ceremonies": [
+    {
+      "name": "Mandap Muhurat",
+      "art": "media/ring_ceremony.webp",
+      "date": "2026-11-28",
+      "time": "07:00 AM",
+      "venue": "A-302 Vedant Antilia, Opp. Devasya School, New Vastral, Ahmedabad",
+      "mapUrl": "",
+      "enabled": true,
+      "venueCustom": true
+    },
+    {
+      "name": "Baraat / Jaan Prasthan",
+      "art": "media/mehendi.webp",
+      "date": "2026-11-29",
+      "time": "05:00 AM",
+      "venue": "Departure to Derdi Kumbhaji, Gondal",
+      "mapUrl": "",
+      "enabled": true,
+      "venueCustom": true
+    },
+    {
+      "name": "Hasta Melap (Wedding Ceremony)",
+      "art": "media/vivaah.webp",
+      "date": "2026-11-29",
+      "time": "06:00 PM",
+      "venue": "Diwali-Ba Resort, Derdi Kumbhaji, Gondal, Rajkot",
+      "mapUrl": "",
+      "enabled": true,
+      "venueCustom": true
+    },
+    {
+      "name": "Wedding Dinner & Reception",
+      "art": "media/reception.webp",
+      "date": "2026-11-29",
+      "time": "07:30 PM",
+      "venue": "Diwali-Ba Resort, Vasavad Road, Derdi Kumbhaji",
+      "mapUrl": "",
+      "enabled": true,
+      "venueCustom": true
+    }
+  ],
+  "compliments": {
+    "enabled": true,
+    "lead": "With Best Compliments From:",
+    "lines": [
+      "Shri Vishnubhai T. Patel & Smt. Rekhaben Patel (Ahmedabad)",
+      "Shri Ashokbhai T. Patel & Smt. Tejalben Patel (Ahmedabad)",
+      "Shri Umang V. Patel & Shri Vivek A. Patel",
+      "Little Blessings: Aayansh & Hiyan",
+      "Devnandan Medical Agency & Patel Pan Parlour"
+    ]
+  },
+  "note": {
+    "enabled": true,
+    "lead": "Host & Venue Details",
+    "text": "Host: Shri Pravinbhai P. Patel (+91 94294 36186) & Siddhant Patel (+91 94292 58126) | Residence: A-302, Vedant Antilia, Opp. Devasya School, New Vastral, Ahmedabad. Wedding Venue: Diwali-Ba Resort, Vasavad Road, Derdi Kumbhaji, Taluka Gondal, Dist. Rajkot."
+  },
+  "farewell": {
+    "line": "Warm welcome to grace the occasion and bless the newlyweds • Your Presence & Blessings Mean the World to Us"
+  },
+  "social": {
+    "instagram": true,
+    "instagramUrl": null
+  },
+  "music": {
+    "enabled": true,
+    "src": null,
+    "volume": 0.5
+  },
+  "lastUpdated": "2026-11-22T11:20:00Z"
+}

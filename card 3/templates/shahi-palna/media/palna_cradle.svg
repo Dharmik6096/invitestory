@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 130 380 320" width="100%" height="100%">
+  <defs>
+    <!-- Gold Gradients -->
+    <linearGradient id="goldBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9a712e"/>
+      <stop offset="30%" stop-color="#f5d77f"/>
+      <stop offset="50%" stop-color="#fff0b3"/>
+      <stop offset="70%" stop-color="#f3c95e"/>
+      <stop offset="100%" stop-color="#8c6224"/>
+    </linearGradient>
+    <linearGradient id="goldChain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd56b"/>
+      <stop offset="50%" stop-color="#b8862d"/>
+      <stop offset="100%" stop-color="#ffd56b"/>
+    </linearGradient>
+    <radialGradient id="cushionGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffe6b8"/>
+      <stop offset="60%" stop-color="#f5c276"/>
+      <stop offset="100%" stop-color="#b87333"/>
+    </radialGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="dropShadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#14020a" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- TOP SUSPENSION BEAM (Fixed) -->
+  <g id="topBeam" filter="url(#dropShadow)">
+    <!-- Ornate Brass Beam -->
+    <rect x="50" y="24" width="400" height="14" rx="7" fill="url(#goldBeam)"/>
+    <circle cx="50" cy="31" r="12" fill="url(#goldBeam)"/>
+    <circle cx="450" cy="31" r="12" fill="url(#goldBeam)"/>
+    <!-- Beam Ornaments -->
+    <circle cx="250" cy="31" r="16" fill="url(#goldBeam)"/>
+    <polygon points="250,5 242,20 258,20" fill="url(#goldBeam)"/>
+    <!-- Jasmine/Marigold Toran along Top Beam -->
+    <path d="M 60,38 Q 155,60 250,38 Q 345,60 440,38" fill="none" stroke="#e67e22" stroke-width="4" stroke-dasharray="8,6"/>
+    <path d="M 60,36 Q 155,54 250,36 Q 345,54 440,36" fill="none" stroke="#27ae60" stroke-width="2"/>
+    <path d="M 60,40 Q 155,64 250,40 Q 345,64 440,40" fill="none" stroke="#f1c40f" stroke-width="3" stroke-dasharray="6,8"/>
+  </g>
+
+  <!-- SWINGING ASSEMBLY (Chains & Cradle) -->
+  <g id="swingingPalna" filter="url(#dropShadow)">
+    <!-- LEFT CHAINS -->
+    <g id="leftChain" stroke="url(#goldChain)" stroke-width="3" fill="none">
+      <path d="M 110,38 L 140,290" stroke-dasharray="10,4"/>
+      <path d="M 120,38 L 155,290" stroke-dasharray="10,4"/>
+      <!-- Hanging bells / pearls on chain -->
+      <circle cx="125" cy="140" r="4" fill="#f5d77f"/>
+      <circle cx="132" cy="200" r="5" fill="#f5d77f"/>
+      <polygon points="132,205 127,215 137,215" fill="#d4af37"/>
+    </g>
+
+    <!-- RIGHT CHAINS -->
+    <g id="rightChain" stroke="url(#goldChain)" stroke-width="3" fill="none">
+      <path d="M 390,38 L 360,290" stroke-dasharray="10,4"/>
+      <path d="M 380,38 L 345,290" stroke-dasharray="10,4"/>
+      <!-- Hanging bells / pearls on chain -->
+      <circle cx="375" cy="140" r="4" fill="#f5d77f"/>
+      <circle cx="368" cy="200" r="5" fill="#f5d77f"/>
+      <polygon points="368,205 363,215 373,215" fill="#d4af37"/>
+    </g>
+
+    <!-- CRADLE ARCH & CANOPY FRAME -->
+    <!-- Royal Upper Arch -->
+    <path d="M 120,285 C 130,170 370,170 380,285" fill="none" stroke="url(#goldBeam)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M 135,285 C 145,190 355,190 365,285" fill="none" stroke="url(#goldBeam)" stroke-width="4"/>
+
+    <!-- Central Peacock Crown Crest on Arch -->
+    <g transform="translate(250, 175)">
+      <circle cx="0" cy="0" r="16" fill="url(#goldBeam)"/>
+      <path d="M -12,-8 Q 0,-28 12,-8 Q 0,0 -12,-8" fill="#d4af37"/>
+      <circle cx="0" cy="-14" r="3" fill="#00ffff"/>
+      <path d="M -6,-28 L 0,-40 L 6,-28 Z" fill="url(#goldBeam)"/>
+    </g>
+
+    <!-- CRADLE BASKET BODY -->
+    <!-- Outer Golden Carved Shell -->
+    <path d="M 115,285 Q 110,390 250,405 Q 390,390 385,285 Z" fill="#4a081a" stroke="url(#goldBeam)" stroke-width="7"/>
+
+    <!-- Intricate Lattice / Floral Carvings on Basket -->
+    <path d="M 130,295 Q 128,375 250,390 Q 372,375 370,295" fill="none" stroke="url(#goldBeam)" stroke-width="3" stroke-dasharray="12,6"/>
+    <path d="M 150,305 Q 150,360 250,375 Q 350,360 350,305" fill="none" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+    <!-- Velvet / Silk Mattress inside Cradle -->
+    <ellipse cx="250" cy="305" rx="115" ry="32" fill="url(#cushionGlow)" stroke="#c48a3f" stroke-width="2"/>
+
+    <!-- Little Royal Baby Pillow -->
+    <ellipse cx="180" cy="302" rx="35" ry="18" fill="#fff9eb" stroke="#d4af37" stroke-width="2" transform="rotate(-10 180 302)"/>
+    <ellipse cx="180" cy="302" rx="20" ry="10" fill="#fde5c9" opacity="0.8"/>
+
+    <!-- Auspicious Baby Swaddle Quilt with Golden Dots -->
+    <path d="M 195,300 C 230,290 290,295 330,312 C 320,332 260,338 210,328 Z" fill="#ffd1dc" stroke="#e0829d" stroke-width="2"/>
+    <circle cx="230" cy="308" r="2" fill="#d4af37"/>
+    <circle cx="260" cy="312" r="2.5" fill="#d4af37"/>
+    <circle cx="290" cy="315" r="2" fill="#d4af37"/>
+
+    <!-- Fresh Floral Garlands along the Cradle Rim -->
+    <!-- Marigold (Orange & Yellow) -->
+    <g id="rimGarland">
+      <path d="M 115,285 Q 250,335 385,285" fill="none" stroke="#e67e22" stroke-width="10" stroke-linecap="round" stroke-dasharray="12,12"/>
+      <path d="M 115,285 Q 250,335 385,285" fill="none" stroke="#f1c40f" stroke-width="7" stroke-linecap="round" stroke-dasharray="8,16"/>
+      <path d="M 115,285 Q 250,335 385,285" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-dasharray="4,10"/>
+    </g>
+
+    <!-- Bottom Hanging Golden Ghunghroos (Little Bells) -->
+    <g id="hangingBells" fill="url(#goldBeam)" stroke="#9a712e" stroke-width="1">
+      <circle cx="160" cy="390" r="6"/>
+      <polygon points="160,396 156,406 164,406"/>
+
+      <circle cx="205" cy="404" r="7"/>
+      <polygon points="205,411 200,422 210,422"/>
+
+      <circle cx="250" cy="410" r="9"/>
+      <polygon points="250,419 244,432 256,432"/>
+
+      <circle cx="295" cy="404" r="7"/>
+      <polygon points="295,411 290,422 300,422"/>
+
+      <circle cx="340" cy="390" r="6"/>
+      <polygon points="340,396 336,406 344,406"/>
+    </g>
+
+    <!-- Auspicious Kalash & Charan Emblems on Cradle Front -->
+    <g transform="translate(250, 355)" fill="url(#goldBeam)">
+      <!-- Little Golden Feet (Charan / Pagla) -->
+      <!-- Left Foot -->
+      <ellipse cx="-10" cy="0" rx="4" ry="7" transform="rotate(-5 -10 0)"/>
+      <circle cx="-13" cy="-9" r="1.5"/>
+      <circle cx="-10" cy="-10" r="1.5"/>
+      <circle cx="-7" cy="-9.5" r="1.4"/>
+      <circle cx="-4" cy="-8" r="1.2"/>
+      <circle cx="-2" cy="-6" r="1"/>
+
+      <!-- Right Foot -->
+      <ellipse cx="10" cy="0" rx="4" ry="7" transform="rotate(5 10 0)"/>
+      <circle cx="13" cy="-9" r="1.5"/>
+      <circle cx="10" cy="-10" r="1.5"/>
+      <circle cx="7" cy="-9.5" r="1.4"/>
+      <circle cx="4" cy="-8" r="1.2"/>
+      <circle cx="2" cy="-6" r="1"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#eae3dc" />
+    <meta name="description" content="You are warmly invited to the Reception of Kian &amp; Aria · Sunday, 18 October 2026." />
+    <title>Kian &amp; Aria — Reception Invitation · Aabha (Mithril)</title>
+    <link rel="icon" href="assets/images/key-v2.webp" type="image/webp" />
+    <link rel="preload" as="image" href="assets/images/opening-poster-v3.webp" />
+    <link rel="stylesheet" href="assets/css/fonts.css" />
+    <link rel="stylesheet" href="assets/css/playback-v4.css?v=4" />
+    <link rel="stylesheet" href="assets/css/tailwind.css" />
+    <link rel="stylesheet" href="assets/css/motion.css?v=2.1" />
+    <link rel="stylesheet" href="assets/css/experience-v3.css?v=3.1" />
+    <link rel="stylesheet" href="assets/css/refinement-v4.css?v=5.2" />
+    <link rel="stylesheet" href="assets/css/collection-branding.css?v=1" />
+    <style>
+      .bismillah, .dua, .rs-dua, .rs-arabic, [lang="ar"], [dir="rtl"] {
+        direction: ltr !important;
+        unicode-bidi: normal !important;
+      }
+      /* Calendar Modal Styles */
+      .wc-back {
+        position: fixed; inset: 0; z-index: 2147483001; display: flex; align-items: center; justify-content: center;
+        padding: 20px; background: rgba(20, 16, 12, .45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+        opacity: 0; pointer-events: none; transition: opacity .25s ease;
+      }
+      .wc-back.wc-on { opacity: 1; pointer-events: auto; }
+      .wc-card {
+        position: relative; width: 100%; max-width: 21rem; max-height: 85svh; overflow-y: auto;
+        padding: 2rem 1.5rem 1.4rem; border-radius: 22px; background: #fffdf9; color: #3a2f24;
+        border: 1px solid rgba(0,0,0,.12); box-shadow: 0 30px 70px -30px rgba(0,0,0,.55);
+        text-align: center; transform: translateY(16px) scale(.97); transition: transform .3s cubic-bezier(.22,1,.36,1);
+      }
+      .wc-on .wc-card { transform: none; }
+      .wc-card h3 { margin: 0; font-size: .75rem; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: #b08d57; font-family: var(--ff-cinzel, serif); }
+      .wc-card p.wc-note { margin: .6rem 0 1.2rem; font-size: .85rem; line-height: 1.5; opacity: .75; font-family: var(--ff-cormorant, serif); }
+      .wc-group { margin: 1rem 0 .4rem; font-size: .62rem; letter-spacing: .24em; text-transform: uppercase; opacity: .6; }
+      .wc-opt {
+        display: flex; align-items: center; gap: .8rem; width: 100%; margin: .45rem 0 0; padding: .8rem 1rem;
+        border: 1px solid rgba(0,0,0,.12); border-radius: 14px; background: transparent; color: inherit;
+        font-size: .8rem; letter-spacing: .06em; text-align: left; text-decoration: none; cursor: pointer;
+        transition: background-color .2s, border-color .2s;
+      }
+      .wc-opt:hover { background: rgba(0,0,0,.035); border-color: #b08d57; }
+      .wc-opt small { display: block; font-size: .68rem; opacity: .6; letter-spacing: .02em; }
+      .wc-opt svg { flex: none; width: 18px; height: 18px; color: #b08d57; }
+      .wc-close {
+        position: absolute; top: .6rem; right: .7rem; width: 2rem; height: 2rem; border: 0; border-radius: 50%;
+        background: transparent; color: inherit; font-size: 1.3rem; line-height: 1; cursor: pointer; opacity: .6;
+      }
+      .wc-close:hover { opacity: 1; }
+    </style>
+    <meta name="invitation-design" content="Aabha" />
+  </head>
+  <body>
+
+    <div id="app">
+      <div class="t047 relative mx-auto w-full max-w-2xl overflow-x-hidden bg-[#eae3dc]">
+      <div id="musicWrap" class="absolute right-5 top-5 z-[1000] transition-opacity duration-700 sm:right-8 sm:top-7 opacity-0 pointer-events-none">
+        <button id="musicBtn" type="button" class="flex h-9 w-9 items-center justify-center rounded-full border border-[#c9af8e]/60 bg-[#fdfaf4]/50 text-[#8b7355] backdrop-blur-[6px] transition-colors duration-500 hover:border-[#c9af8e] hover:text-[#7c5d3b] sm:h-10 sm:w-10" aria-label="Play background music">
+          <svg id="musicIconMuted" viewBox="0 0 256 256" fill="currentColor" class="h-4 w-4 sm:h-[1.15rem] sm:w-[1.15rem]" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55ZM245.66,149.66a8,8,0,0,1-11.32,11.32L216,142.63l-18.34,18.35a8,8,0,0,1-11.32-11.32L204.69,131.3l-18.34-18.34a8,8,0,0,1,11.32-11.32L216,120l18.34-18.34a8,8,0,0,1,11.32,11.32L227.31,131.3Z"></path></svg>
+          <svg id="musicIconPlaying" viewBox="0 0 256 256" fill="currentColor" class="h-4 w-4 sm:h-[1.15rem] sm:w-[1.15rem] hidden" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55ZM216,40a8,8,0,0,0-8,8,80.09,80.09,0,0,1,0,160,8,8,0,0,0,0,16,96.11,96.11,0,0,0,0-192A8,8,0,0,0,216,40Zm-24,40a8,8,0,0,0-8,8,40,40,0,0,1,0,80,8,8,0,0,0,0,16,56,56,0,0,0,0-112A8,8,0,0,0,192,80Z"></path></svg>
+        </button>
+      </div>
+      <audio id="music" src="./assets/audio/music.mp3" loop preload="auto"></audio>
+        <div class="relative z-10">
+<section class="relative h-[100svh] min-h-[34rem] w-full overflow-hidden">
+<div class="vr-hero-mask absolute inset-0 overflow-hidden" id="heroStage" style="transform: none; transition: transform 2600ms cubic-bezier(0.22, 1, 0.36, 1);">
+<video class="absolute inset-0 h-full w-full object-cover opacity-100 transition-opacity duration-[1200ms]" id="heroVideo" loop="" muted="" playsinline="" poster="./assets/images/hero-poster-playback-v4.jpg" preload="auto" src="./assets/video/hero.mp4" webkit-playsinline=""></video>
+<div aria-hidden="true" class="absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms] opacity-0" id="heroPoster" style="background-image:url(./assets/images/hero-poster-playback-v4.jpg)"></div>
+</div>
+<div aria-hidden="true" class="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] sm:h-[36%]" style="background:linear-gradient(to bottom, rgba(214,196,166,0) 0%, rgba(214,196,166,0.16) 46%, rgba(226,211,185,0.14) 74%, rgba(246,240,230,0) 100%)"></div>
+<div class="absolute inset-x-0 bottom-0 flex flex-col items-center px-6 text-center">
+<p class="font-cinzel text-[0.62rem] uppercase tracking-[0.34em] text-[#9C7A3C] sm:text-[0.78rem] in" data-hero="" style="--hd:0.05s">The Reception of</p>
+<h1 class="mt-4 font-new-icon tracking-[0.12em] text-[1.8rem] sm:text-3xl leading-[1.15] in" data-hero="" style="--hd:0.2s">Kian &amp; Aria</h1>
+<div class="mt-2 w-full max-w-[6rem] opacity-80 sm:max-w-[10rem] in" data-hero="" style="--hd:0.35s"><img alt="" aria-hidden="true" class="pointer-events-none mx-auto h-auto w-full select-none" src="./assets/images/divider-v2.webp"/></div>
+<p class="mt-2 -mr-[0.5em] mb-12 font-cormorant text-xl tracking-[0.5em] text-[#9C7A3C] sm:text-xl md:mb-2 in" data-hero="" style="--hd:0.5s">18.10.26</p>
+</div>
+</section>
+<div id="sections">
+<section class="mx-auto w-full max-w-[52rem] px-6 pt-4 sm:px-10 sm:pt-20 mithril-v3-surface"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="flex justify-center sm:mt-8" data-g="0.16,0,0.2">
+<p class="max-w-[34rem] px-2 text-center font-cormorant text-[1.28rem] leading-[1.35] text-[#8b7355] sm:text-[1.3rem] sm:leading-[2]">
+<span class="mt-1 block whitespace-pre-line font-cormorant uppercase tracking-widest text-[#8a6a46] in" data-v="E" style="--vd: 0.000s;">Mr. &amp; Mrs.
+Leon Ellis</span><span class="mx-auto mt-1 block whitespace-pre-line text-center w-[19rem] in" data-v="E" style="--vd: 0.160s;">request the pleasure of your company
+at the wedding reception of their son</span><span class="my-6 block font-new-icon tracking-[0.06em] text-[#9C7A3C] whitespace-pre-line text-[1.6rem] sm:text-[2.5rem] leading-[1.25] in" data-v="P" style="--vd: 0.320s;">Kian &amp; Aria</span><span class="mx-auto mt-1 block whitespace-pre-line text-center w-[19rem] in" data-v="E" style="--vd: 0.480s;">daughter of Mr. &amp; Mrs. Robert Hart.</span><span class="mx-auto mt-1 block whitespace-pre-line text-center w-[17rem] in" data-v="E" style="--vd: 0.640s;">Your presence and good wishes would make this day even more meaningful.</span>
+</p>
+</div>
+</section>
+<section class="flex justify-center px-6 pt-14 sm:pt-20 mithril-v3-surface mithril-v4-media mithril-v4-portrait"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="relative aspect-[3/4] w-[8.75rem] sm:w-[10.15rem]" data-g="0.22,0,0.2">
+<img alt="" aria-hidden="true" class="h-full w-full select-none rounded-[50%] object-cover shadow-[0_14px_40px_rgba(138,106,70,0.22)] in" data-v="F" decoding="async" loading="lazy" src="./assets/images/portrait-v2.webp" style="--vd: 0.000s;"/>
+<span aria-hidden="true" class="pointer-events-none absolute inset-[-0.6rem] rounded-[50%] border border-[#c9af8e]/70 sm:inset-[-0.75rem] in" data-v="O" style="--vd: 0.220s;"></span>
+</div>
+</section>
+<section class="mx-auto w-full max-w-[44rem] px-6 pt-12 sm:px-10 sm:pt-16 mithril-v3-surface"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="flex w-full flex-col items-center" data-g="0.16,0,0.2">
+<h2 class="font-cinzel text-center text-[1.2rem] uppercase leading-[1.6] tracking-[0.16em] text-[#8a6a46] sm:mt-8 sm:text-[0.85rem] sm:tracking-[0.42em] in" data-v="P" style="--vd: 0.000s;">Save the Date</h2>
+<div class="flex justify-center pt-5 sm:pt-6 in" data-v="V" style="--vd: 0.160s;"><img alt="" aria-hidden="true" class="h-auto w-[6.5rem] select-none opacity-80 sm:w-[8.5rem]" loading="lazy" src="./assets/images/divider-v2.webp"/></div>
+</div>
+<div class="mt-6 flex flex-col items-center text-center" data-g="0.12,0.05,0.2">
+<p class="font-cormorant text-[1.05rem] italic text-[#8b7355] in" data-v="E" style="--vd: 0.050s;">Scratch the card to reveal the date</p>
+<div class="mt-6 w-full max-w-[22rem] rounded-[18px] border border-[#c9af8e]/70 p-2 in" data-v="F" style="--vd: 0.170s;">
+<div class="vr-scratch relative flex w-full flex-col items-center justify-center overflow-hidden rounded-[12px] bg-[#fdfaf4] px-5 text-center mithril-v3-card" id="vrScratch">
+<span class="font-cinzel text-[0.58rem] uppercase tracking-[0.28em] text-[#a2865c]">The Reception of Kian &amp; Aria</span>
+<span class="mt-3 font-cormorant text-[1rem] italic text-[#8b7355]">Sunday</span>
+<span class="mt-1 font-pinyon text-[2.3rem] leading-[1.2] text-[#8a6a46]">18 October 2026</span>
+<span class="mt-2 font-cinzel text-[0.58rem] uppercase tracking-[0.22em] text-[#a2865c]">7:00 PM · Jagmandir Island Palace</span>
+<canvas aria-label="Scratch to reveal the date" height="223" role="button" style="position: absolute; inset: 0px; width: 100%; height: 100%; z-index: 5; cursor: crosshair; touch-action: none; border-radius: inherit; transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);" tabindex="0" width="334"></canvas></div>
+</div>
+<div class="mt-7 in" data-v="E" style="--vd: 0.290s;"><button class="font-cormorant text-[0.68rem] tracking-[0.22em] sm:text-[0.64rem] bg-[linear-gradient(110deg,transparent_38%,rgba(255,253,248,0.85)_50%,transparent_62%)] bg-[length:260%_100%] bg-no-repeat t047-pill-shimmer uppercase inline-flex items-center justify-center rounded-full border border-[#c9af8e] px-5 py-2 text-[#8a6a46] transition-colors duration-300 hover:border-[#8a6a46] sm:px-6 sm:py-2.5" id="vrCal" type="button">Add to calendar</button></div>
+</div>
+</section>
+<section class="mx-auto w-full max-w-[44rem] px-6 pt-10 sm:px-10 sm:pt-20 mithril-v3-surface"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="flex w-full flex-col items-center" data-g="0.16,0,0.2">
+<h2 class="font-cinzel text-center text-[1.2rem] uppercase leading-[1.6] tracking-[0.16em] text-[#8a6a46] sm:mt-8 sm:text-[0.85rem] sm:tracking-[0.42em] in" data-v="P" style="--vd: 0.000s;">Time left</h2>
+<div class="flex justify-center pt-5 sm:pt-6 in" data-v="V" style="--vd: 0.160s;"><img alt="" aria-hidden="true" class="h-auto w-[6.5rem] select-none opacity-80 sm:w-[8.5rem]" loading="lazy" src="./assets/images/divider-v2.webp"/></div>
+</div>
+<div class="mt-7 flex items-stretch justify-center sm:mt-10" data-g="0.11,0.1,0.2" id="countdown">
+<div class="flex flex-1 flex-col items-center justify-start px-1.5 sm:px-6" data-sub="0.08,0.05">
+<span class="font-cinzel text-2xl leading-none tracking-[0.08em] text-[#8a6a46] sm:text-[2.6rem] in" data-unit="days" data-v="P" style="--vd: 0.150s;">00</span>
+<span class="mt-2.5 text-center font-cinzel text-[0.52rem] uppercase leading-[1.4] tracking-[0.22em] text-[#a2865c] sm:mt-4 sm:text-[0.68rem] sm:tracking-[0.26em] in" data-v="M" style="--vd: 0.230s;">Days</span>
+</div>
+<div class="flex flex-1 flex-col items-center justify-start px-1.5 sm:px-6 border-l border-[#c9af8e]" data-sub="0.08,0.05">
+<span class="font-cinzel text-2xl leading-none tracking-[0.08em] text-[#8a6a46] sm:text-[2.6rem] in" data-unit="hours" data-v="P" style="--vd: 0.260s;">00</span>
+<span class="mt-2.5 text-center font-cinzel text-[0.52rem] uppercase leading-[1.4] tracking-[0.22em] text-[#a2865c] sm:mt-4 sm:text-[0.68rem] sm:tracking-[0.26em] in" data-v="M" style="--vd: 0.340s;">Hours</span>
+</div>
+<div class="flex flex-1 flex-col items-center justify-start px-1.5 sm:px-6 border-l border-[#c9af8e]" data-sub="0.08,0.05">
+<span class="font-cinzel text-2xl leading-none tracking-[0.08em] text-[#8a6a46] sm:text-[2.6rem] in" data-unit="minutes" data-v="P" style="--vd: 0.370s;">00</span>
+<span class="mt-2.5 text-center font-cinzel text-[0.52rem] uppercase leading-[1.4] tracking-[0.22em] text-[#a2865c] sm:mt-4 sm:text-[0.68rem] sm:tracking-[0.26em] in" data-v="M" style="--vd: 0.450s;">Minutes</span>
+</div>
+<div class="flex flex-1 flex-col items-center justify-start px-1.5 sm:px-6 border-l border-[#c9af8e]" data-sub="0.08,0.05">
+<span class="font-cinzel text-2xl leading-none tracking-[0.08em] text-[#8a6a46] sm:text-[2.6rem] in" data-unit="seconds" data-v="P" style="--vd: 0.480s;">00</span>
+<span class="mt-2.5 text-center font-cinzel text-[0.52rem] uppercase leading-[1.4] tracking-[0.22em] text-[#a2865c] sm:mt-4 sm:text-[0.68rem] sm:tracking-[0.26em] in" data-v="M" style="--vd: 0.560s;">Seconds</span>
+</div>
+</div>
+</section>
+<section class="w-full pt-8 sm:pt-11 mithril-v3-surface mithril-v4-media"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="overflow-hidden in" data-g="0,0,0.2" data-v="M" style="--vd: 0.000s;">
+<img alt="" aria-hidden="true" class="block aspect-[128/75] h-auto w-full object-cover in" data-v="Z" decoding="async" loading="lazy" src="./assets/images/interlude-v2.webp" style="--vd: 0.000s;"/>
+</div>
+</section>
+<section class="mx-auto w-full max-w-[54rem] px-6 pt-2 sm:px-10 sm:pt-16 mithril-v3-surface mithril-v4-venue is-bloomed"><div aria-hidden="true" class="timeline-floral-progress" style="left: 20px; top: 2764px; height: 333.94px;"></div><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="flex w-full flex-col items-center" data-g="0.16,0,0.2">
+<h2 class="font-cinzel text-center text-[1.2rem] uppercase leading-[1.6] tracking-[0.16em] text-[#8a6a46] sm:mt-8 sm:text-[0.85rem] sm:tracking-[0.42em] in" data-v="P" style="--vd: 0.000s;">The Evening</h2>
+<div class="flex justify-center pt-5 sm:pt-6 in" data-v="V" style="--vd: 0.160s;"><img alt="" aria-hidden="true" class="h-auto w-[6.5rem] select-none opacity-80 sm:w-[8.5rem]" loading="lazy" src="./assets/images/divider-v2.webp"/></div>
+</div>
+<div class="mt-9 flex flex-col items-center gap-11 sm:mt-12 sm:gap-14">
+<div class="flex w-full flex-col items-center text-center" data-g="0.09,0.05,0.15">
+<div class="flex w-full justify-center in" data-v="F" style="--vd: 0.050s;"><img alt="" aria-hidden="true" class="vr-venue h-auto max-w-[17rem] select-none object-contain sm:h-[11rem] sm:max-w-[22rem]" loading="lazy" src="./assets/images/venue-v2.webp"/></div>
+<div class="mt-10 w-full max-w-[22rem] sm:mt-5 sm:max-w-[26rem]">
+<h3 class="-mt-6 font-pinyon text-[1.65rem] leading-[1.35] tracking-[0.02em] text-[#8a6a46] sm:text-[2rem] in" data-v="P" style="--vd: 0.140s;">Wedding Reception</h3>
+<div class="flex justify-center pt-1.5 sm:pt-2 in" data-v="V" style="--vd: 0.230s;"><img alt="" aria-hidden="true" class="h-auto w-[4.25rem] select-none opacity-80 sm:w-[5.5rem]" loading="lazy" src="./assets/images/divider-v2.webp"/></div>
+<p class="mt-3 font-cinzel text-3xl tracking-[0.2em] text-[#a2865c] sm:mt-3 sm:text-xl in" data-v="P" style="--vd: 0.320s;">7:00 PM</p>
+<p class="mt-2 font-cormorant text-[1.4rem] leading-[1.6] text-[#8b7355] sm:mt-3 sm:text-[0.98rem] in" data-v="E" style="--vd: 0.410s;">Jagmandir Island Palace</p>
+<p class="mt-1 whitespace-pre-line px-6 font-cormorant text-[1.1rem] leading-[1.6] text-[#8b7355] sm:text-[0.94rem] in" data-v="E" style="--vd: 0.500s;">Udaipur, Rajasthan, India</p>
+<div class="mt-4 flex justify-center sm:mt-5 in" data-v="E" style="--vd: 0.590s;"><a class="font-cormorant text-[0.68rem] tracking-[0.22em] sm:text-[0.64rem] bg-[linear-gradient(110deg,transparent_38%,rgba(255,253,248,0.85)_50%,transparent_62%)] bg-[length:260%_100%] bg-no-repeat t047-pill-shimmer uppercase inline-flex items-center justify-center rounded-full border border-[#c9af8e] px-5 py-2 text-[#8a6a46] transition-colors duration-300 hover:border-[#8a6a46] sm:px-6 sm:py-2.5" href="https://www.google.com/maps/search/?api=1&amp;query=Jagmandir%20Island%20Palace%2C%20Udaipur%2C%20Rajasthan%2C%20India" rel="noopener noreferrer" target="_blank">View on map</a></div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="timeline-floral-cursor" style="left: 20px; top: 3097.94px;">
+<div class="timeline-floral-aura"></div>
+<div class="timeline-floral-wrapper" style="transform: scale(1.298) rotate(90.97deg);">
+<img alt="" class="timeline-floral-img" src="assets/images/timeline-floral.svg"/>
+</div>
+</div></section>
+<section class="relative mt-4 w-full overflow-hidden sm:mt-16 mithril-v3-surface mithril-v4-fashion"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div class="relative z-10 flex flex-col items-center justify-start px-6 pt-10 text-center">
+<div class="flex w-full flex-col items-center" data-g="0.16,0,0.2">
+<h2 class="font-cinzel text-center text-[1.2rem] uppercase leading-[1.6] tracking-[0.16em] text-[#8a6a46] sm:mt-8 sm:text-[0.85rem] sm:tracking-[0.42em] in" data-v="P" style="text-shadow: rgba(255, 252, 246, 0.95) 0px 1px 14px, rgba(255, 252, 246, 0.75) 0px 0px 30px; --vd: 0.000s;">Dress code</h2>
+<div class="flex justify-center pt-5 sm:pt-6 in" data-v="V" style="--vd: 0.160s;"><img alt="" aria-hidden="true" class="h-auto w-[6.5rem] select-none opacity-80 sm:w-[8.5rem]" loading="lazy" src="./assets/images/divider-v2.webp"/></div>
+</div>
+<div class="mt-3 flex max-w-[15rem] flex-col gap-[0.15rem] sm:mt-4" data-g="0.14,0.16,0.2">
+<p class="whitespace-pre-line font-cormorant text-[1.05rem] leading-[1.4] text-[#8b7355] sm:text-[1.05rem] in" data-v="E" style="text-shadow: rgba(255, 252, 246, 0.9) 0px 1px 12px; --vd: 0.160s;">We kindly ask you to 
+wear elegant attire</p><p class="whitespace-pre-line font-cormorant text-[1.05rem] leading-[1.4] text-[#8b7355] sm:text-[1.05rem] in" data-v="E" style="text-shadow: rgba(255, 252, 246, 0.9) 0px 1px 12px; --vd: 0.300s;">in the colours of the palette below.</p>
+</div>
+<div class="mt-7 flex items-center justify-center gap-4 sm:mt-9 sm:gap-6" data-g="0.09,0.22,0.2">
+<span aria-hidden="true" class="block h-8 w-8 rounded-full shadow-[0_2px_8px_rgba(138,106,70,0.22)] ring-1 ring-[#fdfaf4]/70 sm:h-11 sm:w-11 in" data-v="R" style="--vd: 0.220s;"><i class="block h-full w-full rounded-full" style="background-color:#e8d6be"></i></span><span aria-hidden="true" class="block h-8 w-8 rounded-full shadow-[0_2px_8px_rgba(138,106,70,0.22)] ring-1 ring-[#fdfaf4]/70 sm:h-11 sm:w-11 in" data-v="R" style="--vd: 0.310s;"><i class="block h-full w-full rounded-full" style="background-color:#d3b896"></i></span><span aria-hidden="true" class="block h-8 w-8 rounded-full shadow-[0_2px_8px_rgba(138,106,70,0.22)] ring-1 ring-[#fdfaf4]/70 sm:h-11 sm:w-11 in" data-v="R" style="--vd: 0.400s;"><i class="block h-full w-full rounded-full" style="background-color:#a6ada1"></i></span><span aria-hidden="true" class="block h-8 w-8 rounded-full shadow-[0_2px_8px_rgba(138,106,70,0.22)] ring-1 ring-[#fdfaf4]/70 sm:h-11 sm:w-11 in" data-v="R" style="--vd: 0.490s;"><i class="block h-full w-full rounded-full" style="background-color:#5e6a5c"></i></span>
+</div>
+</div>
+<!-- The picture follows the text and only its empty sky (top 38%) slides up behind it,
+           so the people always stay below the colour swatches on every screen size. -->
+<img alt="" aria-hidden="true" class="vr-dress-mask vr-dress-img pointer-events-none relative mx-auto block h-auto w-full max-w-[40rem] select-none" src="./assets/images/dresscode-v2.webp"/>
+</section>
+<section class="relative w-full overflow-hidden mithril-v3-surface"><span aria-hidden="true" class="mithril-v3-art"></span>
+<div aria-hidden="true" class="vr-closing-mask pointer-events-none absolute inset-0 bg-cover bg-bottom" style="background-image:url(./assets/images/footer-cover-v2.webp)"></div>
+<div class="relative z-10 flex min-h-[24rem] w-full flex-col items-center justify-end px-6 pt-[12svh] pb-20 text-center sm:min-h-[44rem] sm:pb-28" data-g="0.16,0,0.45">
+<p class="vr-oneline font-amiri leading-[1.9] text-[#a2865c] in" data-v="P" dir="rtl" lang="en" style="--vd: 0.000s;">Two hearts, one beautiful journey.</p>
+<p class="whitespace-pre-line font-pinyon text-[1.5rem] leading-[1.5] text-[#a2865c] sm:text-[1.85rem] in" data-v="P" style="--vd: 0.160s;">We look forward to seeing you.</p>
+<div class="flex justify-center pt-5 sm:pt-6 in" data-v="V" style="--vd: 0.320s;"><img alt="" aria-hidden="true" class="h-auto w-[6.5rem] select-none opacity-80 sm:w-[8.5rem]" loading="lazy" src="./assets/images/divider-v2.webp"/></div>
+<p class="mt-1 font-cormorant text-[1.2rem] tracking-[0.24em] text-[#a2865c] sm:text-[1.2rem] in" data-v="E" style="--vd: 0.480s;">18 · 10 · 2026</p>
+<div class="mt-10 flex w-full justify-center sm:mt-14 in" data-v="F" style="--vd: 0.640s;"><img alt="" aria-hidden="true" class="h-auto w-[8rem] select-none sm:w-[19rem]" loading="lazy" src="./assets/images/key-v2.webp"/></div>
+</div>
+</section></div>
+        </div>
+    <div id="cover" role="button" tabindex="0" aria-label="Open the invitation" class="fixed inset-0 z-[60] cursor-pointer overflow-hidden bg-[#F3EDE1]" style="transition:opacity 1400ms cubic-bezier(0.22,1,0.36,1), transform 1600ms cubic-bezier(0.22,1,0.36,1)">
+      <div id="stage" class="vr-stage absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style="width: calc(56.338svh); height: 100svh; --stage-w: calc(100svh * 0.5633802816901409);">
+        <video id="lockVideo" class="mx-auto h-full w-full max-w-2xl object-cover md:object-contain" src="./assets/video/opening-v3.mp4" poster="./assets/images/opening-poster-v3.webp" playsinline="" webkit-playsinline="" preload="auto" muted=""></video>
+        <div id="coverText" class="pointer-events-none absolute inset-x-0 flex flex-col items-center px-6 text-center" style="top: 79%; transition: opacity 0.9s ease-out; opacity: 1;">
+          <h2 class="vr-cover-names font-cinzel uppercase tracking-[0.14em]" style="color:#c9af8e;font-size:clamp(1.35rem, calc(var(--stage-w) * 0.056), 3rem)">Kian &amp; Aria</h2>
+          <div class="vr-cover-hint flex w-full flex-col items-center" style="margin-top:calc(var(--stage-w) * 0.012)">
+            <span class="font-cormorant uppercase tracking-[0.34em] text-[#9C7A3C]" style="margin-top:calc(var(--stage-w) * 0.022);font-size:clamp(0.58rem, calc(var(--stage-w) * 0.022), 0.85rem)">Tap to unlock</span>
+          </div>
+        </div>
+      </div>
+    </div>
+      </div>
+    </div>
+    <footer class="collection-signature collection-signature--pearl" aria-label="Aabha invitation design" style="--signature-ink:#655846;--signature-paper:#f3ede3">
+      <span class="collection-signature__rule" aria-hidden="true"></span>
+      <span class="collection-signature__name">Aabha</span>
+      <span class="collection-signature__line">An heirloom of light</span>
+    </footer>
+    <!-- Calendar Export Modal -->
+    <div id="calendarModal" class="wc-back" aria-hidden="true">
+      <div class="wc-card" role="dialog" aria-modal="true" aria-labelledby="calHeading">
+        <button type="button" class="wc-close" id="calClose" aria-label="Close">×</button>
+        <h3 id="calHeading">Add to Calendar</h3>
+        <p class="wc-note">The Reception of Kian &amp; Aria<br>Sunday, 18 October 2026 · 7:00 PM</p>
+        <div class="wc-group">Select your calendar</div>
+        <a href="#" id="calGoogle" target="_blank" rel="noopener" class="wc-opt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <div><strong>Google Calendar</strong><small>Open in browser or app</small></div>
+        </a>
+        <a href="#" id="calIcs" class="wc-opt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <div><strong>Apple / Outlook Calendar</strong><small>Download .ics file</small></div>
+        </a>
+        <a href="#" id="calYahoo" target="_blank" rel="noopener" class="wc-opt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <div><strong>Yahoo Calendar</strong><small>Open in browser</small></div>
+        </a>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script src="/shared/cloud-storage.js"></script>
+    <script src="/shared/universal-card-engine.js"></script>
+  </body>
+</html>

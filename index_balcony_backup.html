@@ -1,0 +1,3270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Balcony - Digital website invites</title>
+    <meta name="description"
+        content="Create a beautiful digital web invitation for your wedding in minutes! Interactive 3D animated cards with music, maps, and instant WhatsApp RSVP.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Sora:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --dusk-50: #fbf9f6;
+            --dusk-100: #f3ede2;
+            --dusk-200: #e5dac9;
+            --dusk-700: #4a3e3d;
+            --dusk-800: #2b2226;
+            --dusk-900: #1a0a10;
+            --purple: #5f0fff;
+            --purple-hover: #4e0bd4;
+            --purple-light: #f5f0ff;
+            --gold: #d4af37;
+            --gold-light: #fef8e7;
+            --text-dark: #1f1b24;
+            --text-muted: #6b6375;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+            font-family: 'Sora', system-ui, -apple-system, sans-serif;
+            background-color: var(--dusk-50);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Floating Pill Navbar */
+        header.nav-header {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: center;
+            background: rgba(251, 249, 246, 0.85);
+            backdrop-filter: blur(16px);
+        }
+
+        .nav-container {
+            width: 100%;
+            max-width: 1120px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 9999px;
+            padding: 8px 16px 8px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .brand-logo-text {
+            font-family: 'Fraunces', serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--purple);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--dusk-700);
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: color 0.15s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--purple);
+        }
+
+        .btn-purple {
+            background: var(--purple);
+            color: #ffffff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(95, 15, 255, 0.25);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-purple:hover {
+            background: var(--purple-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(95, 15, 255, 0.35);
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            color: var(--dusk-800);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            padding: 10px 22px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--purple);
+            color: var(--purple);
+            background: var(--purple-light);
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1160px;
+            margin: 40px auto 70px;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            align-items: center;
+            gap: 48px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--purple-light);
+            color: var(--purple);
+            border: 1px solid rgba(95, 15, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+            font-weight: 600;
+            line-height: 1.15;
+            color: var(--dusk-900);
+            margin-bottom: 22px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            color: var(--purple);
+            font-style: italic;
+        }
+
+        .hero p {
+            font-size: clamp(1.05rem, 1.8vw, 1.22rem);
+            color: var(--text-muted);
+            line-height: 1.65;
+            margin-bottom: 34px;
+            max-width: 540px;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        /* 3D Phone Hero Mockup */
+        .hero-phone-wrap {
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        .phone-mockup-3d {
+            width: 360px;
+            height: 720px;
+            max-height: 78vh;
+            border-radius: 46px;
+            background: #000;
+            box-shadow:
+                0 0 0 10px #1e1e24,
+                0 0 0 12px rgba(95, 15, 255, 0.3),
+                0 25px 65px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-mockup-3d iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        /* Explore Templates Section */
+        .section-header {
+            text-align: center;
+            max-width: 720px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .section-header h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 2.6rem;
+            color: var(--dusk-900);
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+
+        .templates-grid {
+            max-width: 1140px;
+            margin: 0 auto 90px;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 36px;
+        }
+
+        .template-card {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .template-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 45px rgba(95, 15, 255, 0.12);
+            border-color: rgba(95, 15, 255, 0.3);
+        }
+
+        .template-thumb {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: #2b0012;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .template-thumb-tag {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            background: #ffffff;
+            color: var(--purple);
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 5px 14px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .template-thumb-content {
+            text-align: center;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .template-thumb-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            color: #f7e6d0;
+        }
+
+        .template-thumb-sub {
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+
+        .template-details {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: space-between;
+        }
+
+        .template-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+
+        .template-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.45rem;
+            color: var(--dusk-900);
+        }
+
+        .template-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--purple);
+        }
+
+        .template-desc {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 22px;
+        }
+
+        .template-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-card-preview,
+        .btn-card-fullscreen {
+            background: var(--dusk-50);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            color: var(--dusk-900);
+            padding: 11px 10px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-card-preview:hover,
+        .btn-card-fullscreen:hover {
+            border-color: var(--purple);
+            color: var(--purple);
+            background: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-card-edit {
+            grid-column: 1 / -1;
+            width: 100%;
+            background: linear-gradient(135deg, #7c24ff, #5f0fff);
+            color: #ffffff;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 9999px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(95, 15, 255, 0.35);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-card-edit:hover {
+            background: linear-gradient(135deg, #6c1aeb, #4d00e8);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(95, 15, 255, 0.5);
+        }
+
+        /* Features Section */
+        .features-section {
+            background: #ffffff;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 80px 24px;
+            margin-bottom: 90px;
+        }
+
+        .features-grid {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 28px;
+        }
+
+        .feature-item {
+            padding: 24px 20px;
+            border-radius: 20px;
+            background: var(--dusk-50);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 14px;
+        }
+
+        .feature-item h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            color: var(--dusk-900);
+            margin-bottom: 8px;
+        }
+
+        .feature-item p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+
+        /* Sharing Guide Section */
+        .sharing-section {
+            max-width: 1120px;
+            margin: 0 auto 90px;
+            padding: 0 24px;
+            text-align: center;
+        }
+
+        .sharing-box {
+            background: linear-gradient(135deg, #f5f0ff 0%, #fff 100%);
+            border: 1px solid rgba(95, 15, 255, 0.2);
+            border-radius: 32px;
+            padding: 48px 36px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+            text-align: left;
+            align-items: center;
+        }
+
+        .sharing-box h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 2.2rem;
+            color: var(--dusk-900);
+            margin-bottom: 14px;
+            line-height: 1.25;
+        }
+
+        .sharing-feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sharing-feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.95rem;
+            color: var(--dusk-700);
+        }
+
+        .sharing-feature-list li span.badge-num {
+            background: var(--purple);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+
+        /* FAQs Accordion */
+        .faqs-section {
+            max-width: 800px;
+            margin: 0 auto 90px;
+            padding: 0 24px;
+        }
+
+        .faq-item {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 18px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 20px 24px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .faq-answer {
+            padding: 0 24px 20px;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(45deg);
+        }
+
+        .faq-toggle {
+            font-size: 1.3rem;
+            color: var(--purple);
+            transition: transform 0.2s ease;
+        }
+
+        /* Minimalist Dark Footer */
+        footer.site-footer {
+            background: var(--dusk-900);
+            color: #ffffff;
+            padding: 60px 24px 30px;
+        }
+
+        .footer-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-brand {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            color: #ffffff;
+        }
+
+        .footer-brand span {
+            color: var(--purple);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.15s;
+        }
+
+        .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        .footer-bottom {
+            max-width: 1120px;
+            margin: 24px auto 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.45);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+
+        /* Mobile Navigation & Responsive Controls */
+        #templates,
+        #features,
+        #sharing,
+        #faqs {
+            scroll-margin-top: 80px;
+        }
+
+        .btn-mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-mobile-nav-toggle:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .hamburger-line {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background-color: var(--dusk-900);
+            border-radius: 2px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mobile-nav-drawer {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .mobile-nav-drawer.active {
+            pointer-events: auto;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-nav-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(18, 5, 16, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .mobile-nav-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 280px;
+            max-width: 85vw;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 24px 20px;
+        }
+
+        .mobile-nav-drawer.active .mobile-nav-panel {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0eaf3;
+        }
+
+        .btn-mobile-nav-close {
+            background: rgba(0, 0, 0, 0.06);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333333;
+        }
+
+        .mobile-nav-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 24px 0;
+            flex: 1;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--dusk-900);
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .mobile-nav-link:hover,
+        .mobile-nav-link:active {
+            background: #f7f3fb;
+            color: var(--purple);
+        }
+
+        .nav-link-icon {
+            font-size: 1.3rem;
+        }
+
+        .mobile-nav-footer {
+            padding-top: 16px;
+            border-top: 1px solid #f0eaf3;
+        }
+
+        .btn-mobile-lock {
+            width: 100%;
+            padding: 12px 16px;
+            background: #fff0f3;
+            color: #c9184a;
+            border: 1px solid #ffccd5;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .phone-mockup-tap-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 24px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 60%);
+            border-radius: 46px;
+            cursor: pointer;
+        }
+
+        .mockup-tap-badge {
+            background: rgba(255, 255, 255, 0.92);
+            color: #2b0814;
+            font-weight: 700;
+            font-size: 0.82rem;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
+
+        .drawer-mobile-handle {
+            display: none;
+            width: 44px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 9999px;
+            margin: 0 auto 12px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .btn-mobile-nav-toggle {
+                display: flex;
+            }
+
+            .phone-mockup-3d iframe {
+                pointer-events: none;
+            }
+
+            .phone-mockup-tap-overlay {
+                display: flex;
+            }
+
+            .drawer-mobile-handle {
+                display: block;
+            }
+        }
+
+        /* Live Preview Modal - Fullscreen & Mobile */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 10, 20, 0.94);
+            backdrop-filter: blur(14px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* Top Bar Floating Navigation */
+        .preview-top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 10005;
+            background: linear-gradient(180deg, rgba(14, 10, 20, 0.9) 0%, rgba(14, 10, 20, 0.4) 60%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .preview-bar-btn {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .preview-bar-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .preview-guest-badge {
+            color: #f3ecff;
+            font-size: 0.88rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 6px 18px;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+        }
+
+        .preview-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .preview-bar-btn--edit {
+            background: #ffffff;
+            color: #1e1b24;
+            border: none;
+            font-weight: 700;
+        }
+
+        .preview-bar-btn--edit:hover {
+            background: #faf8ff;
+            color: var(--dusk-500);
+            box-shadow: 0 4px 14px rgba(95, 15, 255, 0.3);
+        }
+
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Container & Frame: Mobile vs Fullscreen */
+        .modal-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-container.is-fullscreen {
+            width: 100vw;
+            height: 100vh;
+            max-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .modal-container.is-fullscreen .preview-frame-wrapper {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+        }
+
+        .modal-container.is-mobile {
+            width: auto;
+            height: auto;
+            max-height: 94vh;
+            padding: 60px 0 80px;
+        }
+
+        .modal-container.is-mobile .preview-frame-wrapper {
+            width: 390px;
+            height: 800px;
+            max-height: 78vh;
+            border-radius: 46px;
+            background: #000000;
+            box-shadow: 0 0 0 10px #1e1b24, 0 0 0 12px rgba(95, 15, 255, 0.4), 0 30px 80px rgba(0, 0, 0, 0.65);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .preview-frame-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        /* Bottom Floating Controls Dock */
+        .preview-bottom-dock {
+            position: fixed;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10005;
+            pointer-events: none;
+            padding: 0 24px;
+        }
+
+        .preview-pill-switcher {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            background: rgba(26, 18, 38, 0.88);
+            backdrop-filter: blur(16px);
+            padding: 5px 6px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+            gap: 4px;
+        }
+
+        .pill-btn {
+            background: transparent;
+            border: none;
+            color: #d1c7e2;
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .pill-btn.active {
+            background: #f0c978;
+            color: #2b1704;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(240, 201, 120, 0.4);
+        }
+
+        .pill-btn--edit {
+            background: linear-gradient(135deg, rgba(124, 36, 255, 0.4), rgba(95, 15, 255, 0.4));
+            border: 1px solid rgba(240, 201, 120, 0.5);
+            color: #f0c978;
+            font-weight: 700;
+        }
+
+        .pill-btn--edit:hover {
+            background: linear-gradient(135deg, #7c24ff, #5f0fff);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(95, 15, 255, 0.4);
+        }
+
+        .publish-text-short { display: none; }
+        .publish-text-full { display: inline; }
+        @media (max-width: 600px) {
+            .publish-text-full { display: none; }
+            .publish-text-short { display: inline; }
+        }
+
+        .preview-cta-buy {
+            position: absolute;
+            right: 28px;
+            pointer-events: auto;
+            padding: 12px 24px;
+            font-size: 0.88rem;
+            border-radius: 9999px;
+            box-shadow: 0 8px 24px rgba(95, 15, 255, 0.45);
+        }
+
+        .btn-card-fullscreen {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+            background: #ffffff;
+            color: var(--dusk-900);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-card-fullscreen:hover {
+            border-color: var(--dusk-500);
+            color: var(--dusk-500);
+            background: #faf8ff;
+        }
+
+        @media (max-width: 768px) {
+            .preview-top-bar {
+                padding: 0 12px;
+                height: 54px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                z-index: 10010;
+            }
+
+            .preview-guest-badge,
+            .preview-cta-buy {
+                display: none;
+            }
+
+            .preview-top-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-right: 56px; /* Leaves room for card's internal music toggle */
+            }
+
+            .preview-bar-btn {
+                padding: 8px 14px;
+                font-size: 0.82rem;
+                min-height: 38px;
+            }
+
+            .btn-close-modal {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                font-size: 1.4rem;
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .preview-bottom-dock {
+                bottom: 12px;
+                padding: 0 12px;
+            }
+
+            .preview-pill-switcher #pillMobileBtn,
+            .preview-pill-switcher #pillFullscreenBtn {
+                display: none;
+            }
+
+            .modal-container.is-fullscreen,
+            .modal-container.is-mobile {
+                padding: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-height: 100vh !important;
+            }
+
+            .modal-container.is-fullscreen .preview-frame-wrapper,
+            .modal-container.is-mobile .preview-frame-wrapper {
+                width: 100vw !important;
+                height: 100vh !important;
+                max-height: 100vh !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+        }
+
+        /* WYSIWYG Fullscreen Studio Editor Modal */
+        .editor-overlay {
+            position: fixed;
+            inset: 0;
+            background: #110815;
+            z-index: 10001;
+            display: none;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .editor-overlay.active {
+            display: flex;
+        }
+
+        .editor-top-nav {
+            padding: 10px 24px;
+            background: rgba(22, 14, 28, 0.95);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .editor-brand-badge {
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #f7e6d0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .editor-view-switcher {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            padding: 3px 4px;
+            gap: 4px;
+        }
+
+        .editor-pill-btn {
+            background: transparent;
+            border: none;
+            color: #c9bed8;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .editor-pill-btn:hover {
+            color: #ffffff;
+        }
+
+        .editor-pill-btn.active {
+            background: #f0c978;
+            color: #261405;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .editor-workspace {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            background: #0d010b;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: calc(100vh - 58px);
+        }
+
+        /* Fullscreen Mode (Default): Fills 100% of workspace! */
+        .editor-workspace.is-fullscreen .editor-phone-container {
+            width: 100vw;
+            height: 100%;
+            max-height: 100%;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+            border: none;
+        }
+
+        /* Mobile Frame Mode: Centered Phone Mockup */
+        .editor-workspace.is-mobile .editor-phone-container {
+            width: 390px;
+            height: 800px;
+            max-height: 86vh;
+            border-radius: 46px;
+            background: #000;
+            box-shadow: 0 0 0 10px #1e1b24, 0 0 0 12px rgba(95, 15, 255, 0.4), 0 30px 80px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .editor-phone-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        /* Collapsible Quick Details Drawer */
+        .editor-controls-drawer {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            bottom: 20px;
+            width: 320px;
+            background: rgba(26, 14, 30, 0.94);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 22px 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            overflow-y: auto;
+            border: 1px solid rgba(240, 201, 120, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            z-index: 20;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+            color: #ffffff;
+        }
+
+        .editor-controls-drawer.collapsed {
+            transform: translateX(-360px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .editor-controls-drawer .input-group label {
+            color: #f7e6d0;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .editor-controls-drawer .input-group input,
+        .editor-controls-drawer .input-group select {
+            background: rgba(14, 6, 16, 0.8);
+            border: 1px solid rgba(240, 201, 120, 0.3);
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: inherit;
+        }
+
+        .editor-controls-drawer .input-group input:focus,
+        .editor-controls-drawer .input-group select:focus {
+            border-color: #f0c978;
+            outline: none;
+            box-shadow: 0 0 10px rgba(240, 201, 120, 0.25);
+        }
+
+        /* Toggle Drawer Floating Button */
+        .btn-toggle-drawer {
+            position: absolute;
+            left: 18px;
+            bottom: 18px;
+            z-index: 25;
+            background: rgba(26, 14, 30, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(240, 201, 120, 0.4);
+            color: #f0c978;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-toggle-drawer:hover {
+            background: #f0c978;
+            color: #1a000a;
+        }
+
+        .drawer-mobile-handle {
+            display: none;
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            margin: 0 auto 12px;
+        }
+
+        @media (max-width: 768px) {
+            .drawer-mobile-handle {
+                display: block;
+            }
+
+            .editor-top-nav {
+                padding: 8px 12px;
+                height: 52px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .editor-brand-badge {
+                font-size: 0.88rem;
+                max-width: 140px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .editor-view-switcher {
+                display: none;
+            }
+
+            .editor-top-nav .btn-purple {
+                padding: 8px 14px;
+                font-size: 0.82rem;
+                min-height: 38px;
+                white-space: nowrap;
+            }
+
+            .editor-workspace {
+                height: calc(100vh - 52px);
+                flex-direction: row !important;
+                position: relative;
+            }
+
+            .editor-workspace .editor-phone-container {
+                width: 100vw !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* Bottom sheet drawer for mobile */
+            .editor-controls-drawer {
+                position: fixed !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                top: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                max-height: 80vh !important;
+                border-radius: 24px 24px 0 0 !important;
+                background: rgba(22, 10, 26, 0.98) !important;
+                backdrop-filter: blur(24px) !important;
+                -webkit-backdrop-filter: blur(24px) !important;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7) !important;
+                padding: 16px 20px 28px !important;
+                transform: translateY(100%);
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s !important;
+                z-index: 10010 !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            .editor-controls-drawer:not(.collapsed) {
+                transform: translateY(0) !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            .editor-controls-drawer.collapsed {
+                transform: translateY(100%) !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+
+            .btn-toggle-drawer {
+                position: fixed !important;
+                left: 16px !important;
+                bottom: 18px !important;
+                z-index: 10008 !important;
+                padding: 10px 18px !important;
+                font-size: 0.88rem !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+            }
+        }
+
+        /* Share & WhatsApp Link Generator Modal */
+        .share-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(18, 12, 22, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 100020;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .share-modal-overlay.active {
+            display: flex;
+        }
+
+        .share-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 24px 22px;
+            max-width: 460px;
+            width: 100%;
+            max-height: 92vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+            text-align: center;
+            margin: auto;
+            position: relative;
+            animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.92);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .share-icon-circle {
+            width: 64px;
+            height: 64px;
+            background: #e9fbf0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 16px;
+        }
+
+        .share-card h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            color: var(--dusk-900);
+            margin-bottom: 8px;
+        }
+
+        .share-url-box {
+            background: var(--dusk-50);
+            border: 1px dashed rgba(95, 15, 255, 0.35);
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: var(--purple);
+            word-break: break-all;
+            margin: 18px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-copy {
+            background: var(--purple);
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-whatsapp-share {
+            width: 100%;
+            background: #25D366;
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            border-radius: 9999px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-whatsapp-share:hover {
+            background: #20ba5a;
+            transform: translateY(-1px);
+        }
+
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--dusk-700);
+            margin-bottom: 4px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--purple);
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        #templates,
+        #features,
+        #sharing,
+        #faqs {
+            scroll-margin-top: 80px;
+        }
+
+        /* Mobile Hamburger & Slide-out Navigation */
+        .btn-mobile-nav-toggle {
+            display: none;
+            background: rgba(95, 15, 255, 0.08);
+            border: 1px solid rgba(95, 15, 255, 0.2);
+            color: var(--purple);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-mobile-nav-toggle:active {
+            background: var(--purple);
+            color: #ffffff;
+        }
+
+        .mobile-nav-drawer {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: none;
+        }
+
+        .mobile-nav-drawer.active {
+            display: block;
+        }
+
+        .mobile-nav-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(18, 10, 24, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .mobile-nav-content {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(85vw, 320px);
+            background: #ffffff;
+            box-shadow: -10px 0 35px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 20px;
+            animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .mobile-nav-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .mobile-nav-close {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            color: var(--dusk-800);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mobile-nav-list a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--dusk-900);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            background: var(--dusk-50);
+            transition: all 0.15s ease;
+        }
+
+        .mobile-nav-list a:active,
+        .mobile-nav-list a:hover {
+            background: var(--purple-light);
+            color: var(--purple);
+            transform: translateX(4px);
+        }
+
+        .mobile-nav-footer {
+            padding-top: 16px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .mobile-admin-info {
+            background: var(--gold-light);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 14px;
+            padding: 12px 14px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #523b00;
+        }
+
+        .btn-admin-logout-full {
+            background: #ffffff;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: #7a5800;
+            padding: 8px 14px;
+            border-radius: 9999px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Hero Tap Overlay for Mobile Scroll Safety */
+        .phone-mockup-tap-overlay {
+            display: none;
+        }
+
+        /* Responsive Layouts */
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 36px;
+            }
+
+            .hero p {
+                margin: 0 auto 28px;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .btn-mobile-nav-toggle {
+                display: flex;
+            }
+
+            .nav-container {
+                padding: 6px 14px;
+                height: 52px;
+            }
+
+            .nav-container .btn-purple {
+                display: none;
+            }
+
+            .sharing-box {
+                grid-template-columns: 1fr;
+                gap: 28px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            header.nav-header {
+                padding: 8px 12px;
+            }
+
+            .hero {
+                margin: 20px auto 40px;
+                padding: 0 16px;
+                gap: 28px;
+            }
+
+            .hero h1 {
+                font-size: clamp(2rem, 8vw, 2.7rem);
+                line-height: 1.18;
+            }
+
+            .hero p {
+                font-size: 1rem;
+                margin-bottom: 24px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 12px;
+            }
+
+            .hero-actions a,
+            .hero-actions button {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 20px !important;
+                font-size: 0.95rem !important;
+                min-height: 48px;
+            }
+
+            .phone-mockup-3d {
+                width: min(90vw, 340px);
+                height: min(65vh, 600px);
+                border-radius: 36px;
+            }
+
+            .phone-mockup-3d iframe {
+                pointer-events: none;
+            }
+
+            .phone-mockup-tap-overlay {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                inset: 0;
+                z-index: 5;
+                background: rgba(0, 0, 0, 0.15);
+                cursor: pointer;
+            }
+
+            .phone-mockup-tap-overlay span {
+                background: rgba(26, 14, 30, 0.88);
+                color: #f7e6d0;
+                border: 1px solid rgba(240, 201, 120, 0.4);
+                padding: 8px 18px;
+                border-radius: 9999px;
+                font-size: 0.82rem;
+                font-weight: 700;
+                backdrop-filter: blur(8px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            }
+
+            .templates-grid {
+                grid-template-columns: 1fr;
+                padding: 0 16px;
+                gap: 24px;
+            }
+
+            .template-card {
+                border-radius: 22px;
+            }
+
+            .template-thumb {
+                height: 220px;
+            }
+
+            .template-details {
+                padding: 18px 16px;
+            }
+
+            .template-actions {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .template-actions .btn-card-edit {
+                grid-column: 1 / -1;
+                width: 100%;
+                padding: 13px 16px;
+                font-size: 0.92rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                min-height: 46px;
+            }
+
+            .template-actions .btn-card-preview,
+            .template-actions .btn-card-fullscreen {
+                padding: 11px 8px;
+                font-size: 0.82rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                min-height: 44px;
+            }
+
+            .sharing-section {
+                padding: 0 16px;
+                margin-bottom: 60px;
+            }
+
+            .sharing-box {
+                padding: 24px 18px;
+                border-radius: 22px;
+                gap: 20px;
+            }
+
+            .sharing-box h2 {
+                font-size: 1.65rem;
+            }
+
+            .sharing-box p,
+            .sharing-feature-list li {
+                font-size: 0.9rem;
+            }
+
+            .sharing-box p[style*="monospace"] {
+                word-break: break-all !important;
+                overflow-wrap: anywhere !important;
+                font-size: 0.78rem !important;
+            }
+
+            .faqs-section {
+                padding: 0 16px;
+                margin-bottom: 60px;
+            }
+
+            .faq-question {
+                padding: 18px 16px;
+                font-size: 0.95rem;
+            }
+
+            .faq-answer {
+                padding: 0 16px 18px;
+                font-size: 0.88rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+            }
+        }
+
+        /* Admin Gate Lock Screen Styles */
+        body.locked-view {
+            background: #120510 !important;
+            overflow: hidden !important;
+        }
+
+        body.locked-view #adminStudioArea {
+            display: none !important;
+        }
+
+        body.locked-view #adminGateOverlay {
+            display: flex !important;
+        }
+
+        body:not(.locked-view) #adminStudioArea {
+            display: block;
+        }
+
+        body:not(.locked-view) #adminGateOverlay {
+            display: none !important;
+        }
+
+        #adminGateOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: radial-gradient(circle at 50% 30%, #300c25 0%, #160412 60%, #0d010b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            font-family: 'Sora', sans-serif;
+            color: #ffffff;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .admin-gate-card {
+            background: rgba(36, 14, 32, 0.88);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(240, 201, 120, 0.35);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(95, 15, 255, 0.15);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 460px;
+            padding: clamp(28px, 6vw, 42px) clamp(18px, 5vw, 36px);
+            text-align: center;
+            margin: auto;
+            animation: gateFadeIn 0.4s ease-out;
+        }
+
+        @keyframes gateFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .admin-lock-badge {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(240, 201, 120, 0.2), rgba(95, 15, 255, 0.2));
+            border: 1px solid rgba(240, 201, 120, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 25px rgba(240, 201, 120, 0.25);
+        }
+
+        .admin-gate-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.9rem;
+            color: #f7e6d0;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .admin-gate-pill {
+            display: inline-block;
+            background: rgba(240, 201, 120, 0.12);
+            border: 1px solid rgba(240, 201, 120, 0.3);
+            color: #f0c978;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 14px;
+            border-radius: 9999px;
+            margin-bottom: 18px;
+        }
+
+        .admin-gate-desc {
+            font-size: 0.9rem;
+            color: #c9bfd4;
+            line-height: 1.55;
+            margin-bottom: 20px;
+        }
+
+        .guest-notice-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            border-left: 3px solid #f0c978;
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            color: #e8d9eb;
+            text-align: left;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .admin-form-group {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .admin-pin-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: rgba(16, 4, 14, 0.85);
+            border: 1px solid rgba(240, 201, 120, 0.4);
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            text-align: center;
+            letter-spacing: 2px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .admin-pin-input:focus {
+            border-color: #f0c978;
+            box-shadow: 0 0 15px rgba(240, 201, 120, 0.3);
+        }
+
+        .btn-unlock-studio {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #7c24ff, #5f0fff);
+            color: #ffffff;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(95, 15, 255, 0.45);
+            transition: all 0.2s;
+        }
+
+        .btn-unlock-studio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(95, 15, 255, 0.6);
+        }
+
+        .admin-error-msg {
+            color: #ff6b8b;
+            font-size: 0.82rem;
+            margin-top: 10px;
+            display: none;
+            font-weight: 600;
+        }
+
+        /* Admin Navbar Pill */
+        .admin-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(240, 201, 120, 0.2);
+            border: 1px solid rgba(240, 201, 120, 0.5);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            color: #1a0a10;
+            font-weight: 700;
+        }
+
+        .btn-admin-logout {
+            background: none;
+            border: none;
+            color: #8c1d40;
+            font-weight: 700;
+            cursor: pointer;
+            padding-left: 6px;
+            border-left: 1px solid rgba(0, 0, 0, 0.2);
+            font-size: 0.78rem;
+        }
+
+        .btn-admin-logout:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body class="locked-view">
+
+    <!-- Admin Gate Lock Screen (Blocks all general users from viewing editor/catalog) -->
+    <div id="adminGateOverlay">
+        <div class="admin-gate-card">
+            <div class="admin-lock-badge">🔒</div>
+            <div class="admin-gate-pill">Private Client Portal</div>
+            <h1 class="admin-gate-title">Balcony Studio</h1>
+            <p class="admin-gate-desc">
+                Access to the wedding invitation studio and card editor is strictly restricted to authorized
+                administrators and registered clients.
+            </p>
+
+            <div class="guest-notice-box">
+                💌 <strong>Wedding Guests:</strong> If you are attending a celebration, please open your personalized
+                invitation link (e.g. <code>/invite/?card=...</code>) shared by the host to view your card in full
+                screen.
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" style="margin-top: 10px;">
+                <div class="admin-form-group">
+                    <input type="password" id="adminPinInput" class="admin-pin-input" placeholder="Enter Admin Passcode"
+                        autocomplete="current-password" autofocus>
+                </div>
+                <button type="submit" class="btn-unlock-studio">
+                    Unlock Studio &rarr;
+                </button>
+                <div id="adminErrorMsg" class="admin-error-msg">⚠️ Invalid Passcode. Access denied.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Studio Area (Visible ONLY when authenticated) -->
+    <div id="adminStudioArea">
+
+        <!-- Floating Pill Header -->
+        <header class="nav-header">
+            <nav class="nav-container">
+                <a href="#" class="brand">
+                    <span class="brand-logo-text">balcony</span>
+                </a>
+
+                <ul class="nav-links">
+                    <li><a href="#templates">Templates</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#sharing">Sharing</a></li>
+                    <li><a href="#faqs">FAQs</a></li>
+                </ul>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="admin-status-bar" id="adminNavbarPill" style="display: none;">
+                        <span>👑 Admin Mode</span>
+                        <button type="button" onclick="adminLogout()" class="btn-admin-logout"
+                            title="Lock the studio from general users">Lock</button>
+                    </div>
+                    <a href="#templates" class="btn-purple">Get started</a>
+                    <button type="button" class="btn-mobile-nav-toggle" id="btnMobileNavToggle" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Mobile Navigation Drawer Overlay -->
+        <div class="mobile-nav-drawer" id="mobileNavDrawer">
+            <div class="mobile-nav-backdrop" onclick="toggleMobileNav()"></div>
+            <div class="mobile-nav-panel">
+                <div class="mobile-nav-header">
+                    <span class="brand-logo-text" style="font-size: 1.3rem;">balcony</span>
+                    <button type="button" class="btn-mobile-nav-close" onclick="toggleMobileNav()" aria-label="Close menu">&times;</button>
+                </div>
+                <div class="mobile-nav-body">
+                    <a href="#templates" onclick="toggleMobileNav()" class="mobile-nav-link">
+                        <span class="nav-link-icon">👑</span>
+                        <span>Templates</span>
+                    </a>
+                    <a href="#features" onclick="toggleMobileNav()" class="mobile-nav-link">
+                        <span class="nav-link-icon">✨</span>
+                        <span>Features</span>
+                    </a>
+                    <a href="#sharing" onclick="toggleMobileNav()" class="mobile-nav-link">
+                        <span class="nav-link-icon">🔗</span>
+                        <span>Sharing</span>
+                    </a>
+                    <a href="#faqs" onclick="toggleMobileNav()" class="mobile-nav-link">
+                        <span class="nav-link-icon">❓</span>
+                        <span>FAQs</span>
+                    </a>
+                </div>
+                <div class="mobile-nav-footer">
+                    <button type="button" onclick="adminLogout(); toggleMobileNav();" class="btn-mobile-lock">
+                        🔒 Lock Studio (Logout)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">✨ Interactive Digital Wedding Invitations</div>
+                <h1>Make your first impression <span>unforgettable</span>.</h1>
+                <p>
+                    A web invitation for your wedding guests that opens with wonder, shares every detail, and gathers
+                    RSVPs
+                    with love.
+                </p>
+                <div class="hero-actions">
+                    <a href="#templates" class="btn-purple" style="padding: 14px 28px; font-size: 1rem;">
+                        Explore templates
+                    </a>
+                    <button type="button" class="btn-outline"
+                        onclick="openPreview('/card%201/templates/royale/index.html', 'Shahi Patra', 'fullscreen')">
+                        ⛶ Preview Fullscreen
+                    </button>
+                </div>
+                <div
+                    style="font-size: 0.88rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                    <span>⭐⭐⭐⭐⭐</span>
+                    <span>Loved by 1,000+ royal wedding couples</span>
+                </div>
+            </div>
+
+            <div class="hero-phone-wrap">
+                <div class="phone-mockup-3d">
+                    <iframe src="/card%202/templates/papercut-magenta/index.html" allow="autoplay; fullscreen"
+                        title="Live Balcony Preview"></iframe>
+                    <div class="phone-mockup-tap-overlay" onclick="openPreview('/card%202/templates/papercut-magenta/index.html', 'Papercut Lotus', 'mobile')">
+                        <span class="mockup-tap-badge">👆 Tap to explore interactive card</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Explore Templates Section -->
+        <section id="templates">
+            <div class="section-header">
+                <h2>Explore Templates</h2>
+                <p>Every template comes alive with music, motion, and your own photos.</p>
+            </div>
+
+            <div class="templates-grid">
+                <!-- Card 1: Shahi Patra -->
+                <div class="template-card">
+                    <div class="template-thumb">
+                        <span class="template-thumb-tag">Bestseller</span>
+                        <div class="template-thumb-content">
+                            <div style="font-size: 2.8rem; margin-bottom: 8px;">👑</div>
+                            <div class="template-thumb-title">Shahi Patra</div>
+                            <div class="template-thumb-sub">Royale Palace • 3D Door Swing</div>
+                        </div>
+                    </div>
+                    <div class="template-details">
+                        <div>
+                            <div class="template-meta-row">
+                                <h3 class="template-name">Shahi Patra</h3>
+                                <span class="template-price">₹1,499</span>
+                            </div>
+                            <p class="template-desc">
+                                Royal palace courtyard with opening golden gate doors, royal elephants, unrolling wooden
+                                scrolls, hanging photo memories, and classical Shehnai music.
+                            </p>
+                        </div>
+                        <div class="template-actions">
+                            <button type="button" class="btn-card-preview"
+                                onclick="openPreview('/card%201/templates/royale/index.html', 'Shahi Patra', 'mobile')">
+                                📱 Mobile View
+                            </button>
+                            <button type="button" class="btn-card-fullscreen"
+                                onclick="openPreview('/card%201/templates/royale/index.html', 'Shahi Patra', 'fullscreen')">
+                                ⛶ Fullscreen
+                            </button>
+                            <button type="button" class="btn-card-edit" onclick="openEditor('card 1', 'Shahi Patra')">
+                                ✏️ Customize / Edit Card
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Papercut Lotus -->
+                <div class="template-card">
+                    <div class="template-thumb" style="background: #3b0024;">
+                        <span class="template-thumb-tag" style="color: #d81b60;">Trending</span>
+                        <div class="template-thumb-content">
+                            <div style="font-size: 2.8rem; margin-bottom: 8px;">🪷</div>
+                            <div class="template-thumb-title">Papercut Lotus</div>
+                            <div class="template-thumb-sub">Magenta &amp; Gold • Artisanal Arch</div>
+                        </div>
+                    </div>
+                    <div class="template-details">
+                        <div>
+                            <div class="template-meta-row">
+                                <h3 class="template-name">Papercut Lotus</h3>
+                                <span class="template-price">₹1,499</span>
+                            </div>
+                            <p class="template-desc">
+                                Handcrafted papercut lotus arch reveal, rotating blooming date wheel, Ganesha blessing,
+                                ceremony carousel, and guest RSVP tracking.
+                            </p>
+                        </div>
+                        <div class="template-actions">
+                            <button type="button" class="btn-card-preview"
+                                onclick="openPreview('/card%202/templates/papercut-magenta/index.html', 'Papercut Lotus', 'mobile')">
+                                📱 Mobile View
+                            </button>
+                            <button type="button" class="btn-card-fullscreen"
+                                onclick="openPreview('/card%202/templates/papercut-magenta/index.html', 'Papercut Lotus', 'fullscreen')">
+                                ⛶ Fullscreen
+                            </button>
+                            <button type="button" class="btn-card-edit"
+                                onclick="openEditor('card 2', 'Papercut Lotus')">
+                                ✏️ Customize / Edit Card
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Wax Seal Royale (Baby Shower & Godh Bharai) -->
+                <div class="template-card">
+                    <div class="template-thumb" style="background: radial-gradient(circle, #3d1a0a 0%, #1c0c04 100%);">
+                        <span class="template-thumb-tag" style="color: #feb669; border: 1px solid rgba(254,182,105,0.4);">✨ 3D Wax Seal Baby Shower</span>
+                        <div class="template-thumb-content">
+                            <div style="font-size: 2.8rem; margin-bottom: 8px;">💌</div>
+                            <div class="template-thumb-title">Wax Seal Royale</div>
+                            <div class="template-thumb-sub">Baby Shower &amp; Godh Bharai • 3D Cracking Wax Seal</div>
+                        </div>
+                    </div>
+                    <div class="template-details">
+                        <div>
+                            <div class="template-meta-row">
+                                <h3 class="template-name">Wax Seal Royale (Baby Shower)</h3>
+                                <span class="template-price">₹1,499</span>
+                            </div>
+                            <p class="template-desc">
+                                Realistic embossed ivory envelope with cracking golden wax seal, 4K flap unfolding animation, ambient music, luxury deckled torn-paper invitation, gold shimmer live countdown, and instant WhatsApp RSVP.
+                            </p>
+                        </div>
+                        <div class="template-actions">
+                            <button type="button" class="btn-card-preview"
+                                onclick="openPreview('/card%203/templates/shahi-palna/index.html', 'Wax Seal Royale', 'mobile')">
+                                📱 Mobile View
+                            </button>
+                            <button type="button" class="btn-card-fullscreen"
+                                onclick="openPreview('/card%203/templates/shahi-palna/index.html', 'Wax Seal Royale', 'fullscreen')">
+                                ⛶ Fullscreen
+                            </button>
+                            <button type="button" class="btn-card-edit"
+                                onclick="openEditor('card 3', 'Wax Seal Royale')">
+                                ✏️ Customize / Edit Card
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <div class="section-header">
+                <h2>Features</h2>
+                <p>Everything your wedding guests need in the palm of their hand.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">📍</div>
+                    <h3>Instant Directions</h3>
+                    <p>One tap opens Google Maps navigation directly to the venue so no guest ever gets lost.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💌</div>
+                    <h3>RSVP Tracking</h3>
+                    <p>Gather guest headcounts and congratulatory messages in real-time without chasing people.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📅</div>
+                    <h3>Add to Calendar</h3>
+                    <p>Guests can save all function timings into Google or Apple Calendar with a single tap.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Live Updates</h3>
+                    <p>Changed venue timings or parking notes? Update your link instantly without reprinting anything.
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎵</div>
+                    <h3>Music &amp; Motion</h3>
+                    <p>Curated Shehnai, flute, or your own love song plays automatically as guests unfold the card.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sharing Section -->
+        <section id="sharing" class="sharing-section">
+            <div class="sharing-box">
+                <div>
+                    <h2>Want to greet guests by name?</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        Make each family feel truly special with automated personalized invitation links.
+                    </p>
+                    <ul class="sharing-feature-list">
+                        <li>
+                            <span class="badge-num">1</span>
+                            <div><strong>Common link:</strong> One link for everyone you can post on status or groups.
+                            </div>
+                        </li>
+                        <li>
+                            <span class="badge-num">2</span>
+                            <div><strong>Personalized link:</strong> Displays each family's name (e.g. <em>"Inviting
+                                    Sharma
+                                    Family"</em>) on the opening card!</div>
+                        </li>
+                        <li>
+                            <span class="badge-num">3</span>
+                            <div><strong>1-Tap WhatsApp Blast:</strong> Pre-composed invite message ready to send.</div>
+                        </li>
+                    </ul>
+                </div>
+                <div
+                    style="background: #ffffff; padding: 24px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); text-align: left;">
+                    <span
+                        style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--purple); font-weight: 700;">Live
+                        Example</span>
+                    <p
+                        style="font-family: monospace; font-size: 0.85rem; color: #4a3e3d; background: var(--dusk-50); padding: 10px; border-radius: 8px; margin: 12px 0;">
+                        https://yourwedding.com/invite/shahi?guest=Sharma+Family
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">
+                        The card automatically greets <strong>"Sharma Family"</strong> with tailored RSVP headcounts!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQs Section -->
+        <section id="faqs" class="faqs-section">
+            <div class="section-header">
+                <h2>Frequently Asked Questions</h2>
+            </div>
+
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>How do guests open the wedding invitation?</span>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    Guests simply click the link you send them on WhatsApp, SMS, or Email. It opens instantly on any
+                    phone
+                    browser (iPhone or Android) with zero app downloads required.
+                </div>
+            </div>
+
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Can I add my own couple photos and songs?</span>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    Yes! You can upload your own photos into the story polaroids and pick from our royal Shehnai tracks
+                    or
+                    upload your custom MP3 song.
+                </div>
+            </div>
+
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>How long does my invitation stay live online?</span>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    Every invitation is hosted on super-fast cloud infrastructure for a full 1 year after your wedding
+                    date
+                    so guests can revisit memories and photos anytime.
+                </div>
+            </div>
+        </section>
+
+        <!-- Site Footer -->
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <div class="footer-brand">balcony<span>.</span></div>
+                <ul class="footer-links">
+                    <li><a href="#templates">Templates</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#sharing">Sharing</a></li>
+                    <li><a href="#faqs">FAQs</a></li>
+                </ul>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 Balcony Invites. All rights reserved.</span>
+                <span>🔒 Anti-Theft DRM Protected</span>
+            </div>
+        </footer>
+
+        <!-- Interactive Live Preview Modal (Mobile + Fullscreen) -->
+        <div class="modal-overlay" id="previewModal">
+            <!-- Top Navigation Bar (Matches Balcony style) -->
+            <div class="preview-top-bar">
+                <button type="button" class="preview-bar-btn" onclick="closePreview()">
+                    ← Back
+                </button>
+                <div class="preview-guest-badge" id="previewGuestBadge">
+                    👁️ This is what your guests will see
+                </div>
+                <div class="preview-top-actions">
+                    <button type="button" class="preview-bar-btn preview-bar-btn--edit"
+                        onclick="switchToEditorFromPreview()">
+                        ✏️ Try editing
+                    </button>
+                    <button type="button" class="btn-close-modal" onclick="closePreview()"
+                        aria-label="Close preview">&times;</button>
+                </div>
+            </div>
+
+            <!-- Frame Container: Mobile & Fullscreen Modes -->
+            <div class="modal-container is-fullscreen" id="previewModalContainer" onclick="event.stopPropagation()">
+                <div class="preview-frame-wrapper" id="previewFrameWrapper">
+                    <iframe id="previewIframe" src="about:blank" title="Live Preview"
+                        allow="autoplay; fullscreen"></iframe>
+                </div>
+            </div>
+
+            <!-- Bottom Floating Controls Dock (Matches Balcony Floating Pill) -->
+            <div class="preview-bottom-dock">
+                <div class="preview-pill-switcher">
+                    <button type="button" class="pill-btn pill-btn--edit" onclick="switchToEditorFromPreview()">
+                        ✏️ Edit this template
+                    </button>
+                    <button type="button" class="pill-btn" id="pillMobileBtn" onclick="setPreviewView('mobile')">
+                        📱 Mobile View
+                    </button>
+                    <button type="button" class="pill-btn active" id="pillFullscreenBtn"
+                        onclick="setPreviewView('fullscreen')">
+                        ⛶ Fullscreen
+                    </button>
+                    <button type="button" class="pill-btn" onclick="restartPreview()">
+                        🔄 Replay
+                    </button>
+                </div>
+                <button type="button" class="btn-purple preview-cta-buy" onclick="openShareModalFromPreview()">
+                    Buy this template
+                </button>
+            </div>
+        </div>
+
+        <!-- WYSIWYG Fullscreen Studio Editor Modal -->
+        <div class="editor-overlay" id="editorModal">
+            <header class="editor-top-nav">
+                <button type="button" onclick="closeEditor()"
+                    style="padding: 7px 16px; font-size: 0.85rem; border-radius: 9999px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    ← Exit Studio
+                </button>
+                <div class="editor-brand-badge" id="editorTemplateTitle">Studio Editor</div>
+
+                <div class="editor-view-switcher">
+                    <button type="button" class="editor-pill-btn active" id="btnEditorFull" onclick="setEditorView('fullscreen')">
+                        ⛶ Fullscreen
+                    </button>
+                    <button type="button" class="editor-pill-btn" id="btnEditorMobile" onclick="setEditorView('mobile')">
+                        📱 Mobile Frame
+                    </button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button type="button" class="btn-purple" onclick="openShareModal()">
+                        <span class="publish-text-full">🚀 Publish &amp; Get Share Link</span>
+                        <span class="publish-text-short">🚀 Publish</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="editor-workspace is-fullscreen" id="editorWorkspace">
+                <!-- Floating Toggle for Quick Edit Form -->
+                <button type="button" class="btn-toggle-drawer" id="btnDrawerToggle" onclick="toggleEditorDrawer()">
+                    ⚙️ Quick Edit Panel
+                </button>
+
+                <!-- Sidebar Quick Form Controls (Collapsible so it doesn't block fullscreen) -->
+                <div class="editor-controls-drawer collapsed" id="editorControlsDrawer">
+                    <div class="drawer-mobile-handle" onclick="toggleEditorDrawer()"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <h3 style="font-family:'Fraunces',serif; font-size:1.15rem; color:#f7e6d0;">Quick Edit Details</h3>
+                        <button type="button" onclick="toggleEditorDrawer()" style="background:none; border:none; color:#ffffff; font-size:1.2rem; cursor:pointer;">&times;</button>
+                    </div>
+                    <p style="font-size:0.78rem; color:#c9bed8; margin-bottom:8px;">Type here or click directly inside the card to edit elements:</p>
+
+                    <div class="input-group">
+                        <label>Groom Name</label>
+                        <input type="text" id="edGroom" value="Siddhant Patel" placeholder="Groom Name" oninput="updateLiveCard()">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Bride Name</label>
+                        <input type="text" id="edBride" value="Aayushi Lunagariya" placeholder="Bride Name" oninput="updateLiveCard()">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Wedding Date</label>
+                        <input type="date" id="edDate" value="2026-11-29" oninput="updateLiveCard()">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Main Venue Address</label>
+                        <input type="text" id="edVenue" value="Diwali-Ba Resort, Derdi Kumbhaji, Gondal" placeholder="Venue &amp; City" oninput="updateLiveCard()">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Audio Music Track</label>
+                        <select id="edMusic" style="width:100%;" onchange="updateLiveCard()">
+                            <option value="jashn">Jashn-e-Bahara (Instrumental Shehnai)</option>
+                            <option value="flute">Royal Flute &amp; Sitar Fusion</option>
+                            <option value="nagada">Udaipur Festive Nagada</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn-purple" onclick="toggleEditorDrawer()" style="margin-top: 10px; width: 100%; border-radius: 9999px; padding: 10px 14px;">
+                        ✓ Done Editing Details
+                    </button>
+                </div>
+
+                <!-- Phone / Fullscreen Device Frame -->
+                <div class="editor-phone-container" id="editorPhoneContainer">
+                    <iframe id="editorIframe" src="about:blank" title="WYSIWYG Fullscreen Studio Editor" allow="autoplay; fullscreen"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unique Link & 1-Click WhatsApp Share Modal -->
+        <div class="share-modal-overlay" id="shareModal" onclick="if(event.target===this) closeShareModal()">
+            <div class="share-card" style="position: relative;">
+                <button type="button" class="btn-close-modal" onclick="closeShareModal()" aria-label="Close"
+                    style="position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.06); color: #333333; width: 32px; height: 32px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
+                <div class="share-icon-circle">🎉</div>
+                <h3>Your Invitation is Ready!</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">
+                    Your live personalized invitation URL is generated and ready to share worldwide:
+                </p>
+
+                <div class="share-url-box">
+                    <span
+                        id="generatedUrl">https://invitation-card-umber-six.vercel.app/invite/?card=shahi-7a91b2</span>
+                    <button type="button" class="btn-copy" onclick="copyShareUrl()">Copy</button>
+                </div>
+
+                <div style="margin: 20px 0 16px; text-align: left;">
+                    <label
+                        style="display:block; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--dusk-700); font-weight:700; margin-bottom:4px;">
+                        Personalize for a Guest / Family (Optional):
+                    </label>
+                    <input type="text" id="guestFamilyName" placeholder="e.g. Sharma Family, Priya & Rohan"
+                        oninput="updateGuestUrl()"
+                        style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; font-family:inherit;">
+                </div>
+
+                <a id="btnWhatsAppShare" href="#" target="_blank" class="btn-whatsapp-share">
+                    <span>💬 1-Click WhatsApp Share</span>
+                </a>
+
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
+                    <a id="btnTestOpenLive" href="#" target="_blank" class="btn-outline"
+                        style="flex: 1; text-align: center; text-decoration: none; border-radius: 9999px; padding: 10px 16px; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        🌐 Open Live Card
+                    </a>
+                    <button type="button" id="btnShareDone" onclick="closeShareModal(true)"
+                        style="flex: 1; border-radius: 9999px; padding: 10px 16px; font-size: 0.88rem; font-weight: 700; cursor: pointer; background: #5f0fff; color: #ffffff; border: none; box-shadow: 0 4px 12px rgba(95, 15, 255, 0.35);">
+                        ✓ Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div> <!-- /#adminStudioArea -->
+
+    <!-- Scripts -->
+    <script>
+        // Admin Passcode Authentication (Mandatory passcode gate: NO URL bypass allowed)
+        var ADMIN_PASSCODES = ['Dharmik@401', '270625'];
+
+        function isAdminAuthenticated() {
+            return sessionStorage.getItem('balcony_admin_auth') === '1';
+        }
+
+        function checkAdminAuth() {
+            if (isAdminAuthenticated()) {
+                document.body.classList.remove('locked-view');
+                var pill = document.getElementById('adminNavbarPill');
+                if (pill) pill.style.display = 'flex';
+            } else {
+                document.body.classList.add('locked-view');
+                var pill = document.getElementById('adminNavbarPill');
+                if (pill) pill.style.display = 'none';
+            }
+        }
+
+        function handleAdminLogin(e) {
+            if (e) e.preventDefault();
+            var input = document.getElementById('adminPinInput');
+            var err = document.getElementById('adminErrorMsg');
+            var val = (input.value || '').trim();
+
+            if (ADMIN_PASSCODES.indexOf(val) !== -1) {
+                sessionStorage.setItem('balcony_admin_auth', '1');
+                if (err) err.style.display = 'none';
+                document.body.classList.remove('locked-view');
+                var pill = document.getElementById('adminNavbarPill');
+                if (pill) pill.style.display = 'flex';
+                if (input) input.value = '';
+            } else {
+                if (err) err.style.display = 'block';
+                input.focus();
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('balcony_admin_auth');
+            document.body.classList.add('locked-view');
+            var pill = document.getElementById('adminNavbarPill');
+            if (pill) pill.style.display = 'none';
+            var err = document.getElementById('adminErrorMsg');
+            if (err) err.style.display = 'none';
+            var input = document.getElementById('adminPinInput');
+            if (input) input.value = '';
+        }
+
+        // Run auth check immediately
+        checkAdminAuth();
+
+            var currentTemplateFolder = 'card 1';
+            var currentRandomSlug = '';
+            var currentPreviewUrl = '';
+            var currentPreviewTitle = '';
+            var currentPreviewFolder = 'card 1';
+            var currentPreviewView = 'fullscreen';
+
+            // Canonical live domain: links generated and shared must NEVER output localhost!
+            var LIVE_PRODUCTION_DOMAIN = 'https://invitation-card-umber-six.vercel.app';
+
+            function getShareableOrigin() {
+                var host = window.location.hostname;
+                if (!host || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.endsWith('.local')) {
+                    return LIVE_PRODUCTION_DOMAIN;
+                }
+                return window.location.origin;
+            }
+
+            function toggleFaq(el) {
+                el.classList.toggle('active');
+            }
+
+            function toggleMobileNav() {
+                var drawer = document.getElementById('mobileNavDrawer');
+                if (drawer) {
+                    drawer.classList.toggle('active');
+                    document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : '';
+                }
+            }
+            window.toggleMobileNav = toggleMobileNav;
+
+            function openPreview(url, title, viewMode) {
+                if (!isAdminAuthenticated()) {
+                    document.body.classList.add('locked-view');
+                    return;
+                }
+                currentPreviewUrl = url;
+                currentPreviewTitle = title || 'Template Preview';
+                currentPreviewFolder = (url.indexOf('card 3') !== -1 || title.indexOf('Palna') !== -1 || title.indexOf('Wax') !== -1) ? 'card 3' : ((url.indexOf('card 2') !== -1 || title.indexOf('Lotus') !== -1) ? 'card 2' : 'card 1');
+
+                var modal = document.getElementById('previewModal');
+                var iframe = document.getElementById('previewIframe');
+                iframe.src = url;
+
+                // On mobile screens, default to full immersion
+                var mode = (window.innerWidth <= 768) ? 'fullscreen' : (viewMode || 'fullscreen');
+                setPreviewView(mode);
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function setPreviewView(mode) {
+                currentPreviewView = mode;
+                var container = document.getElementById('previewModalContainer');
+                var pillMobile = document.getElementById('pillMobileBtn');
+                var pillFull = document.getElementById('pillFullscreenBtn');
+
+                if (mode === 'fullscreen') {
+                    container.classList.remove('is-mobile');
+                    container.classList.add('is-fullscreen');
+                    if (pillFull) pillFull.classList.add('active');
+                    if (pillMobile) pillMobile.classList.remove('active');
+                } else {
+                    container.classList.remove('is-fullscreen');
+                    container.classList.add('is-mobile');
+                    if (pillMobile) pillMobile.classList.add('active');
+                    if (pillFull) pillFull.classList.remove('active');
+                }
+            }
+
+            function restartPreview() {
+                var iframe = document.getElementById('previewIframe');
+                if (iframe && currentPreviewUrl) {
+                    iframe.src = currentPreviewUrl + (currentPreviewUrl.indexOf('?') === -1 ? '?' : '&') + '_t=' + Date.now();
+                }
+            }
+
+            function closePreview() {
+                var modal = document.getElementById('previewModal');
+                var iframe = document.getElementById('previewIframe');
+                if (iframe) iframe.src = 'about:blank';
+                if (modal) modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            function switchToEditorFromPreview() {
+                var folder = currentPreviewFolder;
+                var title = currentPreviewTitle;
+                closePreview();
+                openEditor(folder, title);
+            }
+
+            function openShareModalFromPreview() {
+                currentTemplateFolder = currentPreviewFolder;
+                closePreview();
+                openShareModal();
+            }
+
+            var currentEditorView = 'fullscreen';
+
+            function setEditorView(mode) {
+                currentEditorView = mode;
+                var ws = document.getElementById('editorWorkspace');
+                var btnFull = document.getElementById('btnEditorFull');
+                var btnMob = document.getElementById('btnEditorMobile');
+
+                if (mode === 'fullscreen') {
+                    ws.classList.remove('is-mobile');
+                    ws.classList.add('is-fullscreen');
+                    if (btnFull) btnFull.classList.add('active');
+                    if (btnMob) btnMob.classList.remove('active');
+                } else {
+                    ws.classList.remove('is-fullscreen');
+                    ws.classList.add('is-mobile');
+                    if (btnMob) btnMob.classList.add('active');
+                    if (btnFull) btnFull.classList.remove('active');
+                }
+            }
+
+            function toggleEditorDrawer() {
+                var drawer = document.getElementById('editorControlsDrawer');
+                var btn = document.getElementById('btnDrawerToggle');
+                if (drawer) {
+                    drawer.classList.toggle('collapsed');
+                    var isClosed = drawer.classList.contains('collapsed');
+                    if (btn) btn.textContent = isClosed ? '⚙️ Quick Edit Panel' : '✕ Hide Edit Panel';
+                }
+            }
+
+            var currentCardSlug = '';
+            var currentCustomDParam = '';
+            var currentCustomNames = '';
+
+            function generateRandomSlug(folder) {
+                var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+                var result = '';
+                for (var i = 0; i < 6; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                var f = folder || currentTemplateFolder;
+                var prefix = f === 'card 3' ? 'palna' : (f === 'card 2' ? 'lotus' : 'shahi');
+                return prefix + '-' + result;
+            }
+
+            function openEditor(folder, title) {
+                if (!isAdminAuthenticated()) {
+                    document.body.classList.add('locked-view');
+                    return;
+                }
+                currentTemplateFolder = folder;
+                currentCardSlug = generateRandomSlug(folder);
+                currentCustomDParam = '';
+                currentCustomNames = '';
+
+                var modal = document.getElementById('editorModal');
+                var iframe = document.getElementById('editorIframe');
+                var titleEl = document.getElementById('editorTemplateTitle');
+                if (titleEl) titleEl.textContent = (title || 'Card') + ' Studio';
+
+                var edGroom = document.getElementById('edGroom');
+                var edBride = document.getElementById('edBride');
+                var edDate = document.getElementById('edDate');
+                var edVenue = document.getElementById('edVenue');
+                var edMusic = document.getElementById('edMusic');
+
+                if (folder === 'card 3') {
+                    if (edGroom) edGroom.value = 'Kaushal Patel';
+                    if (edBride) edBride.value = 'Meghal Patel';
+                    if (edDate) edDate.value = '2026-11-22';
+                    if (edVenue) edVenue.value = '232 North East Road, Klemzig SA 5087';
+                    if (edMusic) edMusic.value = 'jashn';
+                    iframe.src = '/card%203/templates/shahi-palna/index.html?edit=1&card=' + currentCardSlug;
+                } else if (folder === 'card 2') {
+                    if (edGroom) edGroom.value = 'Kaushik Sharma';
+                    if (edBride) edBride.value = 'Ankita Patel';
+                    if (edDate) edDate.value = '2026-12-15';
+                    if (edVenue) edVenue.value = 'The Lotus Palace & Resort, Udaipur';
+                    if (edMusic) edMusic.value = 'flute';
+                    iframe.src = '/card%202/templates/papercut-magenta/index.html?edit=1&card=' + currentCardSlug;
+                } else {
+                    if (edGroom) edGroom.value = 'Siddhant Patel';
+                    if (edBride) edBride.value = 'Aayushi Lunagariya';
+                    if (edDate) edDate.value = '2026-11-29';
+                    if (edVenue) edVenue.value = 'Diwali-Ba Resort, Derdi Kumbhaji, Gondal';
+                    if (edMusic) edMusic.value = 'jashn';
+                    iframe.src = '/card%201/templates/royale/index.html?edit=1&card=' + currentCardSlug;
+                }
+
+                // Default to 100% Fullscreen editing
+                setEditorView('fullscreen');
+
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeEditor() {
+                var modal = document.getElementById('editorModal');
+                var iframe = document.getElementById('editorIframe');
+                if (iframe) iframe.src = 'about:blank';
+                if (modal) modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            function updateLiveCard() {
+                var iframe = document.getElementById('editorIframe');
+                if (!iframe || !iframe.contentWindow) return;
+
+                var edGroom = document.getElementById('edGroom');
+                var edBride = document.getElementById('edBride');
+                var edDate = document.getElementById('edDate');
+                var edVenue = document.getElementById('edVenue');
+                var edMusic = document.getElementById('edMusic');
+
+                var groom = edGroom ? edGroom.value.trim() : '';
+                var bride = edBride ? edBride.value.trim() : '';
+                var date = edDate ? edDate.value.trim() : '';
+                var venue = edVenue ? edVenue.value.trim() : '';
+                var music = edMusic ? edMusic.value.trim() : '';
+
+                var names = [groom, bride].filter(Boolean).join(' & ');
+
+                var msg = {
+                    type: 'card:update_live',
+                    names: names,
+                    groom: groom,
+                    bride: bride,
+                    date: date,
+                    venue: venue,
+                    music: music
+                };
+
+                try {
+                    iframe.contentWindow.postMessage(msg, '*');
+                } catch (_) {}
+
+                if (currentCardSlug) {
+                    try {
+                        var existing = JSON.parse(localStorage.getItem('card_' + currentCardSlug) || '{}');
+                        if (groom) existing.groomName = groom;
+                        if (bride) existing.brideName = bride;
+                        if (names) {
+                            existing.title = names;
+                            existing.hostNames = [groom, bride].filter(Boolean);
+                        }
+                        if (date) existing.eventISO = date;
+                        if (venue) {
+                            if (Array.isArray(existing.ceremonies)) {
+                                existing.ceremonies.forEach(function (c) { c.venue = venue; });
+                            } else {
+                                existing.ceremonies = [{ venue: venue }];
+                            }
+                        }
+                        if (music) {
+                            if (!existing.music) existing.music = {};
+                            existing.music.track = music;
+                        }
+                        localStorage.setItem('card_' + currentCardSlug, JSON.stringify(existing));
+                    } catch (_) {}
+                }
+            }
+
+            function encodePayload(obj) {
+                try {
+                    var json = JSON.stringify(obj);
+                    return btoa(unescape(encodeURIComponent(json)))
+                        .replace(/\+/g, '-')
+                        .replace(/\//g, '_')
+                        .replace(/=+$/, '');
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            function openShareModal() {
+                if (!isAdminAuthenticated()) {
+                    document.body.classList.add('locked-view');
+                    return;
+                }
+                if (!currentCardSlug) {
+                    currentCardSlug = generateRandomSlug(currentTemplateFolder);
+                }
+
+                var edGroom = document.getElementById('edGroom');
+                var edBride = document.getElementById('edBride');
+                var edDate = document.getElementById('edDate');
+                var edVenue = document.getElementById('edVenue');
+                var edMusic = document.getElementById('edMusic');
+
+                var groom = edGroom ? edGroom.value.trim() : '';
+                var bride = edBride ? edBride.value.trim() : '';
+                var date = edDate ? edDate.value.trim() : '';
+                var venue = edVenue ? edVenue.value.trim() : '';
+                var music = edMusic ? edMusic.value.trim() : '';
+                var names = [groom, bride].filter(Boolean).join(' & ');
+
+                // Retrieve in-card edits from iframe if accessible
+                var iframeConfig = null;
+                try {
+                    var iframe = document.getElementById('editorIframe');
+                    if (iframe && iframe.contentWindow) {
+                        var w = iframe.contentWindow;
+                        if (w.Royale && w.Royale.config) iframeConfig = w.Royale.config;
+                        else if (w.Papercut && w.Papercut.config) iframeConfig = w.Papercut.config;
+                    }
+                } catch (_) {}
+
+                var storedConfig = {};
+                try {
+                    storedConfig = JSON.parse(localStorage.getItem('card_' + currentCardSlug) || '{}');
+                } catch (_) {}
+
+                var finalConfig = Object.assign({}, iframeConfig || {}, storedConfig);
+                if (groom) finalConfig.groomName = groom;
+                if (bride) finalConfig.brideName = bride;
+                if (names) {
+                    finalConfig.title = names;
+                    finalConfig.hostNames = [groom, bride].filter(Boolean);
+                }
+                if (date) finalConfig.eventISO = date;
+                if (venue) {
+                    if (Array.isArray(finalConfig.ceremonies)) {
+                        finalConfig.ceremonies = finalConfig.ceremonies.map(function (c) {
+                            return Object.assign({}, c, { venue: venue });
+                        });
+                    }
+                }
+                if (music) {
+                    if (!finalConfig.music) finalConfig.music = {};
+                    finalConfig.music.track = music;
+                }
+
+                try {
+                    localStorage.setItem('card_' + currentCardSlug, JSON.stringify(finalConfig));
+                } catch (_) {}
+
+                // Build lightweight portable diff
+                var diff = {};
+                if (groom) diff.groomName = groom;
+                if (bride) diff.brideName = bride;
+                if (names) { diff.title = names; diff.hostNames = [groom, bride].filter(Boolean); }
+                if (date) diff.eventISO = date;
+                if (venue && finalConfig.ceremonies) diff.ceremonies = finalConfig.ceremonies;
+                if (music) diff.music = finalConfig.music;
+                if (finalConfig.introNote) diff.introNote = finalConfig.introNote;
+                if (finalConfig.groomFamily) diff.groomFamily = finalConfig.groomFamily;
+                if (finalConfig.brideFamily) diff.brideFamily = finalConfig.brideFamily;
+                if (finalConfig.gallery) diff.gallery = finalConfig.gallery;
+                if (finalConfig.invocation) diff.invocation = finalConfig.invocation;
+
+                var dParam = encodePayload(diff);
+                currentCustomDParam = dParam;
+                currentCustomNames = names;
+
+                var origin = getShareableOrigin();
+                var shareUrl = origin + '/invite/?card=' + currentCardSlug;
+                if (names) shareUrl += '&names=' + encodeURIComponent(names);
+                if (dParam) shareUrl += '&d=' + dParam;
+
+                var genEl = document.getElementById('generatedUrl');
+                if (genEl) genEl.textContent = shareUrl;
+
+                var openBtn = document.getElementById('btnTestOpenLive');
+                if (openBtn) openBtn.href = shareUrl;
+
+                updateGuestUrl();
+                document.getElementById('shareModal').classList.add('active');
+            }
+
+            function closeShareModal(andExitStudio) {
+                var modal = document.getElementById('shareModal');
+                if (modal) {
+                    modal.classList.remove('active');
+                }
+                if (andExitStudio === true) {
+                    closeEditor();
+                    closePreview();
+                    var tpl = document.getElementById('templates');
+                    if (tpl) {
+                        tpl.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            }
+            window.closeShareModal = closeShareModal;
+
+            function updateGuestUrl() {
+                var origin = getShareableOrigin();
+                var baseUrl = origin + '/invite/?card=' + currentCardSlug;
+                if (currentCustomNames) baseUrl += '&names=' + encodeURIComponent(currentCustomNames);
+                if (currentCustomDParam) baseUrl += '&d=' + currentCustomDParam;
+
+                var guestInput = document.getElementById('guestFamilyName');
+                var guestName = guestInput ? guestInput.value.trim() : '';
+                var fullUrl = baseUrl;
+                if (guestName) {
+                    fullUrl += '&guest=' + encodeURIComponent(guestName);
+                }
+
+                var genEl = document.getElementById('generatedUrl');
+                if (genEl) genEl.textContent = fullUrl;
+
+                var openBtn = document.getElementById('btnTestOpenLive');
+                if (openBtn) openBtn.href = fullUrl;
+
+                var waBtn = document.getElementById('btnWhatsAppShare');
+                if (waBtn) {
+                    var couple = currentCustomNames || 'Our Wedding';
+                    var waMsg = '';
+                    if (guestName) {
+                        waMsg = 'Namaste ' + guestName + '! 🙏\n\n' +
+                            'We cordially invite you and your family to celebrate the auspicious wedding of ' + couple + '.\n\n' +
+                            '✨ Open our interactive wedding invitation card here:\n' + fullUrl + '\n\n' +
+                            'We look forward to celebrating together!';
+                    } else {
+                        waMsg = 'Namaste! 🙏\n\n' +
+                            'We cordially invite you to celebrate the auspicious wedding of ' + couple + '.\n\n' +
+                            '✨ Open our interactive wedding invitation card here:\n' + fullUrl + '\n\n' +
+                            'We look forward to celebrating together!';
+                    }
+                    waBtn.href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(waMsg);
+                }
+            }
+
+            function copyShareUrl() {
+                var text = document.getElementById('generatedUrl').textContent;
+                function showCopiedNotice() {
+                    var btn = document.querySelector('.btn-copy');
+                    if (btn) {
+                        var oldText = btn.textContent;
+                        btn.textContent = 'Copied! ✓';
+                        btn.style.background = '#059669';
+                        setTimeout(function () {
+                            btn.textContent = oldText;
+                            btn.style.background = '';
+                        }, 2000);
+                    }
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(showCopiedNotice).catch(fallbackCopy);
+                } else {
+                    fallbackCopy();
+                }
+                function fallbackCopy() {
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-9999px';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); showCopiedNotice(); } catch (_) {}
+                    document.body.removeChild(ta);
+                }
+            }
+    </script>
+    <script src="security/anti-theft.js"></script>
+</body>
+
+</html>

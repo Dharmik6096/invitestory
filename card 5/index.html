@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <base href="/card%205/">
+    <title>Kian &amp; Aria — Reception Invitation · Aabha (Mithril)</title>
+    <meta name="description" content="You are warmly invited to the Reception of Kian & Aria · Sunday, 18 October 2026.">
+    <meta property="og:title" content="Kian &amp; Aria — Reception Invitation · Aabha">
+    <meta property="og:description" content="Sunday, 18 October 2026 · Jagmandir Island Palace, Udaipur">
+    <meta property="og:image" content="assets/images/key-v2.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="assets/images/key-v2.webp" type="image/webp">
+    <style>
+        :root {
+            --phone-w: 420px;
+            --phone-h: 880px;
+            --gold: #d4af37;
+            --pearl: #eae3dc;
+            --ink: #655846;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #181512;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Desktop Stage */
+        .stage {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #2e261f 0%, #1a1511 60%, #0d0a08 100%);
+            position: relative;
+        }
+
+        /* Mobile Device Frame */
+        .mobile-device {
+            position: relative;
+            width: var(--phone-w);
+            height: min(var(--phone-h), 94vh);
+            border-radius: 46px;
+            background: #F3EDE3;
+            box-shadow:
+                0 0 0 10px #211a14,
+                0 0 0 12px rgba(212, 175, 55, 0.4),
+                0 25px 65px rgba(0, 0, 0, 0.85);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dynamic Island / Notch on Desktop */
+        .device-notch {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 24px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 100001;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+        }
+
+        .device-notch::after {
+            content: '';
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #141414;
+            box-shadow: inset 0 0 2px #444;
+        }
+
+        /* The Card Iframe */
+        .mobile-device iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            background-color: #F3EDE3;
+        }
+
+        /* Bottom Floating Bar on Desktop */
+        .dock-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(32, 26, 21, 0.94);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            padding: 7px 16px;
+            border-radius: 30px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+            z-index: 999999;
+        }
+
+        .dock-btn {
+            background: none;
+            border: none;
+            color: #eedacf;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dock-btn:hover {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        .dock-btn.active {
+            background: linear-gradient(135deg, #dfc06b, #b38b36);
+            color: #1a0f05;
+            font-weight: 600;
+        }
+
+        .dock-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(212, 175, 55, 0.3);
+        }
+
+        /* Fullscreen View Mode */
+        body.mode-fullscreen .mobile-device {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body.mode-fullscreen .device-notch,
+        body.mode-fullscreen .dock-bar {
+            display: none !important;
+        }
+
+        /* Native Fullscreen on Actual Mobile Phones, Tablets & Touch Devices */
+        @media (max-width: 768px), (max-height: 540px), (pointer: coarse) {
+            .stage {
+                padding: 0 !important;
+                background: #000 !important;
+            }
+
+            .mobile-device {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                height: 100dvh !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .device-notch {
+                display: none !important;
+            }
+
+            .dock-bar {
+                display: none !important;
+            }
+        }
+    
+        /* Floating Fullscreen / Mobile Back Button */
+        .fullscreen-back-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: rgba(22, 16, 24, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+            transition: all 0.2s ease;
+        }
+
+        .fullscreen-back-btn:hover {
+            background: rgba(45, 32, 50, 0.95);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        body.mode-fullscreen .fullscreen-back-btn {
+            display: flex !important;
+        }
+
+        @media (max-width: 480px) {
+            .fullscreen-back-btn {
+                display: flex !important;
+            }
+        }
+</style>
+</head>
+
+<body>
+    <!-- Floating Back Button for Fullscreen / Mobile Mode -->
+    <button type="button" class="fullscreen-back-btn" id="fullscreenBackBtn" onclick="goBack()" aria-label="Back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        <span>Back</span>
+    </button>
+
+
+    <div class="stage">
+        <div class="mobile-device">
+            <div class="device-notch"></div>
+            <iframe id="cardFrame" src="templates/mithril/index.html" allow="autoplay; fullscreen; camera; microphone; clipboard-write; web-share"
+                title="Kian &amp; Aria — Reception Invitation · Aabha (Mithril)"></iframe>
+        </div>
+    </div>
+
+    <!-- Desktop Viewport Controls -->
+    <div class="dock-bar">
+        <button type="button" class="dock-btn" id="btnBack" onclick="goBack()" title="Back">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </button>
+        <div class="dock-divider"></div>
+
+        <button type="button" class="dock-btn active" id="btnMobile" onclick="setViewMode('mobile')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                <path d="M12 18h.01" />
+            </svg>
+            Mobile View
+        </button>
+        <button type="button" class="dock-btn" id="btnFull" onclick="setViewMode('fullscreen'); tryForwardPlay();">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+            </svg>
+            Fullscreen
+        </button>
+        <div class="dock-divider"></div>
+        <button type="button" class="dock-btn" onclick="reloadFrame()" title="Reload invitation">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                <path d="M16 21h5v-5" />
+            </svg>
+            Restart
+        </button>
+    </div>
+
+    <script>
+        
+        function goBack() {
+            if (document.body.classList.contains('mode-fullscreen') && window.innerWidth > 480) {
+                setViewMode('mobile');
+                return;
+            }
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        function tryForwardPlay() {
+            // Strictly prevent autoplay when opened inside the homepage preview modal!
+            if (window.self !== window.top && !location.search.includes('mode=fullscreen') && !location.hash.includes('fullscreen')) {
+                return;
+            }
+            var frame = document.getElementById('cardFrame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({ type: 'INVITESTORY_PLAY_AUDIO', sound: true }, '*');
+                try {
+                    if (frame.contentDocument) {
+                        frame.contentDocument.querySelectorAll('audio').forEach(function(a) {
+                            a.muted = false;
+                            a.play().catch(function(){});
+                        });
+                    }
+                } catch (_) {}
+            }
+        }
+
+        // Forward audio messages to inner frame
+        window.addEventListener('message', function (e) {
+            if (e.data && (e.data.type === 'INVITESTORY_PLAY_AUDIO' || e.data.type === 'PLAY_AUDIO')) {
+                tryForwardPlay();
+            } else if (e.data && (e.data.type === 'INVITESTORY_PAUSE_AUDIO' || e.data.type === 'PAUSE_AUDIO')) {
+                var frame = document.getElementById('cardFrame');
+                if (frame && frame.contentWindow) {
+                    frame.contentWindow.postMessage(e.data, '*');
+                    try {
+                        if (frame.contentDocument) {
+                            frame.contentDocument.querySelectorAll('audio').forEach(function(a) {
+                                a.pause();
+                            });
+                        }
+                    } catch (_) {}
+                }
+            }
+        });
+
+        function setViewMode(mode) {
+            if (mode === 'fullscreen') {
+                document.body.classList.add('mode-fullscreen');
+                document.getElementById('btnFull').classList.add('active');
+                document.getElementById('btnMobile').classList.remove('active');
+            } else {
+                document.body.classList.remove('mode-fullscreen');
+                document.getElementById('btnMobile').classList.add('active');
+                document.getElementById('btnFull').classList.remove('active');
+            }
+        }
+
+        function reloadFrame() {
+            var frame = document.getElementById('cardFrame');
+            if (frame) {
+                frame.src = frame.src;
+            }
+        }
+
+        // Pass through search/hash params to template (allow edit mode only for admin)
+        (function () {
+            var frame = document.getElementById('cardFrame');
+            var rawSearch = location.search || '';
+            var isAdmin = false;
+            try {
+                isAdmin = (localStorage.getItem('invitestory_admin_session') === 'true');
+            } catch (_) {}
+
+            var search = '';
+            if (isAdmin && (rawSearch.includes('edit=1') || rawSearch.includes('preview=1'))) {
+                var sp = new URLSearchParams(rawSearch);
+                sp.set('admin', '1');
+                search = '?' + sp.toString();
+                setViewMode('fullscreen');
+            } else {
+                search = rawSearch.replace(/[?&](trial|preview|edit)=[^&#]*/gi, '').replace(/^\?&/, '?').replace(/^\?$/, '');
+                var isMobile = (window.self !== window.top) ||
+                               (window.innerWidth <= 768) ||
+                               (window.innerHeight <= 540) ||
+                               (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+                var isExplicitFullscreen = location.search.includes('mode=fullscreen') || location.hash.includes('fullscreen');
+                if (isMobile || isExplicitFullscreen) {
+                    setViewMode('fullscreen');
+                    if (isExplicitFullscreen) {
+                        tryForwardPlay();
+                        if (frame) frame.addEventListener('load', tryForwardPlay, { once: true });
+                    }
+                }
+            }
+            if (frame && (search || location.hash)) {
+                frame.src = 'templates/mithril/index.html' + (search || '') + (location.hash || '');
+            }
+        })();
+    </script>
+</body>
+
+</html>

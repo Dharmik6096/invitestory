@@ -1,0 +1,233 @@
+{
+  "event": {
+    "title": "Siddhant & Aayushi",
+    "hostNames": [
+      "Siddhant",
+      "Aayushi"
+    ],
+    "coupleNames": [],
+    "date": "2026-11-29",
+    "time": "",
+    "venue": "Diwali-Ba Resort, Derdi Kumbhaji, Gondal",
+    "address": "",
+    "contactInfo": [],
+    "media": [],
+    "story": [],
+    "schedule": [],
+    "family": [],
+    "sectionOverrides": {
+      "__templateConfig": {
+        "version": 1,
+        "finalized": true,
+        "invocation": {
+          "symbol": "ganesha",
+          "religion": "hindu",
+          "script": "english",
+          "custom": "|| Shree Swaminarayan Namo Namah ||"
+        },
+        "brideName": "Aayushi Lunagariya",
+        "groomName": "Siddhant Patel",
+        "title": "Siddhant & Aayushi",
+        "hostNames": [
+          "Siddhant",
+          "Aayushi"
+        ],
+        "introNote": "With the divine blessings of Lord Shree Swaminarayan, we cordially invite you and your family to celebrate the auspicious wedding ceremony of Siddhant and Aayushi.",
+        "eventISO": "2026-11-29",
+        "revealButton": "Reveal the Date",
+        "revealAfter": "Save the Date • 29-11-2026",
+        "groomFamily": {
+          "enabled": true,
+          "name": "Chi. Siddhant Patel",
+          "relLabel": "Son of",
+          "parentA": "Shri Pravinbhai P. Patel",
+          "parentB": "Smt. Kavitaben Patel",
+          "parentJoin": "&",
+          "grandLabel": "Grandson of (With Blessings of)",
+          "grandA": "Late Shri Pragjibhai G. Patel",
+          "grandB": "Late Smt. Madhuben Patel",
+          "grandJoin": "&"
+        },
+        "brideFamily": {
+          "enabled": true,
+          "name": "Chi. Aayushi Lunagariya",
+          "relLabel": "Daughter of",
+          "parentA": "Shri Sanjaybhai G. Lunagariya",
+          "parentB": "Smt. Dakshaben Lunagariya",
+          "parentJoin": "&",
+          "grandLabel": "Granddaughter of (With Blessings of)",
+          "grandA": "Late Shri Tribhovandas G. Patel",
+          "grandB": "Late Smt. Champaben Patel",
+          "grandJoin": "&"
+        },
+        "gallery": {
+          "enabled": true,
+          "items": [
+            {
+              "type": "portrait",
+              "image": "media/user_uploaded_shahi.jpg",
+              "placeholder": true,
+              "caption": "#howitstarted",
+              "hang": 118,
+              "zoom": 1
+            },
+            {
+              "type": "story",
+              "text": "Some stories begin with grand gestures. Ours started with a simple conversation.",
+              "hang": 86
+            },
+            {
+              "type": "landscape",
+              "image": "uploads/events/8/edf9f981-3908-4eb9-93a8-bed06a534df1.jpg",
+              "placeholder": true,
+              "caption": "#adventures",
+              "hang": 150,
+              "posY": 0,
+              "zoom": 1.4693280768000003
+            },
+            {
+              "type": "story",
+              "text": "Friendship grew into something more, and we realized life's best moments were the ones we shared together.",
+              "hang": 120
+            },
+            {
+              "type": "portrait",
+              "image": "uploads/events/8/e74252cb-746f-416f-b810-5dd56e430229.jpg",
+              "placeholder": true,
+              "caption": "#thelittlethings",
+              "hang": 132,
+              "zoom": 1
+            },
+            {
+              "type": "portrait",
+              "image": null,
+              "placeholder": true,
+              "caption": "#foreverbegins",
+              "hang": 150
+            },
+            {
+              "type": "landscape",
+              "image": null,
+              "placeholder": true,
+              "caption": "#usforever",
+              "hang": 92
+            }
+          ]
+        },
+        "ceremonies": [
+          {
+            "name": "Mandap Muhurat",
+            "art": "media/ring_ceremony.webp",
+            "date": "2026-11-28",
+            "time": "07:00 AM",
+            "venue": "A-302 Vedant Antilia, Opp. Devasya School, New Vastral, Ahmedabad",
+            "mapUrl": "",
+            "enabled": true,
+            "venueCustom": true
+          },
+          {
+            "name": "Baraat / Jaan Prasthan",
+            "art": "media/mehendi.webp",
+            "date": "2026-11-29",
+            "time": "05:00 AM",
+            "venue": "Departure to Derdi Kumbhaji, Gondal",
+            "mapUrl": "",
+            "enabled": true,
+            "venueCustom": true
+          },
+          {
+            "name": "Hasta Melap (Wedding Ceremony)",
+            "art": "media/vivaah.webp",
+            "date": "2026-11-29",
+            "time": "06:00 PM",
+            "venue": "Diwali-Ba Resort, Derdi Kumbhaji, Gondal, Rajkot",
+            "mapUrl": "",
+            "enabled": true,
+            "venueCustom": true
+          },
+          {
+            "name": "Wedding Dinner & Reception",
+            "art": "media/reception.webp",
+            "date": "2026-11-29",
+            "time": "07:30 PM",
+            "venue": "Diwali-Ba Resort, Vasavad Road, Derdi Kumbhaji",
+            "mapUrl": "",
+            "enabled": true,
+            "venueCustom": true
+          }
+        ],
+        "compliments": {
+          "enabled": true,
+          "lead": "With Best Compliments From:",
+          "lines": [
+            "Shri Vishnubhai T. Patel & Smt. Rekhaben Patel (Ahmedabad)",
+            "Shri Ashokbhai T. Patel & Smt. Tejalben Patel (Ahmedabad)",
+            "Shri Umang V. Patel & Shri Vivek A. Patel",
+            "Little Blessings: Aayansh & Hiyan",
+            "Devnandan Medical Agency & Patel Pan Parlour"
+          ]
+        },
+        "note": {
+          "enabled": true,
+          "lead": "Host & Venue Details",
+          "text": "Host: Shri Pravinbhai P. Patel (+91 94294 36186) & Siddhant Patel (+91 94292 58126) | Residence: A-302, Vedant Antilia, Opp. Devasya School, New Vastral, Ahmedabad. Wedding Venue: Diwali-Ba Resort, Vasavad Road, Derdi Kumbhaji, Taluka Gondal, Dist. Rajkot."
+        },
+        "farewell": {
+          "line": "Warm welcome to grace the occasion and bless the newlyweds • Your Presence & Blessings Mean the World to Us"
+        },
+        "social": {
+          "instagram": true,
+          "instagramUrl": null
+        },
+        "music": {
+          "enabled": true,
+          "src": null,
+          "volume": 0.5
+        }
+      }
+    },
+    "id": 8,
+    "status": "live",
+    "publishedAt": "2026-09-30T03:46:51+00:00",
+    "expiresAt": "2027-03-30T03:46:51+00:00",
+    "editsRemaining": 4,
+    "isLocked": false,
+    "personalizationTier": "included",
+    "commonLinkSlug": "shahi-patra-1d92be",
+    "rsvpEvents": [
+      {
+        "id": 38,
+        "key": "1",
+        "name": "Mehendi",
+        "date": "2026-10-10"
+      },
+      {
+        "id": 39,
+        "key": "2",
+        "name": "Haldi",
+        "date": "2026-10-10"
+      },
+      {
+        "id": 40,
+        "key": "3",
+        "name": "Sangeet",
+        "date": "2026-10-10"
+      },
+      {
+        "id": 41,
+        "key": "4",
+        "name": "Vivaah",
+        "date": "2026-10-11"
+      },
+      {
+        "id": 42,
+        "key": "5",
+        "name": "Reception",
+        "date": "2026-10-12"
+      }
+    ],
+    "rsvpAccent": "#380015",
+    "commonLinkCompliments": true
+  },
+  "guest": null
+}

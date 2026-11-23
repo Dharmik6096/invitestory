@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Wedding Invitation | Live Invitation</title>
+    <meta name="description" content="You are cordially invited to our wedding celebration.">
+    <meta property="og:title" content="Wedding Invitation">
+    <meta property="og:description" content="Open to experience our interactive digital invitation.">
+    <meta property="og:image" content="/card%201/uploads/og/royale-1793891310-vjgsvu.webp">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a000a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 100% Fullscreen on all mobile phones, tablets & desktop screens */
+        #cardFrame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Personalized Guest Banner (Greeting only, pointer-events none) */
+        .guest-banner {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            color: #3b0024;
+            padding: 9px 24px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+            z-index: 10000;
+            display: none;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            border: 1px solid rgba(240, 201, 120, 0.6);
+            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .guest-banner {
+                top: 10px;
+                font-size: 12px;
+                padding: 7px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="guest-banner" id="guestGreeting"></div>
+
+    <iframe id="cardFrame" src="/card%201/templates/royale/index.html" allow="autoplay; fullscreen"
+        title="Wedding Invitation"></iframe>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+            var slug = params.get('card') || params.get('slug') || hashParams.get('card') || window.location.pathname.split('/').filter(Boolean).pop() || '';
+            var guest = params.get('guest') || hashParams.get('guest');
+            var names = params.get('names') || params.get('couple') || hashParams.get('names');
+
+            // Check if guest name is in URL
+            if (guest) {
+                var pill = document.getElementById('guestGreeting');
+                pill.textContent = 'Special Invitation for ' + decodeURIComponent(guest);
+                pill.style.display = 'block';
+            }
+
+            // Cache 'd' payload into localStorage if present (from query or hash)
+            var dParam = params.get('d') || hashParams.get('d');
+            if (dParam && slug) {
+                try {
+                    var parsed = JSON.parse(decodeURIComponent(escape(atob(dParam.replace(/-/g, '+').replace(/_/g, '/')))));
+                    if (parsed && typeof parsed === 'object') {
+                        var existing = {};
+                        try { existing = JSON.parse(localStorage.getItem('card_' + slug) || '{}'); } catch(_) {}
+                        var merged = Object.assign({}, existing, parsed);
+                        localStorage.setItem('card_' + slug, JSON.stringify(merged));
+                    }
+                } catch (_) {}
+            }
+
+            var queryAndHash = window.location.search + window.location.hash;
+
+            // Determine template type from slug
+            var frame = document.getElementById('cardFrame');
+            var tplTitle = 'Wedding Invitation';
+            var editUrl = '/card 1/index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+
+            if (slug === '4' || slug === '104' || slug.indexOf('bloom') !== -1 || slug.indexOf('ever-after') !== -1 || slug.indexOf('eab') !== -1) {
+                frame.src = '/card%204/templates/ever-after-bloom/index.html' + queryAndHash;
+                tplTitle = 'Ever After Bloom';
+                editUrl = '/card 4/index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+            } else if (slug === '3' || slug === '101' || slug.indexOf('palna') !== -1 || slug.indexOf('baby') !== -1 || slug.indexOf('wax') !== -1) {
+                frame.src = '/card%203/templates/shahi-palna/index.html' + queryAndHash;
+                tplTitle = 'Wax Seal Royale Baby Shower';
+                editUrl = '/card 3/index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+            } else if (slug === '2' || slug === '103' || slug.indexOf('lotus') !== -1 || slug.indexOf('papercut') !== -1) {
+                frame.src = '/card%202/templates/papercut-magenta/index.html' + queryAndHash;
+                tplTitle = 'Papercut Lotus';
+                editUrl = '/card 2/index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+            } else if (slug === '5' || slug === '105' || slug.indexOf('mithril') !== -1 || slug.indexOf('aabha') !== -1) {
+                frame.src = '/card%205/templates/mithril/index.html' + queryAndHash;
+                tplTitle = 'Aabha (Mithril) Heirloom';
+                editUrl = '/card 5/index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+            } else {
+                frame.src = '/card%201/templates/royale/index.html' + queryAndHash;
+                tplTitle = 'Shahi Patra';
+                editUrl = '/card 1/index.html?edit=1&admin=1&card=' + encodeURIComponent(slug);
+            }
+
+            if (names) {
+                document.title = decodeURIComponent(names) + ' | ' + tplTitle;
+            } else {
+                document.title = tplTitle + ' | Wedding Invitation';
+            }
+        })();
+    </script>
+    <script src="/security/anti-theft.js"></script>
+</body>
+
+</html>

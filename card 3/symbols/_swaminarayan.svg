@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 170" width="170" height="170">
+  <!-- Auspicious Kalash / Temple Arch Base -->
+  <path d="M45 145 C45 130 55 125 65 125 L105 125 C115 125 125 130 125 145 C125 152 115 155 85 155 C55 155 45 152 45 145 Z" fill="#b8860b" opacity="0.9"/>
+  <!-- Decorative Lotus Petals at Base -->
+  <path d="M85 125 C75 110 50 115 48 135 C60 135 75 130 85 125 Z" fill="#c41e3a"/>
+  <path d="M85 125 C95 110 120 115 122 135 C110 135 95 130 85 125 Z" fill="#c41e3a"/>
+  
+  <!-- Swaminarayan Sacred U-shaped Chandan Tilak -->
+  <!-- Outer U curve -->
+  <path d="M58 25 C58 25 57 85 64 102 C70 115 80 122 85 122 C90 122 100 115 106 102 C113 85 112 25 112 25 C104 25 103 75 99 90 C96 98 90 103 85 103 C80 103 74 98 71 90 C67 75 66 25 58 25 Z" fill="#e6a100"/>
+  <!-- Inner Golden/Chandan Highlight -->
+  <path d="M62 30 C62 30 61 80 67 96 C72 107 80 113 85 113 C90 113 98 107 103 96 C109 80 108 30 108 30 C104 30 102 72 98 86 C95 93 90 97 85 97 C80 97 75 93 72 86 C68 72 66 30 62 30 Z" fill="#ffd700"/>
+  
+  <!-- Sacred Red Kumkum Chandlo (Center Round Bindi) -->
+  <circle cx="85" cy="72" r="14" fill="#c41e3a"/>
+  <circle cx="85" cy="72" r="12" fill="#d91e36"/>
+  <circle cx="82" cy="69" r="4" fill="#ff6b6b" opacity="0.6"/>
+
+  <!-- Divine Aura Rays -->
+  <circle cx="85" cy="18" r="3" fill="#e6a100"/>
+  <circle cx="50" cy="22" r="2.5" fill="#e6a100"/>
+  <circle cx="120" cy="22" r="2.5" fill="#e6a100"/>
+</svg>

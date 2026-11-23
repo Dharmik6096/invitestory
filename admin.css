@@ -1,0 +1,1263 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ADMIN SYSTEM STYLES — InviteStory Luxury Administration
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Hidden by default for guests */
+.admin-only,
+.admin-card-edit-btn {
+  display: none !important;
+}
+
+body.is-admin .admin-only {
+  display: block !important;
+}
+
+body.is-admin .admin-only-flex {
+  display: flex !important;
+}
+
+body.is-admin .admin-card-edit-btn {
+  display: flex !important;
+}
+
+/* Floating Admin Top Banner */
+.admin-top-banner {
+  display: none;
+  background: linear-gradient(180deg, #181411 0%, #100d0b 100%);
+  border-bottom: 1.5px solid rgba(212, 175, 55, 0.45);
+  color: #f7eedc;
+  padding: 0 16px;
+  height: 46px;
+  position: sticky;
+  top: 0;
+  z-index: 999999;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+body.is-admin .admin-top-banner {
+  display: flex;
+  align-items: center;
+}
+
+.admin-top-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f5dfa8;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.admin-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulseDot 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.admin-badge-text-full {
+  display: inline;
+}
+
+.admin-badge-text-short {
+  display: none;
+}
+
+.admin-label-desktop {
+  display: inline;
+}
+
+.admin-label-mobile {
+  display: none;
+}
+
+.admin-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Universal Admin Pill Button */
+.admin-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: inherit;
+  line-height: 1;
+  outline: none;
+  user-select: none;
+}
+
+/* 1. Saved User Cards Button */
+.admin-btn-pill--gold {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.22), rgba(184, 134, 11, 0.16));
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  color: #f7e7b4;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.12);
+}
+
+.admin-btn-pill--gold:hover {
+  background: linear-gradient(135deg, #d4af37, #b8860b);
+  color: #16120d;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
+  transform: translateY(-1px);
+}
+
+.admin-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #d4af37;
+  color: #16120d;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: 2px;
+  transition: all 0.2s;
+}
+
+.admin-btn-pill--gold:hover .admin-count-badge {
+  background: #16120d;
+  color: #f7e7b4;
+}
+
+/* 2. Responsive Templates Dropdown */
+.admin-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.admin-btn-pill--templates {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #e5ded2;
+}
+
+.admin-btn-pill--templates:hover {
+  background: rgba(212, 175, 55, 0.22);
+  border-color: rgba(212, 175, 55, 0.5);
+  color: #fff;
+}
+
+.admin-chevron {
+  font-size: 10px;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.admin-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 230px;
+  background: #181412;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.15);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 1000000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform-origin: top right;
+  animation: adminDropFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminDropFade {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.admin-dropdown-menu.is-open {
+  display: flex;
+}
+
+.admin-dropdown-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #a39582;
+  padding: 6px 10px 4px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 2px;
+}
+
+.admin-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #ede2d3;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.admin-dropdown-item:hover {
+  background: rgba(212, 175, 55, 0.16);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.admin-drop-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.admin-drop-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.admin-drop-text strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f5e4bd;
+}
+
+.admin-drop-text small {
+  font-size: 10px;
+  color: #a99e90;
+}
+
+/* 3. Responsive Templates Dropdown Always Visible & Scalable */
+.admin-dropdown-wrap {
+  display: inline-flex;
+}
+
+.admin-desktop-template-pills {
+  display: none !important;
+}
+
+/* 4. Logout Button */
+.admin-btn-pill--logout {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.admin-btn-pill--logout:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+/* Fix site header overlap and vertical positioning when admin banner is active */
+body.is-admin .header-bar {
+  top: 46px !important;
+}
+
+body.is-admin .admin-header-btn {
+  display: none !important;
+}
+
+body.is-admin .archive-intro {
+  margin-top: 46px !important;
+}
+
+@media (max-width: 768px) {
+  .admin-top-banner {
+    height: 42px;
+    padding: 0 10px;
+  }
+  .admin-top-banner-inner {
+    gap: 6px;
+  }
+  .admin-badge {
+    font-size: 11.5px;
+  }
+  .admin-btn-pill {
+    height: 29px;
+    padding: 0 9px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+  .admin-label-desktop {
+    display: none;
+  }
+  .admin-label-mobile {
+    display: inline;
+  }
+  body.is-admin .header-bar {
+    top: 42px !important;
+  }
+  body.is-admin .archive-intro {
+    margin-top: 42px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-top-banner {
+    height: 40px;
+    padding: 0 6px;
+  }
+  .admin-top-banner-inner {
+    gap: 4px;
+  }
+  .admin-badge-text-full {
+    display: none;
+  }
+  .admin-badge-text-short {
+    display: inline;
+  }
+  .admin-btn-pill {
+    height: 28px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+  .admin-btn-pill .admin-pill-icon {
+    font-size: 12px;
+  }
+  .admin-dropdown-menu {
+    width: 210px;
+    right: -10px;
+  }
+  body.is-admin .header-bar {
+    top: 40px !important;
+  }
+  body.is-admin .archive-intro {
+    margin-top: 40px !important;
+  }
+}
+
+/* Saved Cards row responsive on mobile */
+@media (max-width: 650px) {
+  .admin-saved-card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    gap: 10px;
+  }
+  .admin-saved-card-info {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+  .admin-saved-card-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .admin-saved-card-actions .admin-btn-row-action {
+    justify-content: center;
+    width: 100%;
+    padding: 8px 10px;
+  }
+  .admin-saved-card-actions .admin-btn-row-del {
+    grid-column: span 2;
+  }
+}
+
+/* Legacy Admin Action & Logout classes kept for backward compatibility */
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-btn-action {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #e5c985;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.admin-btn-action:hover {
+  background: #d4af37;
+  color: #161311;
+  transform: translateY(-1px);
+}
+
+.admin-btn-logout {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-btn-logout:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* Admin Card Button in Catalogue */
+.admin-card-edit-btn {
+  background: linear-gradient(135deg, #d4af37, #b8860b) !important;
+  color: #1a0f05 !important;
+  font-weight: 700 !important;
+  border: none !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  margin-top: 8px !important;
+  cursor: pointer !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.admin-card-edit-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5) !important;
+}
+
+/* Modals Overlay */
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 7, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000005;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.admin-modal-backdrop.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.admin-modal-dialog {
+  background: #1b1714;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(212, 175, 55, 0.15);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  color: #f7eedc;
+  overflow: hidden;
+  transform: translateY(20px) scale(0.97);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-modal-backdrop.is-open .admin-modal-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.admin-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-modal-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: #f7eedc;
+}
+
+.admin-modal-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: color 0.2s;
+}
+
+.admin-modal-close:hover {
+  color: #fff;
+}
+
+.admin-modal-body {
+  padding: 24px;
+}
+
+.admin-input-group {
+  margin-bottom: 18px;
+}
+
+.admin-input-group label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #d4af37;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.admin-input-group input,
+.admin-input-group textarea,
+.admin-input-group select {
+  width: 100%;
+  background: #27211c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.admin-input-group input:focus,
+.admin-input-group textarea:focus,
+.admin-input-group select:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.admin-modal-footer {
+  padding: 18px 24px;
+  background: #14110f;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-btn-primary {
+  background: linear-gradient(135deg, #d4af37, #b8860b);
+  color: #1a0f05;
+  font-weight: 700;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.admin-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.admin-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ddd;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.admin-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/* Large Editor Modal */
+.admin-editor-dialog {
+  max-width: 680px !important;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(212, 175, 55, 0.12) !important;
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+
+.admin-editor-dialog .admin-modal-body {
+  overflow-y: auto;
+  max-height: calc(92vh - 130px);
+  padding: 18px 22px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
+}
+
+.admin-editor-dialog .admin-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-editor-dialog .admin-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-editor-dialog .admin-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+}
+
+/* Card Target & Client Profile Panel */
+.admin-profile-panel {
+  background: #191512;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-client-name-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-panel-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  color: #d4af37;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-panel-label-icon {
+  font-size: 13px;
+}
+
+.admin-panel-input {
+  width: 100%;
+  background: #27211c;
+  color: #f7eedc;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.admin-panel-input:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+  background: #2e2620;
+}
+
+.admin-panel-input::placeholder {
+  color: #8c7e72;
+  font-weight: 400;
+}
+
+.admin-target-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-target-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 260px;
+}
+
+.admin-target-tag {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  color: #d4af37;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.admin-btn-action--fresh {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.45) !important;
+  color: #86efac !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+}
+
+.admin-btn-action--fresh:hover {
+  background: #22c55e !important;
+  color: #12100e !important;
+}
+
+/* Tabs Bar styled identically to Screen 2 */
+.admin-card-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #14110f;
+  padding: 6px 8px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.admin-card-tab {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #e5c985;
+  font-size: 11.8px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-card-tab:hover {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: #d4af37;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.admin-card-tab.active {
+  background: #d4af37 !important;
+  color: #161311 !important;
+  font-weight: 700 !important;
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.4) !important;
+}
+
+/* Visual Studio Card in Modal */
+.admin-visual-studio-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(212, 175, 55, 0.05));
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  padding: 20px 22px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.admin-studio-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  margin-bottom: 6px;
+}
+
+.admin-visual-studio-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f7eedc;
+}
+
+.admin-visual-studio-desc {
+  margin: 4px 0 0 0;
+  font-size: 12.5px;
+  color: #aaa;
+  line-height: 1.45;
+}
+
+.admin-studio-launch-btn {
+  background: linear-gradient(135deg, #d4af37, #b8860b) !important;
+  color: #161311 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 9px 18px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3) !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.admin-studio-launch-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.45) !important;
+  filter: brightness(1.1) !important;
+}
+
+.admin-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHARE MODAL STYLES
+   ═══════════════════════════════════════════════════════════════ */
+.admin-share-dialog {
+  max-width: 500px !important;
+  border-radius: 24px !important;
+  text-align: center;
+}
+
+.admin-share-url-box {
+  background: #14110f;
+  border: 1px dashed rgba(212, 175, 55, 0.45);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS & TOUCH ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .admin-fields-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-modal-backdrop {
+    padding: 0 !important;
+    align-items: flex-end !important; /* Bottom-sheet behavior on phones */
+  }
+
+  .admin-modal-dialog {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 24px 24px 0 0 !important;
+    max-height: 94vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .admin-modal-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    background: #1b1714 !important;
+    padding: 16px 18px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .admin-modal-title {
+    font-size: 18px !important;
+  }
+
+  .admin-modal-body {
+    padding: 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 1 auto !important;
+  }
+
+  .admin-modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 20 !important;
+    background: #14110f !important;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5) !important;
+    padding: 14px 16px !important;
+  }
+
+  .admin-input-group input,
+  .admin-input-group select,
+  .admin-input-group textarea {
+    font-size: 16px !important; /* Strictly prevents iOS Safari auto-zoom! */
+    padding: 12px 14px !important;
+    min-height: 44px !important;
+  }
+
+  .admin-card-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 8px !important;
+    padding: 6px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .admin-card-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .admin-card-tab {
+    flex: 0 0 auto !important;
+    padding: 10px 16px !important;
+    font-size: 13px !important;
+    border-radius: 999px !important;
+  }
+
+  .admin-template-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 8px !important;
+    padding: 6px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .admin-template-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .admin-tpl-card {
+    flex: 0 0 160px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Multi-User Card Profile Switcher & Saved Cards Manager
+   ───────────────────────────────────────────────────────────────── */
+.admin-user-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.admin-user-mode-target {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 280px;
+}
+
+.admin-select-picker {
+  flex: 1;
+  background: #27211c;
+  color: #f7eedc;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+}
+
+.admin-select-picker:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+}
+
+.admin-editor-card-status {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.admin-editor-card-status.is-fresh {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+.admin-editor-card-status.is-editing {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #f0c978;
+}
+
+.admin-slug-badge {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #fce7b2;
+}
+
+/* Saved Cards Directory Dialog */
+.admin-saved-cards-dialog {
+  max-width: 860px !important;
+  width: 95% !important;
+}
+
+.admin-saved-cards-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-search-input {
+  flex: 1 1 220px;
+  background: #27211c;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  outline: none;
+}
+
+.admin-search-input:focus {
+  border-color: #d4af37;
+}
+
+.admin-saved-cards-container {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.admin-saved-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-saved-card-row {
+  background: #211c18;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.admin-saved-card-row:hover {
+  background: #28211c;
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.admin-saved-card-info {
+  flex: 1 1 300px;
+}
+
+.admin-saved-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.admin-saved-card-names {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f7eedc;
+}
+
+.admin-template-badge {
+  background: rgba(212, 175, 55, 0.18);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #e5c985;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.admin-saved-card-meta {
+  font-size: 12px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-saved-card-meta code {
+  color: #d4af37;
+  font-size: 11.5px;
+}
+
+.admin-saved-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-btn-row-action {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+}
+
+.admin-btn-row-edit {
+  background: #d4af37;
+  color: #161311;
+  font-weight: 700;
+}
+
+.admin-btn-row-edit:hover {
+  background: #f0c978;
+  transform: translateY(-1px);
+}
+
+.admin-btn-row-studio {
+  background: rgba(147, 51, 234, 0.18);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+}
+
+.admin-btn-row-studio:hover {
+  background: rgba(147, 51, 234, 0.35);
+  color: #fff;
+}
+
+.admin-btn-row-live {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+.admin-btn-row-live:hover {
+  background: rgba(59, 130, 246, 0.35);
+  color: #fff;
+}
+
+.admin-btn-row-copy {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+}
+
+.admin-btn-row-copy:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.admin-btn-row-del {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+  padding: 6px 9px;
+}
+
+.admin-btn-row-del:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+.admin-empty-saved-cards {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}

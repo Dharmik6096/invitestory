@@ -1,0 +1,17 @@
+{
+  "name": "invitation_card",
+  "version": "1.0.0",
+  "description": "A modular multi-card repository for digital wedding invitations. Each card is packaged in its own 100% self-contained folder (`card 1`, `card 2`, etc.), allowing you to customize and manage multiple wedding invitation designs independently.",
+  "main": "admin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@vercel/blob": "^2.9.0",
+    "dotenv": "^18.0.10"
+  }
+}

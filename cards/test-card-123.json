@@ -1,0 +1,16 @@
+{
+  "title": "Test Groom & Test Bride",
+  "groomName": "Test Groom",
+  "brideName": "Test Bride",
+  "gallery": {
+    "items": [
+      {
+        "type": "portrait",
+        "image": "https://5bp5y1wstf0j3wd4.public.blob.vercel-storage.com/images/test-card-123_image_1795328415786_3o7ed.gif",
+        "caption": "#test"
+      }
+    ]
+  },
+  "version": 3,
+  "updatedAt": "2026-11-22T06:20:15.783Z"
+}
