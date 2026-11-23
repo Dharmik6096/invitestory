@@ -210,8 +210,13 @@
 
     // Card 1: Royale
     if (tpl.id === 102) {
-      if (window.Royale && window.Royale.render && typeof window.Royale.render.all === 'function') {
-        window.Royale.render.all();
+      if (window.Royale) {
+        if (window.Royale.config) {
+          Object.assign(window.Royale.config, cfg);
+        }
+        if (window.Royale.render && typeof window.Royale.render.all === 'function') {
+          window.Royale.render.all();
+        }
       }
       const bName = cfg.brideName || 'Aayushi';
       const gName = cfg.groomName || 'Siddhant';
@@ -224,14 +229,53 @@
         elInv.textContent = cfg.invocation.custom || cfg.invocation.text || elInv.textContent;
       }
       const elNote = document.getElementById('ryIntroNote');
-      if (elNote && cfg.introNote) elNote.textContent = cfg.introNote;
+      if (elNote) {
+        if (cfg.introNote) {
+          elNote.textContent = cfg.introNote;
+        } else if (cfg.brideName || cfg.groomName) {
+          elNote.textContent = 'With the divine blessings of Lord Shree Swaminarayan, we cordially invite you and your family to celebrate the auspicious wedding ceremony of ' + gName + ' and ' + bName + '.';
+        }
+      }
+
+      // Re-render gallery images if custom gallery items exist
+      if (cfg.gallery && Array.isArray(cfg.gallery.items)) {
+        const frameImgs = document.querySelectorAll('.gframe__img');
+        cfg.gallery.items.forEach((item, i) => {
+          if (frameImgs[i] && item && item.image) {
+            frameImgs[i].src = item.image;
+          }
+        });
+      }
+
+      // Re-render family scrolls if customized
+      if (cfg.groomFamily) {
+        const elGN = document.getElementById('ryGroomCardName');
+        if (elGN && cfg.groomFamily.name) elGN.textContent = cfg.groomFamily.name;
+        const elGPA = document.getElementById('ryGroomParentA');
+        if (elGPA && cfg.groomFamily.parentA) elGPA.textContent = cfg.groomFamily.parentA;
+        const elGPB = document.getElementById('ryGroomParentB');
+        if (elGPB && cfg.groomFamily.parentB) elGPB.textContent = cfg.groomFamily.parentB;
+      }
+      if (cfg.brideFamily) {
+        const elBN = document.getElementById('ryBrideCardName');
+        if (elBN && cfg.brideFamily.name) elBN.textContent = cfg.brideFamily.name;
+        const elBPA = document.getElementById('ryBrideParentA');
+        if (elBPA && cfg.brideFamily.parentA) elBPA.textContent = cfg.brideFamily.parentA;
+        const elBPB = document.getElementById('ryBrideParentB');
+        if (elBPB && cfg.brideFamily.parentB) elBPB.textContent = cfg.brideFamily.parentB;
+      }
       return;
     }
 
     // Card 2: Papercut Lotus
     if (tpl.id === 103) {
-      if (window.Papercut && window.Papercut.render && typeof window.Papercut.render.all === 'function') {
-        window.Papercut.render.all();
+      if (window.Papercut) {
+        if (window.Papercut.config) {
+          Object.assign(window.Papercut.config, cfg);
+        }
+        if (window.Papercut.render && typeof window.Papercut.render.all === 'function') {
+          window.Papercut.render.all();
+        }
       }
       const bName = cfg.brideName || 'Ankita';
       const gName = cfg.groomName || 'Kaushik';
@@ -244,7 +288,13 @@
         elInv.textContent = cfg.invocation.custom || cfg.invocation.text || elInv.textContent;
       }
       const elNote = document.getElementById('pcIntroNote');
-      if (elNote && cfg.introNote) elNote.textContent = cfg.introNote;
+      if (elNote) {
+        if (cfg.introNote) {
+          elNote.textContent = cfg.introNote;
+        } else if (cfg.brideName || cfg.groomName) {
+          elNote.textContent = 'With the divine blessings of our elders, we cordially invite you and your family to celebrate the auspicious wedding ceremony of ' + gName + ' and ' + bName + '.';
+        }
+      }
       return;
     }
 
@@ -322,7 +372,24 @@
 
       if (cfg.sacredArtImg) {
         const elArt = document.querySelector('.sacred-art-img');
-        if (elArt) elArt.src = cfg.sacredArtImg;
+        if (elArt) {
+          elArt.src = cfg.sacredArtImg;
+          elArt.setAttribute('src', cfg.sacredArtImg);
+        }
+      }
+      if (cfg.babyFeetImg) {
+        const elFeet = document.querySelector('.baby-feet-img');
+        if (elFeet) {
+          elFeet.src = cfg.babyFeetImg;
+          elFeet.setAttribute('src', cfg.babyFeetImg);
+        }
+      }
+      if (cfg.venueSketchImg) {
+        const elSketch = document.querySelector('.venue-sketch');
+        if (elSketch) {
+          elSketch.src = cfg.venueSketchImg;
+          elSketch.setAttribute('src', cfg.venueSketchImg);
+        }
       }
 
       const btnMaps = document.querySelector('.btn-maps');
@@ -344,7 +411,7 @@
 
       const elHeroNames = document.getElementById('heroNames');
       if (elHeroNames) {
-        elHeroNames.innerHTML = esc(bride) + '<span class="mx-3 font-script text-3xl italic sm:text-4xl">&amp;</span><br class="sm:hidden"/>' + esc(groom);
+        elHeroNames.innerHTML = '<span>' + esc(bride) + '</span><span class="mx-3 font-script text-3xl italic sm:text-4xl">&amp;</span><span>' + esc(groom) + '</span>';
       }
 
       const elKicker = document.querySelector('p.font-sans.text-\\[0\\.62rem\\].tracking-\\[0\\.5em\\]');
@@ -442,8 +509,8 @@
 
       const namesSpan = document.querySelector('span[data-v="P"]');
       if (namesSpan) namesSpan.textContent = couple;
-      const scratchKicker = document.querySelector('.vr-scratch-card .font-cinzel.tracking-\\[0\\.28em\\]');
-      if (scratchKicker) scratchKicker.textContent = "The Reception of " + couple;
+      const scratchKickerEl = document.querySelector('.vr-scratch-card .font-cinzel.tracking-\\[0\\.28em\\], #vrScratch span.font-cinzel:first-of-type');
+      if (scratchKickerEl) scratchKickerEl.textContent = "The Reception of " + couple;
 
       // Spans in invitation letter
       const spansE = document.querySelectorAll('#sections section:nth-of-type(1) span[data-v="E"]');
@@ -455,6 +522,8 @@
       }
 
       // Scratch card internal text
+      const scratchDay = document.querySelector('#vrScratch span.font-cormorant');
+      if (scratchDay && cfg.day) scratchDay.textContent = cfg.day;
       const scratchDate = document.querySelector('#vrScratch span.font-pinyon');
       if (scratchDate) scratchDate.textContent = dateStr;
       const scratchCinzel = document.querySelectorAll('#vrScratch span.font-cinzel');
@@ -475,7 +544,7 @@
       const noteEl = document.querySelector('p.font-pinyon:last-of-type');
       if (noteEl && cfg.closingNote) noteEl.textContent = cfg.closingNote;
 
-      const portraitImg = document.querySelector('.mithril-v4-portrait img');
+      const portraitImg = document.querySelector('.mithril-v4-portrait img, img[src*="portrait"]');
       if (portraitImg && cfg.couplePortrait) portraitImg.src = cfg.couplePortrait;
 
       const calNote = document.querySelector('.wc-note');
@@ -1162,10 +1231,6 @@
         { selector: '#heroNames', path: 'coupleNames', placeholder: "Bride & Groom", label: "Couple" },
         { selector: 'p.font-script.text-xl.text-primary\\/80', path: 'blessing', placeholder: "Couple Blessing", label: "Blessing" },
         { selector: 'p.font-sans.text-\\[0\\.62rem\\].tracking-\\[0\\.5em\\]', path: 'heroKicker', placeholder: "Together with our families", label: "Header" },
-        { selector: 'article:has(img[src*="portrait-bride"]) h3, p:contains("The Bride") + h3', path: 'couple.bride', placeholder: "Bride", label: "Bride Name" },
-        { selector: 'article:has(img[src*="portrait-bride"]) p.text-sm', path: 'brideStory', multiline: true, placeholder: "Bride Story", label: "Bride Story" },
-        { selector: 'article:has(img[src*="portrait-groom"]) h3, p:contains("The Groom") + h3', path: 'couple.groom', placeholder: "Groom", label: "Groom Name" },
-        { selector: 'article:has(img[src*="portrait-groom"]) p.text-sm', path: 'groomStory', multiline: true, placeholder: "Groom Story", label: "Groom Story" },
         { selector: 'section#details .plate:nth-child(1) .font-display', path: 'dateLabel', placeholder: "The Day", label: "Day" },
         { selector: 'section#details .plate:nth-child(2) .font-display', path: 'timeLabel', placeholder: "The Hour", label: "Hour" },
         { selector: 'section#details .plate:nth-child(3) .font-display', path: 'venueName', placeholder: "The Place", label: "Place" },
@@ -1178,7 +1243,7 @@
         { selector: 'p.font-cormorant[data-hero]', path: 'heroDate', placeholder: "18.10.26", label: "Hero Date" },
         { selector: 'p[data-hero]', path: 'heroSubtitle', placeholder: "The Reception of", label: "Subtitle" },
         { selector: '.vr-cover-names', path: 'couple', placeholder: "Couple Names", label: "Cover Names" },
-        { selector: '.vr-scratch-card span.font-pinyon', path: 'date', placeholder: "Date", label: "Scratch Date" },
+        { selector: '#vrScratch span.font-pinyon, .vr-scratch-card span.font-pinyon', path: 'date', placeholder: "Date", label: "Scratch Date" },
         { selector: '.mithril-v4-venue p.font-cinzel', path: 'time', placeholder: "7:00 PM", label: "Evening Time" },
         { selector: '.mithril-v4-venue p.font-cormorant', path: 'venue', multiline: true, placeholder: "Venue Address", label: "Evening Venue" },
         { selector: 'p.vr-oneline', path: 'closingQuote', placeholder: "Blessing Quote", label: "Blessing" },
@@ -1253,6 +1318,66 @@
       });
     });
 
+    // Dynamic selectors for Card 104 Bride & Groom stories
+    if (tpl.id === 104) {
+      document.querySelectorAll('p.font-sans.text-\\[0\\.62rem\\].tracking-\\[0\\.4em\\]').forEach(p => {
+        const text = p.textContent || '';
+        if (text.includes('The Bride')) {
+          const h = p.nextElementSibling;
+          if (h && !h.dataset.ueAttached) {
+            h.dataset.ueAttached = '1';
+            h.setAttribute('contenteditable', 'plaintext-only');
+            h.classList.add('ue-editable');
+            h.title = '✏️ Click to edit Bride Name';
+            h.addEventListener('input', () => {
+              if (!cfg.couple) cfg.couple = {};
+              cfg.couple.bride = (h.textContent || '').trim();
+              const elHN = document.getElementById('heroNames');
+              if (elHN) elHN.innerHTML = esc(cfg.couple.bride) + '<span class="mx-3 font-script text-3xl italic sm:text-4xl">&amp;</span><br class="sm:hidden"/>' + esc((cfg.couple && cfg.couple.groom) || 'Ishaan');
+              persistCardConfig(tpl, cfg, false);
+            });
+          }
+          const story = h ? h.nextElementSibling : null;
+          if (story && !story.dataset.ueAttached) {
+            story.dataset.ueAttached = '1';
+            story.setAttribute('contenteditable', 'plaintext-only');
+            story.classList.add('ue-editable');
+            story.title = '✏️ Click to edit Bride Story';
+            story.addEventListener('input', () => {
+              cfg.brideStory = (story.innerText || '').trim();
+              persistCardConfig(tpl, cfg, false);
+            });
+          }
+        } else if (text.includes('The Groom')) {
+          const h = p.nextElementSibling;
+          if (h && !h.dataset.ueAttached) {
+            h.dataset.ueAttached = '1';
+            h.setAttribute('contenteditable', 'plaintext-only');
+            h.classList.add('ue-editable');
+            h.title = '✏️ Click to edit Groom Name';
+            h.addEventListener('input', () => {
+              if (!cfg.couple) cfg.couple = {};
+              cfg.couple.groom = (h.textContent || '').trim();
+              const elHN = document.getElementById('heroNames');
+              if (elHN) elHN.innerHTML = esc((cfg.couple && cfg.couple.bride) || 'Aarohi') + '<span class="mx-3 font-script text-3xl italic sm:text-4xl">&amp;</span><br class="sm:hidden"/>' + esc(cfg.couple.groom);
+              persistCardConfig(tpl, cfg, false);
+            });
+          }
+          const story = h ? h.nextElementSibling : null;
+          if (story && !story.dataset.ueAttached) {
+            story.dataset.ueAttached = '1';
+            story.setAttribute('contenteditable', 'plaintext-only');
+            story.classList.add('ue-editable');
+            story.title = '✏️ Click to edit Groom Story';
+            story.addEventListener('input', () => {
+              cfg.groomStory = (story.innerText || '').trim();
+              persistCardConfig(tpl, cfg, false);
+            });
+          }
+        }
+      });
+    }
+
     // Wire Photo Slots for Direct Canvas Crop/Swap
     wirePhotoUploader(tpl, cfg);
   }
@@ -1262,7 +1387,7 @@
     const PHOTO_SELECTORS = {
       101: ['.sacred-art-img', '.baby-feet-img', '.venue-sketch'],
       102: ['.gframe__img', '.ryc-card__photo-img', '.royale-couple__img'],
-      103: ['.gallery__img', '.couple__portrait'],
+      103: ['#pcGalleryPhotoTrack img', '.gallery__img', '.ceremony__art', '.cere-photo', '.frame__cell img', '.couple__portrait'],
       104: ['img[src*="portrait-bride"]', 'img[src*="portrait-groom"]', '.gallery-card img', 'img[src*="couple-lanterns"]'],
       105: ['.mithril-v4-portrait img', 'img[src*="portrait"]', 'img[src*="key"]']
     };
@@ -1290,15 +1415,55 @@
               // Map to config
               if (tpl.id === 101) {
                 if (sel.includes('sacred-art')) cfg.sacredArtImg = compressedUrl;
+                else if (sel.includes('baby-feet')) cfg.babyFeetImg = compressedUrl;
+                else if (sel.includes('venue-sketch')) cfg.venueSketchImg = compressedUrl;
+              } else if (tpl.id === 102) {
+                if (sel.includes('gframe')) {
+                  if (!cfg.gallery) cfg.gallery = {};
+                  if (!Array.isArray(cfg.gallery.items)) cfg.gallery.items = [];
+                  const frameEl = img.closest('.gframe');
+                  const frames = Array.from(document.querySelectorAll('.gframe'));
+                  const frameIdx = frameEl ? frames.indexOf(frameEl) : idx;
+                  if (!cfg.gallery.items[frameIdx]) cfg.gallery.items[frameIdx] = { type: 'portrait', image: '' };
+                  cfg.gallery.items[frameIdx].image = compressedUrl;
+                  cfg.gallery.enabled = true;
+                } else if (sel.includes('ryc-card')) {
+                  const cereCard = img.closest('.ryc-card');
+                  const cereIdx = cereCard ? (parseInt(cereCard.dataset.index, 10) || idx) : idx;
+                  if (Array.isArray(cfg.ceremonies) && cfg.ceremonies[cereIdx]) {
+                    cfg.ceremonies[cereIdx].art = compressedUrl;
+                  }
+                } else if (sel.includes('royale-couple')) {
+                  cfg.couplePortrait = compressedUrl;
+                }
+              } else if (tpl.id === 103) {
+                if (sel.includes('gallery') || sel.includes('frame__cell') || sel.includes('pcGallery')) {
+                  if (!cfg.gallery) cfg.gallery = {};
+                  if (!Array.isArray(cfg.gallery.photos)) cfg.gallery.photos = [];
+                  cfg.gallery.photos[idx] = compressedUrl;
+                  if (!Array.isArray(cfg.gallery.items)) cfg.gallery.items = [];
+                  if (!cfg.gallery.items[idx]) cfg.gallery.items[idx] = { image: '' };
+                  cfg.gallery.items[idx].image = compressedUrl;
+                } else if (sel.includes('ceremony') || sel.includes('cere-photo')) {
+                  if (Array.isArray(cfg.ceremonies) && cfg.ceremonies[idx]) {
+                    cfg.ceremonies[idx].art = compressedUrl;
+                  }
+                } else if (sel.includes('couple')) {
+                  cfg.couplePortrait = compressedUrl;
+                }
               } else if (tpl.id === 104) {
                 if (sel.includes('portrait-bride')) cfg.bridePortrait = compressedUrl;
                 else if (sel.includes('portrait-groom')) cfg.groomPortrait = compressedUrl;
                 else if (sel.includes('gallery')) {
                   if (!Array.isArray(cfg.gallery)) cfg.gallery = [];
-                  cfg.gallery[idx] = { src: compressedUrl, caption: '' };
+                  if (!cfg.gallery[idx]) cfg.gallery[idx] = {};
+                  cfg.gallery[idx].src = compressedUrl;
+                } else if (sel.includes('couple-lanterns')) {
+                  cfg.couplePortrait = compressedUrl;
                 }
               } else if (tpl.id === 105) {
-                cfg.couplePortrait = compressedUrl;
+                if (sel.includes('key')) cfg.closingKeyImg = compressedUrl;
+                else cfg.couplePortrait = compressedUrl;
               }
               persistCardConfig(tpl, cfg, true);
               showToast('Photo replaced &amp; saved ✓');
@@ -1733,6 +1898,22 @@
 
     let cfg = getCurrentConfig(tpl);
 
+    // 0. Synchronous Cloud Check if slug is present (ensures instant freshest render on every device)
+    if (slug) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/card/?slug=' + encodeURIComponent(slug) + '&v=' + Date.now(), false);
+        xhr.send(null);
+        if (xhr.status === 200 && xhr.responseText) {
+          var cloudJson = JSON.parse(xhr.responseText);
+          if (cloudJson && cloudJson.data) {
+            cfg = deepMerge(cfg, cloudJson.data);
+            try { localStorage.setItem('card_' + slug, JSON.stringify(cloudJson.data)); } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+
     // 1. Read existing saved card data by slug (User 1 vs User 2 isolation)
     if (slug) {
       try {
@@ -1801,6 +1982,19 @@
       }).catch(() => {});
     }
   }
+
+  // Listen for real-time config sync messages from parent window (invite/index.html gateway)
+  window.addEventListener('message', function (ev) {
+    if (ev && ev.data && ev.data.type === 'INVITESTORY_UPDATE_CARD' && ev.data.data) {
+      try {
+        const tpl = detectTemplate();
+        let current = getCurrentConfig(tpl);
+        current = deepMerge(current, ev.data.data);
+        setConfigBack(tpl, current);
+        renderTemplateDOM(tpl, current);
+      } catch (_) {}
+    }
+  });
 
   // Auto-run on DOM ready
   if (document.readyState === 'loading') {

@@ -8,6 +8,21 @@
   const ADMIN_SESSION_KEY = 'invitestory_admin_session';
   const REGISTRY_KEY = 'invitestory_cards_registry';
 
+  function deepMerge(base, over) {
+    if (!base || typeof base !== 'object') return over || {};
+    if (!over || typeof over !== 'object') return base;
+    if (Array.isArray(base) && Array.isArray(over)) return over;
+    var out = Object.assign({}, base);
+    Object.keys(over).forEach(function (k) {
+      if (over[k] && typeof over[k] === 'object' && !Array.isArray(over[k]) && base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) {
+        out[k] = deepMerge(base[k], over[k]);
+      } else {
+        out[k] = over[k];
+      }
+    });
+    return out;
+  }
+
   // ─────────────────────────────────────────────────────────────────
   // 1. CARDS REGISTRY HELPERS (Multi-user isolation & persistence)
   // ─────────────────────────────────────────────────────────────────
@@ -88,7 +103,7 @@
       return { cardId: 101, templateName: 'Wax Seal Baby Shower', prefix: 'palna' };
     } else if (s.indexOf('lotus') !== -1 || s.indexOf('papercut') !== -1) {
       return { cardId: 103, templateName: 'Papercut Lotus', prefix: 'lotus' };
-    } else if (s.indexOf('bloom') !== -1 || s.indexOf('ever-after') !== -1 || s.indexOf('eab') !== -1) {
+    } else if (s.indexOf('bloom') !== -1 || s.indexOf('ever-after') !== -1 || s.indexOf('eab') !== -1 || s.indexOf('storybook') !== -1) {
       return { cardId: 104, templateName: 'Ever After Bloom', prefix: 'bloom' };
     } else if (s.indexOf('mithril') !== -1 || s.indexOf('aabha') !== -1) {
       return { cardId: 105, templateName: 'Aabha Mithril', prefix: 'mithril' };
@@ -642,12 +657,26 @@
     var finalSlug = currentEditingCardSlug || generateUniqueSlug(slugPrefix);
     currentEditingCardSlug = finalSlug;
 
+    // Retrieve any existing configuration for this card (to preserve photos, ceremonies, stories)
+    var existingConfig = {};
+    try {
+      var localExisting = JSON.parse(localStorage.getItem('card_' + finalSlug) || 'null');
+      if (localExisting && typeof localExisting === 'object') {
+        existingConfig = localExisting;
+      } else {
+        var fromReg = getUserCardBySlug(finalSlug);
+        if (fromReg && fromReg.config) existingConfig = fromReg.config;
+      }
+    } catch (_) {}
+
+    var finalConfig = deepMerge(existingConfig, overrides);
+
     // Compact payload encoding (prevents URI_TOO_LONG)
-    var dParam = encodePayload(overrides);
+    var dParam = encodePayload(finalConfig);
 
     // Save isolated user config to localStorage
     try {
-      localStorage.setItem('card_' + finalSlug, JSON.stringify(overrides));
+      localStorage.setItem('card_' + finalSlug, JSON.stringify(finalConfig));
     } catch (_) {}
 
     // Clean Short URL without bloated query hashes
@@ -656,7 +685,7 @@
 
     // Persist to CloudStorage
     if (window.CloudStorage && typeof window.CloudStorage.saveCard === 'function') {
-      window.CloudStorage.saveCard(finalSlug, overrides, {
+      window.CloudStorage.saveCard(finalSlug, finalConfig, {
         cardId: currentEditingCardId,
         templateName: meta.templateName,
         names: coupleNames,
@@ -674,7 +703,7 @@
       date: eventDate,
       venue: eventVenue,
       url: shareUrl,
-      config: overrides
+      config: finalConfig
     });
 
     currentShareData = {

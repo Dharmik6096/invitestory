@@ -1,8 +1,10 @@
-const { put } = require('@vercel/blob');
+const { put, get } = require('@vercel/blob');
+const { text: streamToText } = require('node:stream/consumers');
 const fs = require('fs');
 const path = require('path');
 
 const BLOB_BASE = 'https://5bp5y1wstf0j3wd4.public.blob.vercel-storage.com';
+const FALLBACK_BLOB_TOKEN = 'vercel_blob_rw_5bp5Y1wStF0J3wd4_PdP8Efu1RUfPCzQnYblRV4UN7pXspn';
 
 // Helper to recursively find and upload all data:image/ base64 strings
 async function processBase64Images(obj, slug, token) {
@@ -43,16 +45,17 @@ async function processBase64Images(obj, slug, token) {
 }
 
 module.exports = async function handler(req, res) {
-  // CORS headers
+  // CORS & Cache-Control headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
 
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = process.env.BLOB_READ_WRITE_TOKEN || FALLBACK_BLOB_TOKEN;
 
   // GET: Fetch card JSON by slug
   if (req.method === 'GET') {
@@ -61,24 +64,47 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Missing slug parameter' });
     }
 
-    // 1. Try fetching from Cloud Blob
-    try {
-      const blobUrl = `${BLOB_BASE}/cards/${encodeURIComponent(slug)}.json?v=${Date.now()}`;
-      const blobResp = await fetch(blobUrl);
-      if (blobResp.ok) {
-        const cardData = await blobResp.json();
-        return res.status(200).json({ success: true, source: 'cloud', slug, data: cardData });
-      }
-    } catch (_) {}
+    let freshestData = null;
+    let freshestTime = 0;
 
-    // 2. Fallback to local cards/ folder
+    // 1. Check local cards/ folder (instant synchronous write on local host)
     try {
       const localPath = path.join(process.cwd(), 'cards', `${slug}.json`);
       if (fs.existsSync(localPath)) {
         const localData = JSON.parse(fs.readFileSync(localPath, 'utf-8'));
-        return res.status(200).json({ success: true, source: 'local', slug, data: localData });
+        freshestData = localData;
+        freshestTime = new Date(localData.updatedAt || 0).getTime();
       }
     } catch (_) {}
+
+    // 2. Check Cloud Blob store directly via get()
+    try {
+      const blobRes = await get(`cards/${slug}.json`, { access: 'public', token });
+      if (blobRes && blobRes.stream) {
+        const jsonText = await streamToText(blobRes.stream);
+        const cloudData = JSON.parse(jsonText);
+        const cloudTime = new Date(cloudData.updatedAt || 0).getTime();
+        if (!freshestData || cloudTime >= freshestTime) {
+          freshestData = cloudData;
+          freshestTime = cloudTime;
+        }
+      }
+    } catch (_) {}
+
+    // 3. Fallback to public blob URL if not yet found
+    if (!freshestData) {
+      try {
+        const blobUrl = `${BLOB_BASE}/cards/${encodeURIComponent(slug)}.json?v=${Date.now()}`;
+        const blobResp = await fetch(blobUrl, { cache: 'no-store' });
+        if (blobResp.ok) {
+          freshestData = await blobResp.json();
+        }
+      } catch (_) {}
+    }
+
+    if (freshestData) {
+      return res.status(200).json({ success: true, source: 'cloud', slug, data: freshestData, cardId: freshestData.cardId });
+    }
 
     return res.status(404).json({ error: 'Card not found', slug });
   }
@@ -98,6 +124,8 @@ module.exports = async function handler(req, res) {
 
       let cardData = body.data || body.config || body;
       if (cardData.data) cardData = cardData.data;
+      if (body.cardId && !cardData.cardId) cardData.cardId = body.cardId;
+      if (body.card && !cardData.cardId && !isNaN(parseInt(body.card, 10))) cardData.cardId = parseInt(body.card, 10);
 
       // Ensure version
       cardData.version = (cardData.version || 2) + 1;
@@ -116,7 +144,8 @@ module.exports = async function handler(req, res) {
           token: token,
           addRandomSuffix: false,
           allowOverwrite: true,
-          contentType: 'application/json'
+          contentType: 'application/json',
+          cacheControlMaxAge: 0
         });
         cloudUrl = blobRes.url;
       } catch (blobErr) {

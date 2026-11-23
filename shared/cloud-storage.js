@@ -19,7 +19,7 @@
 
     // Upload standalone image to cloud
     uploadImage: function (base64OrDataUri) {
-      return fetch('/api/upload', {
+      return fetch('/api/upload/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64OrDataUri })
@@ -39,7 +39,7 @@
       var origin = window.location.origin || 'https://invitation-card-umber-six.vercel.app';
       var cleanUrl = CloudStorage.getCleanInviteUrl(slug, meta.names || config.title || '');
 
-      return fetch('/api/card', {
+      return fetch('/api/card/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -106,7 +106,7 @@
 
     // Fetch card from cloud database with local fallback
     getCard: function (slug) {
-      return fetch('/api/card?slug=' + encodeURIComponent(slug) + '&v=' + Date.now())
+      return fetch('/api/card/?slug=' + encodeURIComponent(slug) + '&v=' + Date.now())
         .then(function (res) {
           if (!res.ok) throw new Error('API fetch failed');
           return res.json();

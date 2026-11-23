@@ -152,21 +152,50 @@
 
             var frame = document.getElementById('cardFrame');
 
+            var knownCardId = null;
+            var latestCardData = null;
+            try {
+                var cached = localStorage.getItem('card_' + slug);
+                if (cached) {
+                    latestCardData = JSON.parse(cached);
+                    if (latestCardData && latestCardData.cardId) knownCardId = latestCardData.cardId;
+                }
+            } catch (_) {}
+
+            // Always query Cloud API synchronously if slug is present, to guarantee fresh data across all browsers
+            if (slug) {
+                try {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', '/api/card/?slug=' + encodeURIComponent(slug) + '&v=' + Date.now(), false);
+                    xhr.send(null);
+                    if (xhr.status === 200 && xhr.responseText) {
+                        var cloudJson = JSON.parse(xhr.responseText);
+                        if (cloudJson && cloudJson.cardId) knownCardId = cloudJson.cardId;
+                        if (cloudJson && cloudJson.data) {
+                            latestCardData = cloudJson.data;
+                            try { localStorage.setItem('card_' + slug, JSON.stringify(cloudJson.data)); } catch(_) {}
+                        }
+                    }
+                } catch(_) {}
+            }
+
             // Determine template endpoint
-            function getTemplateBase(cardSlug) {
-                if (cardSlug === '4' || cardSlug === '104' || cardSlug.indexOf('bloom') !== -1 || cardSlug.indexOf('ever-after') !== -1 || cardSlug.indexOf('eab') !== -1) {
+            function getTemplateBase(cardSlug, cardId) {
+                var cid = parseInt(cardId, 10);
+                var s = (cardSlug || '').toLowerCase();
+                if (cid === 104 || s === '4' || s === '104' || s.indexOf('bloom') !== -1 || s.indexOf('ever-after') !== -1 || s.indexOf('eab') !== -1 || s.indexOf('storybook') !== -1) {
                     return { src: '/card%204/templates/ever-after-bloom/index.html', title: 'Ever After Bloom' };
-                } else if (cardSlug === '3' || cardSlug === '101' || cardSlug.indexOf('palna') !== -1 || cardSlug.indexOf('baby') !== -1 || cardSlug.indexOf('wax') !== -1) {
+                } else if (cid === 101 || s === '3' || s === '101' || s.indexOf('palna') !== -1 || s.indexOf('baby') !== -1 || s.indexOf('wax') !== -1) {
                     return { src: '/card%203/templates/shahi-palna/index.html', title: 'Wax Seal Royale Baby Shower' };
-                } else if (cardSlug === '2' || cardSlug === '103' || cardSlug.indexOf('lotus') !== -1 || cardSlug.indexOf('papercut') !== -1) {
+                } else if (cid === 103 || s === '2' || s === '103' || s.indexOf('lotus') !== -1 || s.indexOf('papercut') !== -1) {
                     return { src: '/card%202/templates/papercut-magenta/index.html', title: 'Papercut Lotus' };
-                } else if (cardSlug === '5' || cardSlug === '105' || cardSlug.indexOf('mithril') !== -1 || cardSlug.indexOf('aabha') !== -1) {
+                } else if (cid === 105 || s === '5' || s === '105' || s.indexOf('mithril') !== -1 || s.indexOf('aabha') !== -1) {
                     return { src: '/card%205/templates/mithril/index.html', title: 'Aabha (Mithril) Heirloom' };
                 }
                 return { src: '/card%201/templates/royale/index.html', title: 'Shahi Patra' };
             }
 
-            var tpl = getTemplateBase(slug);
+            var tpl = getTemplateBase(slug, knownCardId);
             if (names) {
                 document.title = decodeURIComponent(names) + ' | ' + tpl.title;
             } else {
@@ -176,11 +205,32 @@
             // Immediate zero-latency frame mounting for instant mobile render
             var initialSearch = slug ? ('?card=' + encodeURIComponent(slug)) : '';
             if (names) initialSearch += (initialSearch ? '&' : '?') + 'names=' + encodeURIComponent(names);
+            initialSearch += (initialSearch ? '&' : '?') + '_v=' + Date.now();
             frame.src = tpl.src + initialSearch;
 
-            // Background cloud sync to keep mobile localStorage cache in lockstep
+            // Background cloud sync with postMessage bridge to iframe
+            function syncDataToFrame(data) {
+                if (!data || !frame.contentWindow) return;
+                try {
+                    frame.contentWindow.postMessage({
+                        type: 'INVITESTORY_UPDATE_CARD',
+                        slug: slug,
+                        data: data
+                    }, '*');
+                } catch (_) {}
+            }
+
+            frame.addEventListener('load', function () {
+                if (latestCardData) syncDataToFrame(latestCardData);
+            });
+
             if (slug && window.CloudStorage) {
-                window.CloudStorage.getCard(slug).catch(function () {});
+                window.CloudStorage.getCard(slug).then(function (data) {
+                    if (data && typeof data === 'object') {
+                        latestCardData = data;
+                        syncDataToFrame(data);
+                    }
+                }).catch(function () {});
             }
 
             // If the viewer is authenticated as admin, show floating "Admin: Edit This Card" button

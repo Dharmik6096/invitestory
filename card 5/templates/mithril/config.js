@@ -149,20 +149,19 @@ window.VERONA_CONFIG = {
     if (urlCard) {
       try {
         var cardSaved = JSON.parse(localStorage.getItem('card_' + urlCard) || 'null');
-          if (!cardSaved) {
-            try {
-              var xhr = new XMLHttpRequest();
-              xhr.open('GET', '/api/card?slug=' + encodeURIComponent(urlCard) + '&v=' + Date.now(), false);
-              xhr.send(null);
-              if (xhr.status === 200 && xhr.responseText) {
-                var apiData = JSON.parse(xhr.responseText);
-                if (apiData && apiData.data) {
-                  cardSaved = apiData.data;
-                  try { localStorage.setItem('card_' + urlCard, JSON.stringify(cardSaved)); } catch(_) {}
-                }
-              }
-            } catch (_) {}
+        // Always check Cloud API for freshest updates
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', '/api/card/?slug=' + encodeURIComponent(urlCard) + '&v=' + Date.now(), false);
+          xhr.send(null);
+          if (xhr.status === 200 && xhr.responseText) {
+            var apiData = JSON.parse(xhr.responseText);
+            if (apiData && apiData.data) {
+              cardSaved = Object.assign({}, cardSaved || {}, apiData.data);
+              try { localStorage.setItem('card_' + urlCard, JSON.stringify(cardSaved)); } catch(_) {}
+            }
           }
+        } catch (_) {}
         if (cardSaved && typeof cardSaved === 'object') {
           overrides = Object.assign({}, cardSaved, overrides);
         }
@@ -212,6 +211,10 @@ window.VERONA_CONFIG = {
       if (window.VERONA_CONFIG.celebration && window.VERONA_CONFIG.celebration.events && window.VERONA_CONFIG.celebration.events[0]) {
         window.VERONA_CONFIG.celebration.events[0].time = overrides.time;
       }
+    }
+    if (overrides.couplePortrait) {
+      window.VERONA_CONFIG.couplePortrait = overrides.couplePortrait;
+      if (window.VERONA_CONFIG.media) window.VERONA_CONFIG.media.portrait = overrides.couplePortrait;
     }
   } catch (e) {}
 })();

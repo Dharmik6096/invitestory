@@ -8,6 +8,7 @@
   document.addEventListener('DOMContentLoaded', init);
 
   function init() {
+    renderConfigOverrides();
     initSealOpening();
     initCountdown();
     initHeroLanterns();
@@ -17,6 +18,47 @@
     initWeddingCarScroll();
     initAudio();
   }
+
+  function renderConfigOverrides() {
+    const c = window.INVITATION_CONFIG || cfg;
+    if (!c) return;
+    const couple = c.couple || {};
+    const bride = couple.bride || 'Aarohi';
+    const groom = couple.groom || 'Ishaan';
+    const h1 = document.getElementById('heroNames');
+    if (h1 && (couple.bride || couple.groom)) {
+      h1.innerHTML = '<span>' + bride + '</span><span>&amp;</span><span>' + groom + '</span>';
+    }
+    if (c.hero && c.hero.blessing) {
+      const bEl = document.querySelector('p.font-script.text-xl');
+      if (bEl) bEl.textContent = c.hero.blessing;
+    }
+    if (c.dateLabel) {
+      document.querySelectorAll('.plate.paper-grain').forEach(function (card) {
+        if (card.textContent.includes('The Day')) {
+          const p = card.querySelector('.font-display');
+          if (p) p.textContent = c.dateLabel;
+        }
+      });
+      const fDate = document.querySelector('footer p.tracking-\\[0\\.34em\\]');
+      if (fDate) fDate.textContent = c.dateLabel;
+    }
+    if (c.bridePortrait) {
+      const imgB = document.querySelector('img[src*="portrait-bride"], img[alt*="Aarohi"]');
+      if (imgB) {
+        imgB.src = c.bridePortrait;
+        imgB.setAttribute('src', c.bridePortrait);
+      }
+    }
+    if (c.groomPortrait) {
+      const imgG = document.querySelector('img[src*="portrait-groom"], img[alt*="Ishaan"]');
+      if (imgG) {
+        imgG.src = c.groomPortrait;
+        imgG.setAttribute('src', c.groomPortrait);
+      }
+    }
+  }
+  window.renderEABConfig = renderConfigOverrides;
 
   // --- 1. Wax Seal Video Unboxing (7.15s Film Transition) ---
   function initSealOpening() {

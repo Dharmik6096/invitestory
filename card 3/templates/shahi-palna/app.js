@@ -318,6 +318,28 @@
       elFooterHash.textContent = '#' + mom.replace(/[^a-zA-Z0-9]/g, '') + dad.replace(/[^a-zA-Z0-9]/g, '') + 'BabyShower • #BabyShower2026';
     }
 
+    if (cfg.sacredArtImg) {
+      var elArt = document.querySelector('.sacred-art-img');
+      if (elArt) {
+        elArt.src = cfg.sacredArtImg;
+        elArt.setAttribute('src', cfg.sacredArtImg);
+      }
+    }
+    if (cfg.babyFeetImg) {
+      var elFeet = document.querySelector('.baby-feet-img');
+      if (elFeet) {
+        elFeet.src = cfg.babyFeetImg;
+        elFeet.setAttribute('src', cfg.babyFeetImg);
+      }
+    }
+    if (cfg.venueSketchImg) {
+      var elSketch = document.querySelector('.venue-sketch');
+      if (elSketch) {
+        elSketch.src = cfg.venueSketchImg;
+        elSketch.setAttribute('src', cfg.venueSketchImg);
+      }
+    }
+
     var btnMaps = document.querySelector('.btn-maps');
     if (btnMaps) {
       btnMaps.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(venueStr);

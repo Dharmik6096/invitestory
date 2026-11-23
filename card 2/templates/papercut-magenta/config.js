@@ -469,22 +469,21 @@
       if (urlCard) {
         try {
           let localSaved = JSON.parse(localStorage.getItem('card_' + urlCard) || 'null');
-          if (!localSaved) {
-            try {
-              var xhr = new XMLHttpRequest();
-              xhr.open('GET', '/api/card?slug=' + encodeURIComponent(urlCard) + '&v=' + Date.now(), false);
-              xhr.send(null);
-              if (xhr.status === 200 && xhr.responseText) {
-                var apiData = JSON.parse(xhr.responseText);
-                if (apiData && apiData.data) {
-                  localSaved = apiData.data;
-                  try { localStorage.setItem('card_' + urlCard, JSON.stringify(localSaved)); } catch(_) {}
-                }
+          // Always check Cloud API for freshest updates
+          try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/card/?slug=' + encodeURIComponent(urlCard) + '&v=' + Date.now(), false);
+            xhr.send(null);
+            if (xhr.status === 200 && xhr.responseText) {
+              var apiData = JSON.parse(xhr.responseText);
+              if (apiData && apiData.data) {
+                localSaved = Object.assign({}, localSaved || {}, apiData.data);
+                try { localStorage.setItem('card_' + urlCard, JSON.stringify(localSaved)); } catch(_) {}
               }
-            } catch (_) {}
-          }
+            }
+          } catch (_) {}
           if (localSaved && typeof localSaved === 'object') {
-            result = deepMerge(result, localSaved);
+            result = Object.assign(result, localSaved);
           }
         } catch (_) {}
       }

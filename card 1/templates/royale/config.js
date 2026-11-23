@@ -392,33 +392,17 @@
           localSaved = JSON.parse(localStorage.getItem('card_' + urlCard) || 'null');
         } catch (_) {}
 
-        // Check if cached local copy is missing or outdated (e.g. version < 3 or has placeholder images)
-        var needsRefresh = !localSaved;
-        if (localSaved && typeof localSaved === 'object') {
-          if (!localSaved.version || localSaved.version < 3) {
-            needsRefresh = true;
-          } else if (localSaved.gallery && Array.isArray(localSaved.gallery.items)) {
-            for (var gi = 0; gi < localSaved.gallery.items.length; gi++) {
-              var gImg = (localSaved.gallery.items[gi] && localSaved.gallery.items[gi].image) || '';
-              if (gImg.indexOf('edf9f981') !== -1 || gImg.indexOf('e74252cb') !== -1 || gImg.indexOf('gallery_2') !== -1) {
-                needsRefresh = true;
-                break;
-              }
-            }
-          }
-        }
-
-        if (needsRefresh && !dParam) {
-          // 1. Try Cloud Database API first
+        if (!dParam) {
+          // 1. Try Cloud Database API first (always fetch latest edits)
           try {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/api/card?slug=' + encodeURIComponent(urlCard) + '&v=' + Date.now(), false);
+            xhr.open('GET', '/api/card/?slug=' + encodeURIComponent(urlCard) + '&v=' + Date.now(), false);
             xhr.send(null);
             if (xhr.status === 200 && xhr.responseText) {
               var apiRes = JSON.parse(xhr.responseText);
               if (apiRes && apiRes.data) {
-                localSaved = apiRes.data;
-                try { localStorage.setItem('card_' + urlCard, JSON.stringify(apiRes.data)); } catch(_) {}
+                localSaved = Object.assign({}, localSaved || {}, apiRes.data);
+                try { localStorage.setItem('card_' + urlCard, JSON.stringify(localSaved)); } catch(_) {}
               }
             }
           } catch (_) {}
@@ -432,7 +416,7 @@
               if (xhr2.status === 200 && xhr2.responseText) {
                 var fresh = JSON.parse(xhr2.responseText);
                 if (fresh && typeof fresh === 'object') {
-                  localSaved = fresh;
+                  localSaved = Object.assign({}, localSaved || {}, fresh);
                   try { localStorage.setItem('card_' + urlCard, JSON.stringify(fresh)); } catch(_) {}
                 }
               }
@@ -441,7 +425,7 @@
         }
 
         if (localSaved && typeof localSaved === 'object') {
-          result = deepMerge(result, localSaved);
+          result = Object.assign(result, localSaved);
         }
       }
 

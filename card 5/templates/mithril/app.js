@@ -33,6 +33,11 @@
         calNote.innerHTML = "The Reception of " + coupleText + "<br>" + (cfg.scratch && cfg.scratch.date ? cfg.scratch.date : 'Sunday, 18 October 2026') + " · " + (cfg.scratch && cfg.scratch.time ? cfg.scratch.time : '7:00 PM');
       }
     }
+    if (cfg.couplePortrait || (cfg.media && cfg.media.portrait)) {
+      const portraitSrc = cfg.couplePortrait || cfg.media.portrait;
+      const portraitImg = document.querySelector('.mithril-v4-portrait img, img[src*="portrait"]');
+      if (portraitImg) portraitImg.src = portraitSrc;
+    }
   }
 
   // --- 1. Antique Key Cover Unlock ---

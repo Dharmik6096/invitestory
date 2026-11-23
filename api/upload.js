@@ -39,7 +39,8 @@ module.exports = async function handler(req, res) {
       buffer = Buffer.from(imageStr, 'base64');
     }
 
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    const FALLBACK_BLOB_TOKEN = 'vercel_blob_rw_5bp5Y1wStF0J3wd4_PdP8Efu1RUfPCzQnYblRV4UN7pXspn';
+    const token = process.env.BLOB_READ_WRITE_TOKEN || FALLBACK_BLOB_TOKEN;
     const filename = `images/upload_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
     const blobRes = await put(filename, buffer, {
