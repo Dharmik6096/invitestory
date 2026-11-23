@@ -44,6 +44,12 @@ function createPreviewController(options) {
   const demoURL = item => {
     let u = item.localDemoUrl || item.demoUrl;
     if (!u || u.includes('invitestory.in')) {
+      if (item.id === 105 || (item.tags && (item.tags.includes('key') || item.tags.includes('mithril')))) {
+        return '/card 5/index.html';
+      }
+      if (item.id === 104 || (item.tags && item.tags.includes('storybook'))) {
+        return '/card 4/index.html';
+      }
       if (item.collection === 'dearly' || (item.tags && item.tags.includes('wax-seal')) || (item.tags && item.tags.includes('baby-shower'))) {
         return '/card 3/index.html';
       }

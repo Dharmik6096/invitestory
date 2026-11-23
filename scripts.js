@@ -316,9 +316,8 @@ const TEMPLATE_DATABASE = [
     priceUSD: 75,
     originalPriceINR: 4999,
     originalPriceUSD: 75,
-    demoUrl: "/card 3/index.html",
-    localDemoUrl: "/card 3/index.html",
-    editUrl: "/card 3/index.html?edit=1",
+    demoUrl: "/card 3/index.html?v=20261121-1",
+    localDemoUrl: "/card 3/index.html?v=20261121-1",
     style: "Baby Shower / Wax Seal Royale",
     accentColor: "#b59c6b",
     tags: ["baby-shower", "wax-seal", "dearly", "all"],
@@ -329,15 +328,14 @@ const TEMPLATE_DATABASE = [
     id: 102,
     name: "The Royal Darbar 3D Wedding",
     slug: "royal-darbar-3d",
-    image: "assets/preview/card1.webp",
+    image: "assets/preview/card1.webp?v=20261120-clean-1",
     tier: 3,
     priceINR: 2999,
     priceUSD: 49,
     originalPriceINR: 2999,
     originalPriceUSD: 49,
-    demoUrl: "/card 1/index.html",
-    localDemoUrl: "/card 1/index.html",
-    editUrl: "/card 1/index.html?edit=1",
+    demoUrl: "/card 1/index.html?v=20261121-1",
+    localDemoUrl: "/card 1/index.html?v=20261121-1",
     style: "Grand Royal / 3D Palace",
     accentColor: "#d4af37",
     tags: ["royal", "wedding", "wax-seal", "all"],
@@ -348,20 +346,57 @@ const TEMPLATE_DATABASE = [
     id: 103,
     name: "Lotus Palace & Papercut Royale",
     slug: "lotus-palace-papercut",
-    image: "assets/preview/card2.webp",
+    image: "assets/preview/card2.webp?v=20261120-clean-1",
     tier: 2,
     priceINR: 1999,
     priceUSD: 29,
     originalPriceINR: 1999,
     originalPriceUSD: 29,
-    demoUrl: "/card 2/index.html",
-    localDemoUrl: "/card 2/index.html",
-    editUrl: "/card 2/index.html?edit=1",
+    demoUrl: "/card 2/index.html?v=20261121-1",
+    localDemoUrl: "/card 2/index.html?v=20261121-1",
     style: "Modern Floral / Papercut",
     accentColor: "#9e1946",
     tags: ["papercut", "floral", "wedding", "all"],
     desc: "Layered papercut laser architecture in royal magenta and gold, featuring serene flute & sitar melody and interactive event roadmap.",
     promise: "Intricate laser-cut paper art aesthetic with ambient music & Google Maps navigation."
+  },
+  {
+    id: 104,
+    name: "Ever After Bloom · Illustrated Storybook",
+    slug: "ever-after-bloom",
+    image: "assets/preview/card4.webp",
+    tier: 4,
+    collection: "dearly",
+    priceINR: 4999,
+    priceUSD: 75,
+    originalPriceINR: 4999,
+    originalPriceUSD: 75,
+    demoUrl: "/card 4/index.html?v=20261121-1",
+    localDemoUrl: "/card 4/index.html?v=20261121-1",
+    style: "Watercolour Storybook / Jaipur Palace",
+    accentColor: "#b24367",
+    tags: ["storybook", "watercolour", "wedding", "all", "dearly"],
+    desc: "A hand-painted, animated wedding storybook featuring wax seal opening video, Jaipuri palace watercolour scenery, floating wish lanterns, and interactive photo album.",
+    promise: "Cinematic wax seal unboxing video, floating lanterns, live countdown & romantic chapters."
+  },
+  {
+    id: 105,
+    name: "Aabha (Mithril) · Luxury Key Heirloom",
+    slug: "aabha-mithril",
+    image: "assets/preview/card5.webp",
+    tier: 3,
+    collection: "luxury",
+    priceINR: 3999,
+    priceUSD: 59,
+    originalPriceINR: 3999,
+    originalPriceUSD: 59,
+    demoUrl: "/card 5/index.html?v=20261121-1",
+    localDemoUrl: "/card 5/index.html?v=20261121-1",
+    style: "Antique Key Heirloom / Island Palace",
+    accentColor: "#d4af37",
+    tags: ["key", "heirloom", "royal", "wedding", "luxury", "all"],
+    desc: "A bespoke antique key unboxing video opening, gold leaf scratch-off date reveal, ambient Udaipur island palace backdrop, and live RSVP calendar sync.",
+    promise: "Cinematic key unlock animation, interactive scratch card, venue navigation & Add to Calendar."
   }
 ];
 
@@ -1751,9 +1786,92 @@ function getDesignSlug(item) {
   return (item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+function sha256(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  var mathPow = Math.pow;
+  var maxWord = mathPow(2, 32);
+  var lengthProperty = "length";
+  var i, j;
+  var result = "";
+  var words = [];
+  var asciiBitLength = ascii[lengthProperty] * 8;
+  var hash = [];
+  var k = [];
+  var primeCounter = 0;
+  var isComposite = {};
+  for (var candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) {
+        isComposite[i] = candidate;
+      }
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  ascii += "\x80";
+  while ((ascii[lengthProperty] % 64) - 56) ascii += "\x00";
+  for (i = 0; i < ascii[lengthProperty]; i++) {
+    j = ascii.charCodeAt(i);
+    if (j >> 8) return "";
+    words[i >> 2] |= j << ((3 - (i % 4)) * 8);
+  }
+  words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+  words[words[lengthProperty]] = asciiBitLength | 0;
+  for (j = 0; j < words[lengthProperty]; ) {
+    var w = words.slice(j, (j += 16));
+    var oldHash = hash;
+    hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      var w15 = w[i - 15], w2 = w[i - 2];
+      var s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+      var s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+      w[i] = i < 16 ? w[i] : (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      var s1Ch = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
+      var ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+      var temp1 = (hash[7] + s1Ch + ch + k[i] + w[i]) | 0;
+      var s0Maj = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
+      var maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+      var temp2 = (s0Maj + maj) | 0;
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+    }
+    for (i = 0; i < 8; i++) {
+      hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      var b = (hash[i] >> (j * 8)) & 255;
+      result += (b < 16 ? "0" : "") + b.toString(16);
+    }
+  }
+  return result;
+}
+
+function getDesignHash(itemOrSlug) {
+  if (!itemOrSlug) return "";
+  var slug = "";
+  if (typeof itemOrSlug === "string") {
+    slug = itemOrSlug.trim().toLowerCase();
+  } else if (itemOrSlug.slug) {
+    slug = itemOrSlug.slug;
+  } else if (typeof getDesignSlug === "function") {
+    slug = getDesignSlug(itemOrSlug);
+  } else {
+    slug = (itemOrSlug.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  return sha256(slug) || "";
+}
+
+window.sha256 = sha256;
+window.getDesignHash = getDesignHash;
+
 function getDesignShareUrl(item) {
-  const slug = getDesignSlug(item);
-  return `/?design=${slug}`;
+  const hash = getDesignHash(item);
+  const origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://invitestory.in';
+  return `${origin}/?design=${hash}`;
 }
 
 function getDesignShareContent(item) {
@@ -1766,8 +1884,8 @@ function getDesignShareContent(item) {
 
   return {
     title,
-    text: fullText,          // Full text with URL for clipboard copying
-    shareText: shareIntro,   // Intro text without URL for navigator.share (avoids duplicate URL)
+    text: shareUrl,          // Pure shareable URL for clipboard copying
+    shareText: shareIntro,   // Intro text without URL for navigator.share
     url: shareUrl
   };
 }
@@ -1836,13 +1954,13 @@ function copyDesignShareLink(templateId, event) {
   if (!item) return;
 
   const content = getDesignShareContent(item);
-  const textToCopy = content.text;
+  const textToCopy = content.url || getDesignShareUrl(item);
 
   const onCopied = () => {
     showToast({
       title: "Link copied",
       design: item,
-      message: `The link and details for ${item.name} are ready to share.`,
+      message: `${item.name} link copied to clipboard.`,
       type: "success"
     });
   };
@@ -1882,12 +2000,8 @@ function shareCurrentPreview(event) {
   });
 
   if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
-    // When using Web Share API, OS share targets (WhatsApp, iOS/Android share sheets)
-    // automatically append the `url` property to `text`.
-    // Using shareText (without URL) prevents the link from appearing twice.
     navigator.share({
       title: content.title,
-      text: content.shareText,
       url: content.url
     }).catch((err) => {
       if (err && err.name !== "AbortError") {
@@ -2117,13 +2231,31 @@ function fallbackCopyText(text) {
 function findTemplateByQuery(query) {
   if (!query) return null;
   const q = String(query).trim().toLowerCase();
+
+  // 1. Match by SHA-256 hash (full 64-char hash or prefix of 12+ chars)
+  const byHash = TEMPLATE_DATABASE.find(x => {
+    const h = getDesignHash(x);
+    if (!h) return false;
+    if (h === q) return true;
+    if (q.length >= 12 && h.startsWith(q)) return true;
+    const idHash = sha256(String(x.id));
+    if (idHash && (idHash === q || (q.length >= 12 && idHash.startsWith(q)))) return true;
+    return false;
+  });
+  if (byHash) return byHash;
+
+  // 2. Legacy / fallback: match by ID
   const numId = parseInt(q, 10);
   if (!isNaN(numId)) {
     const byId = TEMPLATE_DATABASE.find(x => x.id === numId);
     if (byId) return byId;
   }
+
+  // 3. Legacy / fallback: match by plain-text slug
   const bySlug = TEMPLATE_DATABASE.find(x => (x.slug === q || getDesignSlug(x) === q));
   if (bySlug) return bySlug;
+
+  // 4. Legacy / fallback: match by name
   const byName = TEMPLATE_DATABASE.find(x => x.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === q || x.name.toLowerCase() === q);
   if (byName) return byName;
   return null;
@@ -2142,6 +2274,18 @@ function handleInitialUrlRoute() {
         const rect = card.getBoundingClientRect();
         const targetY = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - (window.innerHeight / 2) + (rect.height / 2);
         previewState.savedScrollY = Math.max(0, targetY);
+      }
+      // Ensure URL is cleanly normalized to SHA-256 hash if it was plain-text slug, preview, id, or template
+      const currentHash = getDesignHash(matched);
+      if (window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("design") !== currentHash || url.searchParams.has("preview") || url.searchParams.has("id") || url.searchParams.has("template")) {
+          url.searchParams.set("design", currentHash);
+          url.searchParams.delete("preview");
+          url.searchParams.delete("id");
+          url.searchParams.delete("template");
+          window.history.replaceState({ modalOpen: true, templateId: matched.id }, "", url.toString());
+        }
       }
       // Open preview modal cleanly without competing smooth scrolls against overflow:hidden
       openPreview(matched.id, false);
@@ -2212,7 +2356,8 @@ try {
 } catch (e) {}
 
 function syncPreviewFavourite() {
-  const item = TEMPLATE_DATABASE[previewState.currentIndex];
+  const item = (previewState && previewState.currentIndex >= 0 && TEMPLATE_DATABASE[previewState.currentIndex]) ||
+               (window.PreviewController?.state && window.PreviewController.state().item);
   const button = document.getElementById("preview-favourite-btn");
   if (!item || !button) return;
   const saved = previewFavourites.has(item.id);
@@ -2220,18 +2365,32 @@ function syncPreviewFavourite() {
   if (label) label.textContent = saved ? "Saved" : "Save";
   button.setAttribute("aria-pressed", String(saved));
   button.setAttribute("aria-label", saved ? "Remove design from favourites" : "Save design to favourites");
+  const svg = button.querySelector("svg");
+  if (svg) {
+    svg.style.fill = saved ? "#e53e3e" : "none";
+    svg.style.stroke = saved ? "#e53e3e" : "currentColor";
+  }
 }
 
 function togglePreviewFavourite() {
-  const item = TEMPLATE_DATABASE[previewState.currentIndex];
+  const item = (previewState && previewState.currentIndex >= 0 && TEMPLATE_DATABASE[previewState.currentIndex]) ||
+               (window.PreviewController?.state && window.PreviewController.state().item);
   if (!item) return;
-  if (typeof toggleSavedDesign === "function") toggleSavedDesign(item.id);
-  else {
+  if (typeof toggleSavedDesign === "function") {
+    toggleSavedDesign(item.id);
+  } else {
     if (previewFavourites.has(item.id)) previewFavourites.delete(item.id);
     else previewFavourites.add(item.id);
     try { localStorage.setItem("invitestory_favourites", JSON.stringify([...previewFavourites])); } catch (e) {}
     syncPreviewFavourite();
   }
+  const isNowSaved = previewFavourites.has(item.id);
+  showToast({
+    title: isNowSaved ? "Saved to favourites" : "Removed from favourites",
+    design: item,
+    message: isNowSaved ? `"${item.name}" added to your saved favourites.` : `"${item.name}" removed from favourites.`,
+    type: isNowSaved ? "success" : "info"
+  });
 }
 
 // Open the in-page preview modal for a given template id.
@@ -2253,8 +2412,8 @@ function openPreview(id, updateUrl = true) {
   // Seamlessly update browser URL without refresh so user can share link directly
   if (updateUrl && window.history && window.history.replaceState) {
     const url = new URL(window.location.href);
-    const slug = item.slug || getDesignSlug(item);
-    url.searchParams.set("design", slug);
+    const hash = getDesignHash(item);
+    url.searchParams.set("design", hash);
     url.searchParams.delete("preview");
     url.searchParams.delete("id");
     if (!(typeof InviteInteractions !== "undefined" && document.body.classList.contains("browse-home") && InviteInteractions.previewHistory(item))) window.history.replaceState({ modalOpen: true, templateId: item.id }, "", url.toString());
@@ -2324,7 +2483,9 @@ function openPreview(id, updateUrl = true) {
   if (previewFullscreenBtn) {
     let targetUrl = item.demoUrl;
     if (!targetUrl || targetUrl.includes('invitestory.in')) {
-      if (item.tags && item.tags.includes('storybook')) {
+      if (item.id === 105 || (item.tags && (item.tags.includes('key') || item.tags.includes('mithril')))) {
+        targetUrl = '/card 5/index.html';
+      } else if (item.tags && item.tags.includes('storybook')) {
         targetUrl = '/card 4/index.html';
       } else if (item.collection === 'dearly' || (item.tags && item.tags.includes('wax-seal')) || (item.tags && item.tags.includes('baby-shower'))) {
         targetUrl = '/card 3/index.html';
@@ -2334,7 +2495,7 @@ function openPreview(id, updateUrl = true) {
         targetUrl = '/card 1/index.html';
       }
     }
-    previewFullscreenBtn.href = targetUrl;
+    previewFullscreenBtn.href = targetUrl.includes('?') ? `${targetUrl}&mode=fullscreen` : `${targetUrl}?mode=fullscreen`;
   }
 
   // Update dynamic ambient theme backdrop color & glow
@@ -3627,21 +3788,21 @@ const WA_REVIEWS = [
     id: 1,
     file: "review-07",
     alt: "InviteStory WhatsApp review: Thank You Mam for making this invitation beautiful",
-    highlight: "“Thank You Mam for making this invitation beautiful”",
+    highlight: "“Thank You Mam for making this invitation beautiful ”",
     tag: "Delighted Bride"
   },
   {
     id: 2,
     file: "review-06",
-    alt: "InviteStory WhatsApp review: Mene mom dad ko bhej diya... Sir everyone like it",
-    highlight: "“Mene mom dad ko bhej diya... Sir everyone like it”",
+    alt: "InviteStory WhatsApp review: Mene mom dad ko bhej diya woo check kar rahe hai Sir everyone like it",
+    highlight: "“Mene mom dad ko bhej diya... Sir everyone like it ”",
     tag: "Family Approved"
   },
   {
     id: 3,
     file: "review-09",
     alt: "InviteStory WhatsApp review: Thank you sir! I appreciate your work!",
-    highlight: "“Thank you sir! I appreciate your work!”",
+    highlight: "“Thank you sir! I appreciate your work!  ”",
     tag: "Happy Couple"
   }
 ];
@@ -3706,7 +3867,10 @@ function setupWhatsAppReviewsNav() {
 let lightboxReturnFocus = null;
 
 function openLightbox(index) {
-  if (index < 0 || index >= WA_REVIEWS.length) return;
+  if (!WA_REVIEWS || !WA_REVIEWS.length) return;
+  if (typeof index !== "number" || isNaN(index) || index < 0 || index >= WA_REVIEWS.length) {
+    index = 0;
+  }
   currentLightboxIndex = index;
   const rev = WA_REVIEWS[index];
 
@@ -3742,6 +3906,16 @@ function closeLightbox() {
   if (lightboxReturnFocus?.isConnected) lightboxReturnFocus.focus();
 }
 
+function navigateLightbox(dir) {
+  if (!WA_REVIEWS || !WA_REVIEWS.length) return;
+  const next = (currentLightboxIndex + dir + WA_REVIEWS.length) % WA_REVIEWS.length;
+  openLightbox(next);
+}
+
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+window.navigateLightbox = navigateLightbox;
+
 function setupWhatsAppLightbox() {
   const modal = document.getElementById("wa-lightbox");
   const backdrop = document.getElementById("wa-lightbox-backdrop");
@@ -3772,23 +3946,21 @@ function setupWhatsAppLightbox() {
     });
   }
 
-  if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
-  if (backdrop) backdrop.addEventListener("click", closeLightbox);
+  if (closeBtn) closeBtn.onclick = closeLightbox;
+  if (backdrop) backdrop.onclick = closeLightbox;
 
   if (prevBtn) {
-    prevBtn.addEventListener("click", (e) => {
+    prevBtn.onclick = (e) => {
       e.stopPropagation();
-      const prev = (currentLightboxIndex - 1 + WA_REVIEWS.length) % WA_REVIEWS.length;
-      openLightbox(prev);
-    });
+      navigateLightbox(-1);
+    };
   }
 
   if (nextBtn) {
-    nextBtn.addEventListener("click", (e) => {
+    nextBtn.onclick = (e) => {
       e.stopPropagation();
-      const next = (currentLightboxIndex + 1) % WA_REVIEWS.length;
-      openLightbox(next);
-    });
+      navigateLightbox(1);
+    };
   }
 
   document.addEventListener("keydown", (e) => {
@@ -3801,11 +3973,9 @@ function setupWhatsAppLightbox() {
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
     } else if (e.key === "Escape") closeLightbox();
     else if (e.key === "ArrowLeft") {
-      const prev = (currentLightboxIndex - 1 + WA_REVIEWS.length) % WA_REVIEWS.length;
-      openLightbox(prev);
+      navigateLightbox(-1);
     } else if (e.key === "ArrowRight") {
-      const next = (currentLightboxIndex + 1) % WA_REVIEWS.length;
-      openLightbox(next);
+      navigateLightbox(1);
     }
   });
 }

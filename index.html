@@ -1737,154 +1737,426 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- ADMIN CARD DETAILS EDITOR MODAL                                -->
+  <!-- ADMIN CARD DETAILS & BESPOKE STUDIO CUSTOMIZER MODAL              -->
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <div id="admin-card-editor-modal" class="admin-modal-backdrop" onclick="if(event.target===this) closeAdminEditorModal()">
-    <div class="admin-modal-dialog admin-editor-dialog">
-      <div class="admin-modal-header">
-        <h3 class="admin-modal-title">✏️ Live Card Customizer</h3>
-        <button type="button" class="admin-modal-close" onclick="closeAdminEditorModal()" aria-label="Close">✕</button>
+    <div class="admin-modal-dialog admin-editor-dialog rustic-dialog">
+      <!-- ARTISAN HEADER -->
+      <div class="admin-modal-header rustic-modal-header">
+        <div class="rustic-header-left">
+          <div class="rustic-header-crest">⚜️</div>
+          <div>
+            <h3 class="admin-modal-title rustic-title">Royal Invitation Studio</h3>
+            <p class="rustic-subtitle">Bespoke Artisan Customizer &amp; Isolated Client Link Architect</p>
+          </div>
+        </div>
+        <button type="button" class="admin-modal-close rustic-modal-close" onclick="closeAdminEditorModal()" aria-label="Close">✕</button>
       </div>
-      <div class="admin-modal-body">
-        <!-- CARD TARGET & CLIENT PROFILE PANEL -->
-        <div class="admin-profile-panel">
-          <!-- Row 1: Title or Name Field -->
-          <div class="admin-client-name-group">
-            <label for="admin-card-client-name" class="admin-panel-label">
-              <span class="admin-panel-label-icon">🏷️</span> Card Title or Client Name:
-            </label>
-            <input type="text" id="admin-card-client-name" class="admin-panel-input" placeholder="e.g. Kaushal &amp; Meghal Wedding / Patel Family Baby Shower" autocomplete="off">
+
+      <div class="admin-modal-body rustic-modal-body">
+        <!-- STEP 1: CLIENT IDENTITY & TARGET LINK ARCHITECTURE -->
+        <div class="rustic-profile-deck">
+          <div class="rustic-deck-header">
+            <span class="rustic-deck-badge">✦ STEP 1 · CLIENT PROFILE &amp; LINK TARGET</span>
           </div>
 
-          <!-- Row 2: Editing Target Switcher & Start Fresh Button (Same style as screen 2) -->
-          <div class="admin-target-row">
-            <div class="admin-target-select-wrap">
-              <span class="admin-target-tag">Editing Target:</span>
-              <select id="admin-user-card-picker" onchange="onAdminSelectSavedCard(this.value)" class="admin-select-picker">
-                <option value="__NEW__">➕ New User Card (Start Fresh)</option>
-              </select>
+          <div class="rustic-profile-grid">
+            <!-- Client / Event Title -->
+            <div class="rustic-field-wrap">
+              <label for="admin-card-client-name" class="rustic-field-label">
+                <span class="rustic-field-icon">🏷️</span> Card Title or Client Name
+              </label>
+              <input type="text" id="admin-card-client-name" class="rustic-input" placeholder="e.g. Siddhant &amp; Aayushi Wedding / Patel Family Baby Shower" autocomplete="off">
             </div>
-            <button type="button" class="admin-btn-action admin-btn-action--fresh" onclick="startFreshNewCard()">
-              ➕ Start Fresh New Card
-            </button>
+
+            <!-- Target Selection Mode -->
+            <div class="rustic-field-wrap">
+              <label for="admin-user-card-picker" class="rustic-field-label">
+                <span class="rustic-field-icon">📂</span> Select Client Archive or Start Fresh
+              </label>
+              <div class="rustic-picker-row">
+                <select id="admin-user-card-picker" onchange="onAdminSelectSavedCard(this.value)" class="rustic-select">
+                  <option value="__NEW__">➕ New User Card (Start Fresh)</option>
+                </select>
+                <button type="button" class="rustic-btn-fresh" onclick="startFreshNewCard()" title="Load clean pristine defaults">
+                  ➕ Start Fresh
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- Row 3: Admin Header Style Status Banner (Screen 2 aesthetic: pulsing dot + badge) -->
+          <!-- Status Banner (Rustic Parchment Frame) -->
           <div id="admin-editor-card-status" class="admin-editor-card-status is-fresh">
-            <div class="admin-badge">
-              <span class="admin-dot"></span>
-              <span id="admin-status-text"><strong>Creating Fresh Card for New User:</strong> Pristine template defaults loaded. No conflict with existing client cards.</span>
-            </div>
+            <span class="rustic-status-dot"></span>
+            <span id="admin-status-text" class="rustic-status-body">
+              <strong>Mode: Fresh Client Card</strong> · Pristine template defaults loaded. Generates an isolated, conflict-free unique link.
+            </span>
           </div>
         </div>
 
-        <!-- TEMPLATE SELECTION TABS (Screen 2 Pill Buttons) -->
-        <div class="admin-card-tabs" role="tablist">
-          <button type="button" class="admin-card-tab active" data-card-id="101" onclick="switchAdminEditorTab(101)">
-            ✏️ Baby Shower
+        <!-- STEP 2: HEIRLOOM TEMPLATE DECK -->
+        <div class="rustic-deck-header" style="margin-top: 18px;">
+          <span class="rustic-deck-badge">✦ STEP 2 · SELECT INVITATION HEIRLOOM TEMPLATE</span>
+        </div>
+
+        <div class="rustic-template-deck admin-card-tabs" role="tablist">
+          <!-- Card 101 -->
+          <button type="button" class="rustic-template-card admin-card-tab active" data-card-id="101" onclick="switchAdminEditorTab(101)">
+            <div class="rustic-emblem-wrap">
+              <span class="rustic-emblem">🍼</span>
+            </div>
+            <div class="rustic-card-meta">
+              <span class="rustic-tpl-number">Template 101</span>
+              <h4 class="rustic-tpl-name">Wax Seal Royale</h4>
+              <p class="rustic-tpl-desc">Baby Shower &amp; Blessings</p>
+            </div>
+            <div class="rustic-active-glow"></div>
           </button>
-          <button type="button" class="admin-card-tab" data-card-id="102" onclick="switchAdminEditorTab(102)">
-            ✏️ Royal Wedding
+
+          <!-- Card 102 -->
+          <button type="button" class="rustic-template-card admin-card-tab" data-card-id="102" onclick="switchAdminEditorTab(102)">
+            <div class="rustic-emblem-wrap">
+              <span class="rustic-emblem">🏰</span>
+            </div>
+            <div class="rustic-card-meta">
+              <span class="rustic-tpl-number">Template 102</span>
+              <h4 class="rustic-tpl-name">Royal Darbar</h4>
+              <p class="rustic-tpl-desc">Palace 3D Vivah</p>
+            </div>
+            <div class="rustic-active-glow"></div>
           </button>
-          <button type="button" class="admin-card-tab" data-card-id="103" onclick="switchAdminEditorTab(103)">
-            ✏️ Lotus Palace
+
+          <!-- Card 103 -->
+          <button type="button" class="rustic-template-card admin-card-tab" data-card-id="103" onclick="switchAdminEditorTab(103)">
+            <div class="rustic-emblem-wrap">
+              <span class="rustic-emblem">🪷</span>
+            </div>
+            <div class="rustic-card-meta">
+              <span class="rustic-tpl-number">Template 103</span>
+              <h4 class="rustic-tpl-name">Lotus Palace</h4>
+              <p class="rustic-tpl-desc">Heritage Mandap Vivah</p>
+            </div>
+            <div class="rustic-active-glow"></div>
           </button>
-          <button type="button" class="admin-card-tab" data-card-id="104" onclick="switchAdminEditorTab(104)">
-            ✏️ Storybook
+
+          <!-- Card 104 -->
+          <button type="button" class="rustic-template-card admin-card-tab" data-card-id="104" onclick="switchAdminEditorTab(104)">
+            <div class="rustic-emblem-wrap">
+              <span class="rustic-emblem">🌸</span>
+            </div>
+            <div class="rustic-card-meta">
+              <span class="rustic-tpl-number">Template 104</span>
+              <h4 class="rustic-tpl-name">Storybook</h4>
+              <p class="rustic-tpl-desc">Ever After Bloom</p>
+            </div>
+            <div class="rustic-active-glow"></div>
           </button>
-          <button type="button" class="admin-card-tab" data-card-id="105" onclick="switchAdminEditorTab(105)">
-            ✏️ Aabha Mithril
+
+          <!-- Card 105 -->
+          <button type="button" class="rustic-template-card admin-card-tab" data-card-id="105" onclick="switchAdminEditorTab(105)">
+            <div class="rustic-emblem-wrap">
+              <span class="rustic-emblem">🗝️</span>
+            </div>
+            <div class="rustic-card-meta">
+              <span class="rustic-tpl-number">Template 105</span>
+              <h4 class="rustic-tpl-name">Aabha Mithril</h4>
+              <p class="rustic-tpl-desc">Island Palace Key</p>
+            </div>
+            <div class="rustic-active-glow"></div>
           </button>
         </div>
 
+        <!-- STEP 3: WORKSPACE & STUDIO SUITE (For Each Template) -->
         <!-- TAB 1: BABY SHOWER (Card 101) -->
         <div id="editor-fields-baby" class="admin-editor-tab-pane">
-          <div class="admin-visual-studio-card">
-            <div class="admin-visual-studio-info">
-              <div class="admin-studio-tag-badge">
-                <span class="admin-dot" style="width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 8px #d4af37;"></span>
-                <span>Template 101 · Wax Seal Royale</span>
+          <!-- Hero In-Place Studio Launcher -->
+          <div class="rustic-studio-hero">
+            <div class="rustic-hero-icon-box">🎨</div>
+            <div class="rustic-hero-content">
+              <div class="rustic-hero-pill">⚜️ IN-PLACE VISUAL CANVAS · TEMPLATE 101</div>
+              <h4 class="rustic-hero-heading">Interactive Live Baby Shower Canvas</h4>
+              <p class="rustic-hero-lead">Directly click on titles, dates, and messages on the live invitation to edit. Drag &amp; drop photos with auto-compression (<1200px), pick background lullaby audio, and customize RSVP buttons.</p>
+              <div class="rustic-feature-badges">
+                <span>✦ Direct Click-to-Edit</span>
+                <span>✦ Photo Upload &amp; Crop</span>
+                <span>✦ WhatsApp RSVP</span>
+                <span>✦ Royal Audio Track</span>
               </div>
-              <h4 class="admin-visual-studio-title">Visual In-Place Studio Editor</h4>
-              <p class="admin-visual-studio-desc">Open the full drag &amp; drop visual editor with date pickers &amp; photo swaps for this specific user.</p>
             </div>
-            <button type="button" onclick="launchVisualEditor()" class="admin-btn-action admin-studio-launch-btn">
-              🚀 Open Visual Editor Tab
+            <button type="button" onclick="launchVisualEditor()" class="rustic-btn-launch">
+              <span>🎨 Open Live Visual Studio</span>
+              <span class="rustic-btn-arr">↗</span>
             </button>
+          </div>
+
+          <!-- Quick Form Fields -->
+          <div class="rustic-quick-fields">
+            <div class="rustic-quick-header">
+              <h5>✦ Quick Celebration Details</h5>
+              <span>Fast attributes sync</span>
+            </div>
+            <div class="rustic-fields-grid">
+              <div class="rustic-field-wrap">
+                <label for="edit-baby-mom" class="rustic-field-label">Mother's Name</label>
+                <input type="text" id="edit-baby-mom" class="rustic-input" placeholder="e.g. Meghal Patel">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-baby-dad" class="rustic-field-label">Father's Name</label>
+                <input type="text" id="edit-baby-dad" class="rustic-input" placeholder="e.g. Kaushal Patel">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-baby-date" class="rustic-field-label">Event Date</label>
+                <input type="text" id="edit-baby-date" class="rustic-input" placeholder="e.g. Sunday, 22nd November 2026">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-baby-tagline" class="rustic-field-label">Auspicious Tagline / Blessing</label>
+                <input type="text" id="edit-baby-tagline" class="rustic-input" placeholder="e.g. Two Tiny Feet • Welcoming Little Miracles">
+              </div>
+              <div class="rustic-field-wrap rustic-full-width">
+                <label for="edit-baby-venue" class="rustic-field-label">Banquet / Venue Address</label>
+                <input type="text" id="edit-baby-venue" class="rustic-input" placeholder="e.g. Adelaide SA, Klemzig Community Hall">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-baby-hosts" class="rustic-field-label">Hosts / Family Name</label>
+                <input type="text" id="edit-baby-hosts" class="rustic-input" placeholder="e.g. Patel Family">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-baby-wa" class="rustic-field-label">WhatsApp RSVP Number</label>
+                <input type="text" id="edit-baby-wa" class="rustic-input" placeholder="e.g. 0431 386 636">
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- TAB 2: ROYAL DARBAR WEDDING (Card 102) -->
         <div id="editor-fields-royal" class="admin-editor-tab-pane" style="display: none;">
-          <div class="admin-visual-studio-card">
-            <div class="admin-visual-studio-info">
-              <div class="admin-studio-tag-badge">
-                <span class="admin-dot" style="width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 8px #d4af37;"></span>
-                <span>Template 102 · Royal Palace 3D</span>
+          <!-- Hero In-Place Studio Launcher -->
+          <div class="rustic-studio-hero">
+            <div class="rustic-hero-icon-box">🏰</div>
+            <div class="rustic-hero-content">
+              <div class="rustic-hero-pill">⚜️ IN-PLACE VISUAL CANVAS · TEMPLATE 102</div>
+              <h4 class="rustic-hero-heading">Royal Darbar 3D Live Visual Studio</h4>
+              <p class="rustic-hero-lead">Directly click on couple names, venue, and blessings to edit live. Manage Mandap Muhurat, Jaan Prasthan, and Hasta Melap ceremonies, swap bride/groom photos, and audition royal shehnai audio.</p>
+              <div class="rustic-feature-badges">
+                <span>✦ Direct Click-to-Edit</span>
+                <span>✦ Timeline Ceremonies</span>
+                <span>✦ Photo Swap &amp; Compress</span>
+                <span>✦ Royal Shehnai</span>
               </div>
-              <h4 class="admin-visual-studio-title">Visual In-Place Studio Editor</h4>
-              <p class="admin-visual-studio-desc">Open the full drag &amp; drop visual editor with date pickers &amp; photo swaps for this specific user.</p>
             </div>
-            <button type="button" onclick="launchVisualEditor()" class="admin-btn-action admin-studio-launch-btn">
-              🚀 Open Visual Editor Tab
+            <button type="button" onclick="launchVisualEditor()" class="rustic-btn-launch">
+              <span>🎨 Open Live Visual Studio</span>
+              <span class="rustic-btn-arr">↗</span>
             </button>
+          </div>
+
+          <!-- Quick Form Fields -->
+          <div class="rustic-quick-fields">
+            <div class="rustic-quick-header">
+              <h5>✦ Quick Celebration Details</h5>
+              <span>Fast attributes sync</span>
+            </div>
+            <div class="rustic-fields-grid">
+              <div class="rustic-field-wrap">
+                <label for="edit-royal-groom" class="rustic-field-label">Groom's Name</label>
+                <input type="text" id="edit-royal-groom" class="rustic-input" placeholder="e.g. Chi. Siddhant">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-royal-bride" class="rustic-field-label">Bride's Name</label>
+                <input type="text" id="edit-royal-bride" class="rustic-input" placeholder="e.g. Sou. Aayushi">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-royal-date" class="rustic-field-label">Auspicious Wedding Date</label>
+                <input type="text" id="edit-royal-date" class="rustic-input" placeholder="e.g. Sunday, 29th November 2026">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-royal-wa" class="rustic-field-label">WhatsApp RSVP Number</label>
+                <input type="text" id="edit-royal-wa" class="rustic-input" placeholder="e.g. +91 98765 43210">
+              </div>
+              <div class="rustic-field-wrap rustic-full-width">
+                <label for="edit-royal-venue" class="rustic-field-label">Royal Palace / Venue Address</label>
+                <input type="text" id="edit-royal-venue" class="rustic-input" placeholder="e.g. Diwali-Ba Resort, Derdi Kumbhaji, Gondal">
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- TAB 3: LOTUS PALACE (Card 103) -->
         <div id="editor-fields-lotus" class="admin-editor-tab-pane" style="display: none;">
-          <div class="admin-visual-studio-card">
-            <div class="admin-visual-studio-info">
-              <div class="admin-studio-tag-badge">
-                <span class="admin-dot" style="width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 8px #d4af37;"></span>
-                <span>Template 103 · Lotus Palace</span>
+          <!-- Hero In-Place Studio Launcher -->
+          <div class="rustic-studio-hero">
+            <div class="rustic-hero-icon-box">🪷</div>
+            <div class="rustic-hero-content">
+              <div class="rustic-hero-pill">⚜️ IN-PLACE VISUAL CANVAS · TEMPLATE 103</div>
+              <h4 class="rustic-hero-heading">Lotus Palace Heritage Visual Studio</h4>
+              <p class="rustic-hero-lead">Directly customize traditional floral animations, mandap muhurat details, bride &amp; groom titles, and RSVP links on the live interactive canvas.</p>
+              <div class="rustic-feature-badges">
+                <span>✦ Direct Click-to-Edit</span>
+                <span>✦ Heritage Flora Theme</span>
+                <span>✦ Photo Upload</span>
+                <span>✦ Music Selector</span>
               </div>
-              <h4 class="admin-visual-studio-title">Visual In-Place Studio Editor</h4>
-              <p class="admin-visual-studio-desc">Open the full drag &amp; drop visual editor with date pickers &amp; photo swaps for this specific user.</p>
             </div>
-            <button type="button" onclick="launchVisualEditor()" class="admin-btn-action admin-studio-launch-btn">
-              🚀 Open Visual Editor Tab
+            <button type="button" onclick="launchVisualEditor()" class="rustic-btn-launch">
+              <span>🎨 Open Live Visual Studio</span>
+              <span class="rustic-btn-arr">↗</span>
             </button>
+          </div>
+
+          <!-- Quick Form Fields -->
+          <div class="rustic-quick-fields">
+            <div class="rustic-quick-header">
+              <h5>✦ Quick Celebration Details</h5>
+              <span>Fast attributes sync</span>
+            </div>
+            <div class="rustic-fields-grid">
+              <div class="rustic-field-wrap">
+                <label for="edit-lotus-groom" class="rustic-field-label">Groom's Name</label>
+                <input type="text" id="edit-lotus-groom" class="rustic-input" placeholder="e.g. Kaushik">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-lotus-bride" class="rustic-field-label">Bride's Name</label>
+                <input type="text" id="edit-lotus-bride" class="rustic-input" placeholder="e.g. Ankita">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-lotus-date" class="rustic-field-label">Auspicious Wedding Date</label>
+                <input type="text" id="edit-lotus-date" class="rustic-input" placeholder="e.g. Sunday, 22nd November 2026">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-lotus-wa" class="rustic-field-label">WhatsApp RSVP Number</label>
+                <input type="text" id="edit-lotus-wa" class="rustic-input" placeholder="e.g. 0431 386 636">
+              </div>
+              <div class="rustic-field-wrap rustic-full-width">
+                <label for="edit-lotus-venue" class="rustic-field-label">Lotus Palace / Venue Address</label>
+                <input type="text" id="edit-lotus-venue" class="rustic-input" placeholder="e.g. The Lotus Palace &amp; Gardens, Adelaide">
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- TAB 4: EVER AFTER BLOOM (Card 104) -->
         <div id="editor-fields-eab" class="admin-editor-tab-pane" style="display: none;">
-          <div class="admin-visual-studio-card">
-            <div class="admin-visual-studio-info">
-              <div class="admin-studio-tag-badge">
-                <span class="admin-dot" style="width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 8px #d4af37;"></span>
-                <span>Template 104 · Ever After Bloom</span>
+          <!-- Hero In-Place Studio Launcher -->
+          <div class="rustic-studio-hero">
+            <div class="rustic-hero-icon-box">🌸</div>
+            <div class="rustic-hero-content">
+              <div class="rustic-hero-pill">⚜️ IN-PLACE VISUAL CANVAS · TEMPLATE 104</div>
+              <h4 class="rustic-hero-heading">Ever After Bloom Fairytale Visual Studio</h4>
+              <p class="rustic-hero-lead">Directly edit fairytale prose, poetic blessings, dress code palettes, ceremonies, and gallery images right on the luxury storybook canvas.</p>
+              <div class="rustic-feature-badges">
+                <span>✦ Direct Click-to-Edit</span>
+                <span>✦ Storybook Pages</span>
+                <span>✦ Dress Code Palette</span>
+                <span>✦ Love Quote Blessing</span>
               </div>
-              <h4 class="admin-visual-studio-title">Visual In-Place Studio Editor</h4>
-              <p class="admin-visual-studio-desc">Open the full drag &amp; drop visual editor with date pickers &amp; photo swaps for this specific user.</p>
             </div>
-            <button type="button" onclick="launchVisualEditor()" class="admin-btn-action admin-studio-launch-btn">
-              🚀 Open Visual Editor Tab
+            <button type="button" onclick="launchVisualEditor()" class="rustic-btn-launch">
+              <span>🎨 Open Live Visual Studio</span>
+              <span class="rustic-btn-arr">↗</span>
             </button>
+          </div>
+
+          <!-- Quick Form Fields -->
+          <div class="rustic-quick-fields">
+            <div class="rustic-quick-header">
+              <h5>✦ Quick Celebration Details</h5>
+              <span>Fast attributes sync</span>
+            </div>
+            <div class="rustic-fields-grid">
+              <div class="rustic-field-wrap">
+                <label for="edit-eab-bride" class="rustic-field-label">Bride's Name</label>
+                <input type="text" id="edit-eab-bride" class="rustic-input" placeholder="e.g. Aarohi">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-eab-groom" class="rustic-field-label">Groom's Name</label>
+                <input type="text" id="edit-eab-groom" class="rustic-input" placeholder="e.g. Ishaan">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-eab-date" class="rustic-field-label">Wedding Date</label>
+                <input type="text" id="edit-eab-date" class="rustic-input" placeholder="e.g. Sunday, 14 February 2027">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-eab-time" class="rustic-field-label">Celebration Time</label>
+                <input type="text" id="edit-eab-time" class="rustic-input" placeholder="e.g. 6:30 in the evening">
+              </div>
+              <div class="rustic-field-wrap rustic-full-width">
+                <label for="edit-eab-venue" class="rustic-field-label">Heritage Palace / Venue Address</label>
+                <input type="text" id="edit-eab-venue" class="rustic-input" placeholder="e.g. Amrit Mahal Palace, Jal Marg, Old City, Jaipur">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-eab-dress" class="rustic-field-label">Dress Code / Attire Note</label>
+                <input type="text" id="edit-eab-dress" class="rustic-input" placeholder="e.g. Festive Indian — pastels, ivory &amp; gold">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-eab-blessing" class="rustic-field-label">Poetic Blessing / Love Quote</label>
+                <input type="text" id="edit-eab-blessing" class="rustic-input" placeholder="e.g. Two rivers, one sky">
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- TAB 5: AABHA MITHRIL (Card 105) -->
         <div id="editor-fields-mithril" class="admin-editor-tab-pane" style="display: none;">
-          <div class="admin-visual-studio-card">
-            <div class="admin-visual-studio-info">
-              <div class="admin-studio-tag-badge">
-                <span class="admin-dot" style="width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 8px #d4af37;"></span>
-                <span>Template 105 · Aabha Mithril</span>
+          <!-- Hero In-Place Studio Launcher -->
+          <div class="rustic-studio-hero">
+            <div class="rustic-hero-icon-box">🗝️</div>
+            <div class="rustic-hero-content">
+              <div class="rustic-hero-pill">⚜️ IN-PLACE VISUAL CANVAS · TEMPLATE 105</div>
+              <h4 class="rustic-hero-heading">Aabha Mithril Antique Key Visual Studio</h4>
+              <p class="rustic-hero-lead">Directly edit the antique key lock screen, monogram seals, island palace reception dates, and audio soundtrack in place on the heirloom invitation.</p>
+              <div class="rustic-feature-badges">
+                <span>✦ Direct Click-to-Edit</span>
+                <span>✦ Antique Key Mechanism</span>
+                <span>✦ Photo Drag &amp; Drop</span>
+                <span>✦ Royal Audio Track</span>
               </div>
-              <h4 class="admin-visual-studio-title">Visual In-Place Studio Editor</h4>
-              <p class="admin-visual-studio-desc">Open the full drag &amp; drop visual editor with date pickers &amp; photo swaps for this specific user.</p>
             </div>
-            <button type="button" onclick="launchVisualEditor()" class="admin-btn-action admin-studio-launch-btn">
-              🚀 Open Visual Editor Tab
+            <button type="button" onclick="launchVisualEditor()" class="rustic-btn-launch">
+              <span>🎨 Open Live Visual Studio</span>
+              <span class="rustic-btn-arr">↗</span>
             </button>
           </div>
+
+          <!-- Quick Form Fields -->
+          <div class="rustic-quick-fields">
+            <div class="rustic-quick-header">
+              <h5>✦ Quick Celebration Details</h5>
+              <span>Fast attributes sync</span>
+            </div>
+            <div class="rustic-fields-grid">
+              <div class="rustic-field-wrap">
+                <label for="edit-mithril-couple" class="rustic-field-label">Couple's Names</label>
+                <input type="text" id="edit-mithril-couple" class="rustic-input" placeholder="e.g. Kian &amp; Aria">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-mithril-time" class="rustic-field-label">Evening Time</label>
+                <input type="text" id="edit-mithril-time" class="rustic-input" placeholder="e.g. 7:00 PM">
+              </div>
+              <div class="rustic-field-wrap">
+                <label for="edit-mithril-date" class="rustic-field-label">Auspicious Wedding Date</label>
+                <input type="text" id="edit-mithril-date" class="rustic-input" placeholder="e.g. Sunday, 18 October 2026">
+              </div>
+              <div class="rustic-field-wrap rustic-full-width">
+                <label for="edit-mithril-venue" class="rustic-field-label">Island Palace Venue</label>
+                <input type="text" id="edit-mithril-venue" class="rustic-input" placeholder="e.g. Jagmandir Island Palace, Udaipur">
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
-      <div class="admin-modal-footer">
-        <button type="button" class="admin-btn-secondary" onclick="closeAdminEditorModal()">Cancel</button>
-        <button type="button" id="admin-save-card-btn" class="admin-btn-primary" onclick="saveAdminCardEdits()">🚀 Save &amp; Generate Shareable Link</button>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="admin-modal-footer rustic-modal-footer">
+        <button type="button" class="rustic-btn-preview" onclick="previewAdminLiveCard()" title="Preview invitation card in new tab">
+          👁️ Live Preview
+        </button>
+        <div class="rustic-footer-actions-right">
+          <button type="button" class="rustic-btn-cancel" onclick="closeAdminEditorModal()">Cancel</button>
+          <button type="button" id="admin-save-card-btn" class="rustic-btn-save" onclick="saveAdminCardEdits()">
+            ⚜️ Save &amp; Generate Shareable Link
+          </button>
+        </div>
       </div>
     </div>
   </div>

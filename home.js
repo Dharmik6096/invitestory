@@ -1,10 +1,18 @@
 /* Homepage composition only. Product selection, totals and checkout remain in the shared flow. */
 function setupHomeCollectionCards(container) {
   if (!container) return;
-  const examples = [101, 102, 103];
-  container.querySelectorAll('.pricing-card').forEach((card, index) => {
+  const tierMap = {
+    'pricing-card-premium': 103,
+    'pricing-card-luxury': 102,
+    'pricing-card-dearly': 101
+  };
+  container.querySelectorAll('.pricing-card').forEach((card) => {
     if (card.querySelector('.atelier-collection-art')) return;
-    const item = (typeof TEMPLATE_DATABASE !== 'undefined') ? TEMPLATE_DATABASE.find(design => design.id === examples[index]) : null;
+    let itemId = null;
+    for (const [cls, id] of Object.entries(tierMap)) {
+      if (card.classList.contains(cls)) { itemId = id; break; }
+    }
+    const item = (typeof TEMPLATE_DATABASE !== 'undefined') ? TEMPLATE_DATABASE.find(design => design.id === itemId) : null;
     if (!item) return;
     const button = document.createElement('button');
     button.type = 'button';
