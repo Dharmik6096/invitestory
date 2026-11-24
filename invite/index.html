@@ -172,6 +172,8 @@
             // Immediate zero-latency frame mounting for instant mobile render
             var initialSearch = slug ? ('?card=' + encodeURIComponent(slug)) : '';
             if (names) initialSearch += (initialSearch ? '&' : '?') + 'names=' + encodeURIComponent(names);
+            if (params.has('edit') || params.get('edit') === '1') initialSearch += (initialSearch ? '&' : '?') + 'edit=1';
+            if (params.has('admin') || params.get('admin') === '1') initialSearch += (initialSearch ? '&' : '?') + 'admin=1';
             initialSearch += (initialSearch ? '&' : '?') + '_v=' + Date.now();
             frame.src = tpl.src + initialSearch;
 
@@ -189,6 +191,18 @@
 
             frame.addEventListener('load', function () {
                 if (latestCardData) syncDataToFrame(latestCardData);
+            });
+
+            // Listen for balcony:save from within frame
+            window.addEventListener('message', function (e) {
+                if (e.data && e.data.type === 'balcony:save' && e.data.config) {
+                    if (slug) {
+                        try { localStorage.setItem('card_' + slug, JSON.stringify(e.data.config)); } catch (_) {}
+                        if (window.CloudStorage && typeof window.CloudStorage.saveCard === 'function') {
+                            window.CloudStorage.saveCard(slug, e.data.config, { cardId: knownCardId });
+                        }
+                    }
+                }
             });
 
             if (slug && window.CloudStorage) {

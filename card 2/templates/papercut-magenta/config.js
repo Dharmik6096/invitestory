@@ -556,12 +556,18 @@
     syncDerived();
     try {
       const sp = new URLSearchParams(location.search);
-      const urlCard = sp.get('card') || sp.get('slug');
+      const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const urlCard = sp.get('card') || sp.get('slug') || hashParams.get('card') || hashParams.get('slug');
+      const cfgCopy = JSON.parse(JSON.stringify(Papercut.config));
       if (urlCard) {
-        localStorage.setItem('card_' + urlCard, JSON.stringify(Papercut.config));
-        window.dispatchEvent(new CustomEvent('card:saved', { detail: { cardId: urlCard, config: Papercut.config } }));
+        localStorage.setItem('card_' + urlCard, JSON.stringify(cfgCopy));
+        window.dispatchEvent(new CustomEvent('card:saved', { detail: { cardId: urlCard, config: cfgCopy } }));
+        window.dispatchEvent(new CustomEvent('invitestory:save', { detail: { config: cfgCopy } }));
+        if (window.CloudStorage && typeof window.CloudStorage.saveCard === 'function') {
+          return window.CloudStorage.saveCard(urlCard, cfgCopy, { cardId: 103 });
+        }
       } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(Papercut.config));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cfgCopy));
       }
       return true;
     } catch (_) {

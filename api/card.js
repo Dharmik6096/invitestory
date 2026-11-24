@@ -30,7 +30,8 @@ async function processBase64Images(obj, slug, token) {
           const blobRes = await put(filename, buffer, {
             access: 'public',
             token: token || process.env.BLOB_READ_WRITE_TOKEN,
-            addRandomSuffix: false
+            addRandomSuffix: true,
+            allowOverwrite: true
           });
           obj[key] = blobRes.url;
         }

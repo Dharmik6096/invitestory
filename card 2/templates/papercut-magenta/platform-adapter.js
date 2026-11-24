@@ -110,9 +110,20 @@
   if (PC.mode === 'edit') {
     PC.save = function () {
       PC.syncDerived();
-      window.parent.postMessage(
-        { type: 'balcony:save', config: JSON.parse(JSON.stringify(PC.config)) }, '*'
-      );
+      var cfgCopy = JSON.parse(JSON.stringify(PC.config));
+      window.parent.postMessage({ type: 'balcony:save', config: cfgCopy }, '*');
+      window.dispatchEvent(new CustomEvent('invitestory:save', { detail: { config: cfgCopy } }));
+      try {
+        var sp = new URLSearchParams(window.location.search);
+        var hp = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        var slug = sp.get('card') || sp.get('slug') || hp.get('card') || hp.get('slug') || '';
+        if (slug) {
+          localStorage.setItem('card_' + slug, JSON.stringify(cfgCopy));
+          if (window.CloudStorage && typeof window.CloudStorage.saveCard === 'function') {
+            window.CloudStorage.saveCard(slug, cfgCopy, { cardId: 103 });
+          }
+        }
+      } catch (_) {}
       return true;
     };
     // Real gallery-photo uploads (see editor.js): same-origin endpoint, so

@@ -46,7 +46,8 @@ module.exports = async function handler(req, res) {
     const blobRes = await put(filename, buffer, {
       access: 'public',
       token,
-      addRandomSuffix: false
+      addRandomSuffix: true,
+      allowOverwrite: true
     });
 
     return res.status(200).json({

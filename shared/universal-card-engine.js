@@ -278,13 +278,37 @@
       }
 
       // Re-render gallery images if custom gallery items exist
-      if (cfg.gallery && Array.isArray(cfg.gallery.items)) {
-        const frameImgs = document.querySelectorAll('.gframe__img');
-        cfg.gallery.items.forEach((item, i) => {
-          if (frameImgs[i] && item && item.image) {
-            frameImgs[i].src = item.image;
+      if (cfg.gallery) {
+        if (window.Royale && window.Royale.config) {
+          window.Royale.config.gallery = cfg.gallery;
+          if (window.Royale.render && typeof window.Royale.render.gallery === 'function') {
+            window.Royale.render.gallery();
           }
-        });
+        }
+        if (Array.isArray(cfg.gallery.items)) {
+          cfg.gallery.items.forEach((item, i) => {
+            if (item && item.image) {
+              const img = document.querySelector('[data-adjust="' + i + '"] .gframe__img');
+              if (img) img.src = item.image;
+            }
+          });
+        }
+      }
+
+      // Re-render ceremonies if custom
+      if (Array.isArray(cfg.ceremonies)) {
+        if (window.Royale && window.Royale.config) {
+          window.Royale.config.ceremonies = cfg.ceremonies;
+          if (window.Royale.render && typeof window.Royale.render.ceremonies === 'function') {
+            window.Royale.render.ceremonies();
+          }
+        }
+      }
+
+      // Re-render couple portrait
+      if (cfg.couplePortrait) {
+        const cPortrait = document.querySelector('.royale-couple__img');
+        if (cPortrait) cPortrait.src = cfg.couplePortrait;
       }
 
       // Re-render family scrolls if customized
@@ -352,6 +376,38 @@
         } else if (cfg.brideName || cfg.groomName) {
           elNote.textContent = 'With the divine blessings of our elders, we cordially invite you and your family to celebrate the auspicious wedding ceremony of ' + gName + ' and ' + bName + '.';
         }
+      }
+
+      // Re-render gallery
+      if (cfg.gallery) {
+        if (window.Papercut && window.Papercut.config) {
+          window.Papercut.config.gallery = cfg.gallery;
+          if (window.Papercut.render && typeof window.Papercut.render.gallery === 'function') {
+            window.Papercut.render.gallery();
+          }
+        }
+        if (Array.isArray(cfg.gallery.photos)) {
+          const pImgs = document.querySelectorAll('#pcGalleryPhotoTrack img, .gallery__img');
+          cfg.gallery.photos.forEach((src, idx) => {
+            if (pImgs[idx] && src) pImgs[idx].src = src;
+          });
+        }
+      }
+
+      // Re-render ceremonies
+      if (Array.isArray(cfg.ceremonies)) {
+        if (window.Papercut && window.Papercut.config) {
+          window.Papercut.config.ceremonies = cfg.ceremonies;
+          if (window.Papercut.render && typeof window.Papercut.render.ceremonies === 'function') {
+            window.Papercut.render.ceremonies();
+          }
+        }
+      }
+
+      // Re-render couple portrait
+      if (cfg.couplePortrait) {
+        const cp = document.querySelector('.couple__portrait');
+        if (cp) cp.src = cfg.couplePortrait;
       }
       return;
     }
@@ -514,14 +570,23 @@
         }
       });
 
-      // Portraits
-      if (cfg.bridePortrait) {
-        const imgB = document.querySelector('img[src*="portrait-bride"]');
-        if (imgB) imgB.src = cfg.bridePortrait;
+      // Resilient Portraits & Illustrations
+      const brideArticle = Array.from(document.querySelectorAll('article.plate.paper-grain')).find(a => (a.textContent || '').includes('The Bride'));
+      const imgB = (brideArticle && brideArticle.querySelector('img')) || document.querySelector('[data-role="bride-portrait"]') || document.querySelector('img[src*="portrait-bride"]');
+      if (imgB) {
+        imgB.dataset.role = 'bride-portrait';
+        if (cfg.bridePortrait) imgB.src = cfg.bridePortrait;
       }
-      if (cfg.groomPortrait) {
-        const imgG = document.querySelector('img[src*="portrait-groom"]');
-        if (imgG) imgG.src = cfg.groomPortrait;
+      const groomArticle = Array.from(document.querySelectorAll('article.plate.paper-grain')).find(a => (a.textContent || '').includes('The Groom'));
+      const imgG = (groomArticle && groomArticle.querySelector('img')) || document.querySelector('[data-role="groom-portrait"]') || document.querySelector('img[src*="portrait-groom"]');
+      if (imgG) {
+        imgG.dataset.role = 'groom-portrait';
+        if (cfg.groomPortrait) imgG.src = cfg.groomPortrait;
+      }
+      const lanternImg = document.querySelector('[data-role="couple-lanterns"], img[src*="couple-lanterns"]');
+      if (lanternImg) {
+        lanternImg.dataset.role = 'couple-lanterns';
+        if (cfg.couplePortrait) lanternImg.src = cfg.couplePortrait;
       }
 
       // Footer signoff
@@ -602,8 +667,17 @@
       const noteEl = document.querySelector('p.font-pinyon:last-of-type');
       if (noteEl && cfg.closingNote) noteEl.textContent = cfg.closingNote;
 
-      const portraitImg = document.querySelector('.mithril-v4-portrait img, img[src*="portrait"]');
-      if (portraitImg && cfg.couplePortrait) portraitImg.src = cfg.couplePortrait;
+      const portraitImg = document.querySelector('[data-role="couple-portrait"], .mithril-v4-portrait img, img[src*="portrait"]');
+      if (portraitImg) {
+        portraitImg.dataset.role = 'couple-portrait';
+        if (cfg.couplePortrait) portraitImg.src = cfg.couplePortrait;
+      }
+
+      const keyImg = document.querySelector('[data-role="key"], img[src*="key"]');
+      if (keyImg) {
+        keyImg.dataset.role = 'key';
+        if (cfg.closingKeyImg) keyImg.src = cfg.closingKeyImg;
+      }
 
       const calNote = document.querySelector('.wc-note');
       if (calNote) {
@@ -652,7 +726,13 @@
       };
 
       if (window.CloudStorage && typeof window.CloudStorage.saveCard === 'function') {
-        window.CloudStorage.saveCard(slug, cfg, meta).catch(function () {});
+        window.CloudStorage.saveCard(slug, cfg, meta).then(function (res) {
+          if (res && res.data) {
+            Object.assign(cfg, res.data);
+            setConfigBack(tpl, cfg);
+            try { localStorage.setItem('card_' + slug, JSON.stringify(cfg)); } catch (_) {}
+          }
+        }).catch(function () {});
       }
 
       // 3. Admin Registry sync
@@ -1448,10 +1528,10 @@
   function wirePhotoUploader(tpl, cfg) {
     const PHOTO_SELECTORS = {
       101: ['.sacred-art-img', '.baby-feet-img', '.venue-sketch'],
-      102: ['.gframe__img', '.ryc-card__photo-img', '.royale-couple__img'],
+      102: ['.gframe__img', '.ryc-card__photo-img', '.ryc-card__art', '.royale-couple__img'],
       103: ['#pcGalleryPhotoTrack img', '.gallery__img', '.ceremony__art', '.cere-photo', '.frame__cell img', '.couple__portrait'],
-      104: ['img[src*="portrait-bride"]', 'img[src*="portrait-groom"]', '.gallery-card img', 'img[src*="couple-lanterns"]'],
-      105: ['.mithril-v4-portrait img', 'img[src*="portrait"]', 'img[src*="key"]']
+      104: ['[data-role="bride-portrait"]', 'img[src*="portrait-bride"]', '[data-role="groom-portrait"]', 'img[src*="portrait-groom"]', '.gallery-card img', '[data-role="couple-lanterns"]', 'img[src*="couple-lanterns"]'],
+      105: ['[data-role="couple-portrait"]', '.mithril-v4-portrait img', 'img[src*="portrait"]', '[data-role="key"]', 'img[src*="key"]']
     };
 
     const selectors = PHOTO_SELECTORS[tpl.id] || [];
@@ -1483,17 +1563,30 @@
                 if (sel.includes('gframe')) {
                   if (!cfg.gallery) cfg.gallery = {};
                   if (!Array.isArray(cfg.gallery.items)) cfg.gallery.items = [];
+                  const adjustBox = img.closest('[data-adjust]');
                   const frameEl = img.closest('.gframe');
                   const frames = Array.from(document.querySelectorAll('.gframe'));
-                  const frameIdx = frameEl ? frames.indexOf(frameEl) : idx;
+                  const frameIdx = adjustBox ? parseInt(adjustBox.dataset.adjust, 10) : (frameEl ? frames.indexOf(frameEl) : idx);
                   if (!cfg.gallery.items[frameIdx]) cfg.gallery.items[frameIdx] = { type: 'portrait', image: '' };
                   cfg.gallery.items[frameIdx].image = compressedUrl;
                   cfg.gallery.enabled = true;
+                  if (window.Royale && window.Royale.config) {
+                    window.Royale.config.gallery = cfg.gallery;
+                    if (window.Royale.render && typeof window.Royale.render.gallery === 'function') {
+                      window.Royale.render.gallery();
+                    }
+                  }
                 } else if (sel.includes('ryc-card')) {
                   const cereCard = img.closest('.ryc-card');
                   const cereIdx = cereCard ? (parseInt(cereCard.dataset.index, 10) || idx) : idx;
                   if (Array.isArray(cfg.ceremonies) && cfg.ceremonies[cereIdx]) {
                     cfg.ceremonies[cereIdx].art = compressedUrl;
+                    if (window.Royale && window.Royale.config) {
+                      window.Royale.config.ceremonies = cfg.ceremonies;
+                      if (window.Royale.render && typeof window.Royale.render.ceremonies === 'function') {
+                        window.Royale.render.ceremonies();
+                      }
+                    }
                   }
                 } else if (sel.includes('royale-couple')) {
                   cfg.couplePortrait = compressedUrl;
@@ -1506,25 +1599,37 @@
                   if (!Array.isArray(cfg.gallery.items)) cfg.gallery.items = [];
                   if (!cfg.gallery.items[idx]) cfg.gallery.items[idx] = { image: '' };
                   cfg.gallery.items[idx].image = compressedUrl;
+                  if (window.Papercut && window.Papercut.config) {
+                    window.Papercut.config.gallery = cfg.gallery;
+                    if (window.Papercut.render && typeof window.Papercut.render.gallery === 'function') {
+                      window.Papercut.render.gallery();
+                    }
+                  }
                 } else if (sel.includes('ceremony') || sel.includes('cere-photo')) {
                   if (Array.isArray(cfg.ceremonies) && cfg.ceremonies[idx]) {
                     cfg.ceremonies[idx].art = compressedUrl;
+                    if (window.Papercut && window.Papercut.config) {
+                      window.Papercut.config.ceremonies = cfg.ceremonies;
+                      if (window.Papercut.render && typeof window.Papercut.render.ceremonies === 'function') {
+                        window.Papercut.render.ceremonies();
+                      }
+                    }
                   }
                 } else if (sel.includes('couple')) {
                   cfg.couplePortrait = compressedUrl;
                 }
               } else if (tpl.id === 104) {
-                if (sel.includes('portrait-bride')) cfg.bridePortrait = compressedUrl;
-                else if (sel.includes('portrait-groom')) cfg.groomPortrait = compressedUrl;
+                if (sel.includes('bride') || (img.dataset && img.dataset.role === 'bride-portrait')) cfg.bridePortrait = compressedUrl;
+                else if (sel.includes('groom') || (img.dataset && img.dataset.role === 'groom-portrait')) cfg.groomPortrait = compressedUrl;
                 else if (sel.includes('gallery')) {
                   if (!Array.isArray(cfg.gallery)) cfg.gallery = [];
                   if (!cfg.gallery[idx]) cfg.gallery[idx] = {};
                   cfg.gallery[idx].src = compressedUrl;
-                } else if (sel.includes('couple-lanterns')) {
+                } else if (sel.includes('lanterns') || (img.dataset && img.dataset.role === 'couple-lanterns')) {
                   cfg.couplePortrait = compressedUrl;
                 }
               } else if (tpl.id === 105) {
-                if (sel.includes('key')) cfg.closingKeyImg = compressedUrl;
+                if (sel.includes('key') || (img.dataset && img.dataset.role === 'key')) cfg.closingKeyImg = compressedUrl;
                 else cfg.couplePortrait = compressedUrl;
               }
               persistCardConfig(tpl, cfg, true);
@@ -2045,7 +2150,7 @@
     }
   }
 
-  // Listen for real-time config sync messages from parent window (invite/index.html gateway)
+  // Listen for real-time config sync messages from parent window or template editor
   window.addEventListener('message', function (ev) {
     if (ev && ev.data && ev.data.type === 'INVITESTORY_UPDATE_CARD' && ev.data.data) {
       try {
@@ -2054,6 +2159,20 @@
         current = deepMerge(current, ev.data.data);
         setConfigBack(tpl, current);
         renderTemplateDOM(tpl, current);
+      } catch (_) {}
+    } else if (ev && ev.data && ev.data.type === 'balcony:save' && ev.data.config) {
+      try {
+        const tpl = detectTemplate();
+        persistCardConfig(tpl, ev.data.config, true);
+      } catch (_) {}
+    }
+  });
+
+  window.addEventListener('invitestory:save', function (ev) {
+    if (ev && ev.detail && ev.detail.config) {
+      try {
+        const tpl = detectTemplate();
+        persistCardConfig(tpl, ev.detail.config, true);
       } catch (_) {}
     }
   });

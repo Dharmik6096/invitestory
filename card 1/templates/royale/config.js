@@ -484,12 +484,18 @@
     syncDerived();
     try {
       const sp = new URLSearchParams(location.search);
-      const urlCard = sp.get('card') || sp.get('slug');
+      const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const urlCard = sp.get('card') || sp.get('slug') || hashParams.get('card') || hashParams.get('slug');
+      const cfgCopy = JSON.parse(JSON.stringify(window.Royale.config));
       if (urlCard) {
-        localStorage.setItem('card_' + urlCard, JSON.stringify(window.Royale.config));
-        window.dispatchEvent(new CustomEvent('card:saved', { detail: { cardId: urlCard, config: window.Royale.config } }));
+        localStorage.setItem('card_' + urlCard, JSON.stringify(cfgCopy));
+        window.dispatchEvent(new CustomEvent('card:saved', { detail: { cardId: urlCard, config: cfgCopy } }));
+        window.dispatchEvent(new CustomEvent('invitestory:save', { detail: { config: cfgCopy } }));
+        if (window.CloudStorage && typeof window.CloudStorage.saveCard === 'function') {
+          return window.CloudStorage.saveCard(urlCard, cfgCopy, { cardId: 102 });
+        }
       } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(window.Royale.config));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cfgCopy));
       }
       return true;
     } catch (_) {
