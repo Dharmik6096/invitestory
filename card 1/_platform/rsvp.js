@@ -550,7 +550,7 @@
         (message ? '\n💌 *Message:* "' + message + '"\n' : '\n') +
         '\nLooking forward to celebrating this auspicious occasion together! ✨';
 
-      var waUrl = 'https://api.whatsapp.com/send?phone=919429436186&text=' + encodeURIComponent(waText);
+      var waUrl = 'https://api.whatsapp.com/send?phone=919727910473&text=' + encodeURIComponent(waText);
 
       mount.querySelector('.brsvp__thanks').innerHTML =
         '<div style="text-align:center; padding:8px 0 16px;">' +

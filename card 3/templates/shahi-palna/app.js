@@ -195,8 +195,8 @@
     var dad = cfg.dadName || cfg.groomName || 'Kaushal';
     var coupleText = [mom, dad].filter(Boolean).join(' & ') || 'Meghal & Kaushal';
     var eventDateStr = cfg.eventDateText || 'Sunday, 22 November 2026';
-    var phone = (cfg.whatsappRsvp || (cfg.rsvp && cfg.rsvp.phone) || '61481998393').replace(/\D/g, '');
-    if (!phone) phone = '61481998393';
+    var phone = (cfg.whatsappRsvp || (cfg.rsvp && cfg.rsvp.phone) || '919727910473').replace(/\D/g, '');
+    if (!phone) phone = '919727910473';
 
     var defaultMsg = 'Dear ' + coupleText + ', we are delighted to attend your Baby Shower celebration on ' + eventDateStr + '!';
     var textToSend = customText || defaultMsg;

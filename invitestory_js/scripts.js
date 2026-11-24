@@ -1819,7 +1819,7 @@ function askPackageOnWhatsApp(tier) {
     currency: currentCurrency
   });
   const msg = `Hi! Looking at ${name} (${amountText}). I have a few questions before paying.`;
-  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(msg)}`, "_blank");
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(msg)}`, "_blank");
 }
 
 /**
@@ -1840,7 +1840,7 @@ function askTemplateOnWhatsApp(id) {
     currency: currentCurrency
   });
   const msg = `Hi! Looking at "${item.name}" (${packageName(item.tier)} · ${priceText}). I have a few questions before paying.`;
-  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(msg)}`, "_blank");
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(msg)}`, "_blank");
 }
 
 function trackVerifiedPayment(verified, details = {}) {
@@ -1921,7 +1921,7 @@ function handlePaidSuccess(details) {
   showPaymentSuccess(receipt);
   const waMsg = InvitePaidOrder.message(receipt);
   trackPostPaymentWhatsAppAction("payment_success_auto");
-  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(waMsg)}`, "_blank");
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(waMsg)}`, "_blank");
 }
 
 function showPaymentSuccess(details) {
@@ -1969,11 +1969,11 @@ function sendDetailsOnWhatsApp() {
   trackPostPaymentWhatsAppAction("payment_success");
   const d = window.__lastPayment;
   if (!d) {
-    window.open("https://wa.me/918281583882?text=" + encodeURIComponent("Hi InviteStory! I just paid on the website — here are my wedding details:"), "_blank");
+    window.open("https://wa.me/919727910473?text=" + encodeURIComponent("Hi InviteStory! I just paid on the website — here are my wedding details:"), "_blank");
     return;
   }
   const waMsg = InvitePaidOrder.message(d);
-  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(waMsg)}`, "_blank");
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(waMsg)}`, "_blank");
 }
 
 // --- Dynamic Order Sheet / Drawer Controller ---
@@ -2327,7 +2327,7 @@ async function proceedFromOrderDrawerToCheckout(savedPayment) {
       ondismiss: function () {
         if (!window.__lastPaymentOk) {
           trackPostHogEvent("checkout_cancelled", { content_ids: selectedContentIds, package_tier: tier, currency: currencyCode, value: totalVal });
-          const waUrl = `https://wa.me/918281583882?text=${encodeURIComponent(`Hi InviteStory! My checkout for "${name}" (${currencyCode === "INR" ? "₹" : "$"}${totalVal}) was cancelled. Could you please assist me?`)}`;
+          const waUrl = `https://wa.me/919727910473?text=${encodeURIComponent(`Hi InviteStory! My checkout for "${name}" (${currencyCode === "INR" ? "₹" : "$"}${totalVal}) was cancelled. Could you please assist me?`)}`;
           showToast({
             title: "Payment not completed",
             message: "You can try again, or contact us on WhatsApp for help.",
@@ -2391,7 +2391,7 @@ async function proceedFromOrderDrawerToCheckout(savedPayment) {
     const rzp = new Razorpay(options);
     rzp.on("payment.failed", function () {
       trackPostHogEvent("payment_failed", { content_ids: selectedContentIds, package_tier: tier, currency: currencyCode, value: totalVal });
-      const waUrl = `https://wa.me/918281583882?text=${encodeURIComponent(`Hi InviteStory! My payment for ${name} failed. Can you please assist me?`)}`;
+      const waUrl = `https://wa.me/919727910473?text=${encodeURIComponent(`Hi InviteStory! My payment for ${name} failed. Can you please assist me?`)}`;
       showToast({
         title: "Payment didn’t go through",
         message: "Try again, or contact us on WhatsApp for help.",
@@ -2421,7 +2421,7 @@ function askOrderDrawerOnWhatsApp() {
   const price = isINR ? `₹${orderDrawerState.total.toLocaleString("en-IN")}` : `$${orderDrawerState.total}`;
   trackConversionEvent("whatsapp_click", { cta_location: "order_drawer", content_ids: orderDrawerState.template ? [String(orderDrawerState.template.id)] : [], package_tier: orderDrawerState.tier, content_name: name, value: orderDrawerState.total, currency: currentCurrency });
   const msg = `Hi InviteStory! I'm on the website looking at ${name} (${price}). I have a few questions about wedding details and delivery before booking. Can you please assist me?`;
-  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(msg)}`, "_blank");
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(msg)}`, "_blank");
 }
 
 // --- Payment Button UI & Handlers ---
@@ -2662,7 +2662,7 @@ function showToast(messageOrOptions, explicitType, options = {}) {
       const waText = encodeURIComponent("Hi InviteStory! My payment didn't go through on the website. Can you please help me complete my order?");
       action = {
         label: "Chat on WhatsApp",
-        url: `https://wa.me/918281583882?text=${waText}`,
+        url: `https://wa.me/919727910473?text=${waText}`,
         target: "_blank"
       };
     }
@@ -4715,7 +4715,7 @@ function openCustomModal() {
   const waBtn = document.getElementById("custom-modal-wa-btn");
   if (waBtn) {
     const message = `Hi InviteStory, I would like to order Bespoke Design (starting at ${priceText}). Please share details!`;
-    waBtn.href = `https://wa.me/918281583882?text=${encodeURIComponent(message)}`;
+    waBtn.href = `https://wa.me/919727910473?text=${encodeURIComponent(message)}`;
     waBtn.onclick = () => {
       trackConversionEvent("whatsapp_click", {
         cta_location: "custom_modal",

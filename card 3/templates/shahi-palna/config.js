@@ -247,13 +247,13 @@
       name: 'The Royal Heritage Grand Palace & Banquet',
       address: 'Near Vaishnodevi Circle, S.G. Highway, Ahmedabad, Gujarat',
       mapUrl: 'https://www.google.com/maps/search/?api=1&query=Ahmedabad+Grand+Palace',
-      phone: '+91 98250 12345'
+      phone: '+91 97279 10473'
     },
 
     rsvp: {
       enabled: true,
       contactName: 'Priya & Aarav Patel',
-      phone: '+919825012345',
+      phone: '+919727910473',
       deadline: '2026-12-15'
     },
 

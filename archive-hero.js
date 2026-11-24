@@ -203,7 +203,7 @@
     const designUrl = new URL('/', window.location.origin);
     designUrl.searchParams.set('design', item.slug || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
     const ask = document.getElementById('archive-ask');
-    if (ask) ask.href = `https://wa.me/918281583882?text=${encodeURIComponent(`Hi InviteStory, I have a question about the ${item.name} invitation.\n\nDesign: ${designUrl.href}`)}`;
+    if (ask) ask.href = `https://wa.me/919727910473?text=${encodeURIComponent(`Hi InviteStory, I have a question about the ${item.name} invitation.\n\nDesign: ${designUrl.href}`)}`;
     swapText(title, items[index].name, direction || 1);
     swapText(subtitle, items[index].tags, direction || 1);
     cards.forEach((card, i) => card.setAttribute('aria-current', i === index ? 'true' : 'false'));

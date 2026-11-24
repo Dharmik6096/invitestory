@@ -81,7 +81,7 @@
             Dearly: "₹4,999 ($75)",
             bespokeStartingAt: "₹8,000"
           },
-          orderWhatsApp: "https://wa.me/918281583882?text=Hi%20InviteStory%2C%20I%20want%20to%20customize%20template%20" + encodeURIComponent(templateId)
+          orderWhatsApp: "https://wa.me/919727910473?text=Hi%20InviteStory%2C%20I%20want%20to%20customize%20template%20" + encodeURIComponent(templateId)
         };
       }
     },

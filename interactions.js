@@ -147,11 +147,9 @@ const InviteInteractions = (() => {
   }
   function renderShortlist() {
     const items=savedItems();
-    compareIds=new Set([...compareIds].filter(id=>previewFavourites.has(id)));
-    content.innerHTML=items.length ? `<p class="interaction-muted">${items.length} saved ${items.length === 1 ? "design" : "designs"} on this device. Share your shortlist to choose together.</p><div class="interaction-shortlist-actions"><button type="button" class="interaction-primary" data-shortlist-share>Share with family</button><button type="button" class="interaction-secondary" data-shortlist-compare ${compareIds.size<2?"disabled":""}>Compare selected (${compareIds.size})</button></div><p class="interaction-muted" id="compare-selection-status">${items.length < 2 ? "Save one more design to compare your favourites." : "Choose 2 or 3 designs to compare."}</p><div>${items.map(item=>`<div class="interaction-saved-row"><label class="interaction-compare-check"><input type="checkbox" data-compare-choice="${item.id}" ${compareIds.has(item.id)?"checked":""} aria-label="Compare ${escape(item.name)}"></label><button type="button" class="interaction-result" data-shortlist-preview="${item.id}"><img src="${item.image}" alt="" width="48" height="60"><span><strong>${escape(item.name)}</strong><small>${price(item)} · ${packageName(item.tier)}</small></span></button><button type="button" class="interaction-secondary" data-shortlist-remove="${item.id}" aria-label="Remove ${escape(item.name)} from shortlist">Remove</button></div>`).join('')}</div>` : '<h3>A place for your favourites</h3><p class="interaction-muted">Tap the heart on any invitation to keep it here.</p><button type="button" class="interaction-primary" data-sheet-close>Explore the designs</button>';
+    content.innerHTML=items.length ? `<p class="interaction-muted">${items.length} saved ${items.length === 1 ? "design" : "designs"} on this device. Share your shortlist to choose together.</p><div class="interaction-shortlist-actions"><button type="button" class="interaction-primary" data-shortlist-share>Share with family</button></div><div>${items.map(item=>`<div class="interaction-saved-row"><button type="button" class="interaction-result" data-shortlist-preview="${item.id}"><img src="${item.image}" alt="" width="48" height="60"><span><strong>${escape(item.name)}</strong><small>${price(item)} · ${packageName(item.tier)}</small></span></button><button type="button" class="interaction-secondary" data-shortlist-remove="${item.id}" aria-label="Remove ${escape(item.name)} from shortlist">Remove</button></div>`).join('')}</div>` : '<h3>A place for your favourites</h3><p class="interaction-muted">Tap the heart on any invitation to keep it here.</p><button type="button" class="interaction-primary" data-sheet-close>Explore the designs</button>';
   }
   function openShortlist() {
-    compareIds=new Set(savedItems().slice(0,3).map(item=>item.id));
     openSheet('shortlist','Your saved designs','',root=>{
       renderShortlist();
       root.onclick=event=>{
@@ -160,14 +158,6 @@ const InviteInteractions = (() => {
         if(preview){const id=Number(preview.dataset.shortlistPreview);closeSheet(false);openPreview(id);}
         if(remove)toggleSavedDesign(Number(remove.dataset.shortlistRemove));
         if(event.target.closest('[data-shortlist-share]'))shareSavedDesigns();
-        if(event.target.closest('[data-shortlist-compare]'))openComparison([...compareIds]);
-      };
-      root.onchange=event=>{
-        const choice=event.target.closest('[data-compare-choice]');if(!choice)return;
-        const id=Number(choice.dataset.compareChoice);
-        if(choice.checked && compareIds.size>=3){choice.checked=false;root.querySelector('#compare-selection-status').textContent='Compare up to three at a time.';return;}
-        choice.checked?compareIds.add(id):compareIds.delete(id);
-        const button=root.querySelector('[data-shortlist-compare]');button.disabled=compareIds.size<2;button.textContent=`Compare selected (${compareIds.size})`;
       };
     });
   }

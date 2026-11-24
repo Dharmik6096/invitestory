@@ -444,7 +444,7 @@ function askDeliveryOnWhatsApp() {
   const last = TEMPLATE_DATABASE[previewState.currentIndex];
   const message = `Hi InviteStory! ${last ? `I’m interested in ${last.name} (${packageName(last.tier)}). ` : ""}Can you help me check the delivery timeline before I book?`;
   trackConversionEvent("whatsapp_click", { cta_location: "delivery_planner", content_name: last?.name || "Delivery enquiry" });
-  window.open(`https://wa.me/918281583882?text=${encodeURIComponent(message)}`, "_blank", "noopener");
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(message)}`, "_blank", "noopener");
 }
 
 function updateSalesOrder() {
