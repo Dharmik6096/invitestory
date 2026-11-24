@@ -525,7 +525,15 @@
             }
           }
         }
+        const curCfg = RY.config || cfg;
+        if (cfg !== curCfg) {
+          Object.assign(cfg, curCfg);
+        }
         kit.saveNow();
+        if (typeof RY.save === 'function') RY.save();
+        if (window.UniversalCardEngine && typeof window.UniversalCardEngine.saveCard === 'function') {
+          window.UniversalCardEngine.saveCard(null, curCfg, true);
+        }
         RY.render.invocation();
         pop.innerHTML = invocationPopHtml();
         const ci = pop.querySelector('.inv-custom');
@@ -544,7 +552,15 @@
       if (!cfg.invocation) cfg.invocation = {};
       cfg.invocation.custom = inp.value;
       cfg.invocation.script = 'custom';
+      const curCfg = RY.config || cfg;
+      if (!curCfg.invocation) curCfg.invocation = {};
+      curCfg.invocation.custom = inp.value;
+      curCfg.invocation.script = 'custom';
       kit.saveNow();
+      if (typeof RY.save === 'function') RY.save();
+      if (window.UniversalCardEngine && typeof window.UniversalCardEngine.saveCard === 'function') {
+        window.UniversalCardEngine.saveCard(null, curCfg, false);
+      }
       RY.render.invocation();
       const caret = inp.selectionStart;
       pop.innerHTML = invocationPopHtml();

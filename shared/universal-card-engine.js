@@ -164,12 +164,47 @@
   }
 
   function setConfigBack(tpl, cfg) {
-    if (tpl.id === 101 && window.Palna) window.Palna.config = cfg;
-    if (tpl.id === 102 && window.Royale) window.Royale.config = cfg;
-    if (tpl.id === 103 && window.Papercut) window.Papercut.config = cfg;
-    if (tpl.id === 104) window.INVITATION_CONFIG = cfg;
-    if (tpl.id === 105) window.VERONA_CONFIG = cfg;
-    window.CARD_CONFIG = cfg;
+    if (!cfg || typeof cfg !== 'object') return;
+    if (tpl.id === 101 && window.Palna) {
+      if (window.Palna.config && typeof window.Palna.config === 'object') {
+        Object.assign(window.Palna.config, cfg);
+      } else {
+        window.Palna.config = cfg;
+      }
+    }
+    if (tpl.id === 102 && window.Royale) {
+      if (window.Royale.config && typeof window.Royale.config === 'object') {
+        Object.assign(window.Royale.config, cfg);
+      } else {
+        window.Royale.config = cfg;
+      }
+    }
+    if (tpl.id === 103 && window.Papercut) {
+      if (window.Papercut.config && typeof window.Papercut.config === 'object') {
+        Object.assign(window.Papercut.config, cfg);
+      } else {
+        window.Papercut.config = cfg;
+      }
+    }
+    if (tpl.id === 104) {
+      if (window.INVITATION_CONFIG && typeof window.INVITATION_CONFIG === 'object') {
+        Object.assign(window.INVITATION_CONFIG, cfg);
+      } else {
+        window.INVITATION_CONFIG = cfg;
+      }
+    }
+    if (tpl.id === 105) {
+      if (window.VERONA_CONFIG && typeof window.VERONA_CONFIG === 'object') {
+        Object.assign(window.VERONA_CONFIG, cfg);
+      } else {
+        window.VERONA_CONFIG = cfg;
+      }
+    }
+    if (window.CARD_CONFIG && typeof window.CARD_CONFIG === 'object') {
+      Object.assign(window.CARD_CONFIG, cfg);
+    } else {
+      window.CARD_CONFIG = cfg;
+    }
   }
 
   function extractDelta(cfg) {
@@ -690,6 +725,10 @@
   // 7. PERSISTENCE & CLOUD SYNC
   let saveDebounceTimer = null;
   function persistCardConfig(tpl, cfg, immediate) {
+    if (!cfg || typeof cfg !== 'object') {
+      cfg = getCurrentConfig(tpl);
+    }
+    setConfigBack(tpl, cfg);
     const sp = new URLSearchParams(location.search);
     const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
     let slug = sp.get('card') || sp.get('slug') || hashParams.get('card') || hashParams.get('slug') || '';
@@ -2043,7 +2082,8 @@
     };
 
     document.getElementById('ueBtnSave').onclick = function () {
-      persistCardConfig(tpl, cfg, true);
+      const liveCfg = getCurrentConfig(tpl);
+      persistCardConfig(tpl, liveCfg, true);
     };
 
     document.getElementById('ueBtnShare').onclick = function () {
@@ -2075,6 +2115,7 @@
           var cloudJson = JSON.parse(xhr.responseText);
           if (cloudJson && cloudJson.data) {
             cfg = deepMerge(cfg, cloudJson.data);
+            setConfigBack(tpl, cfg);
             try { localStorage.setItem('card_' + slug, JSON.stringify(cloudJson.data)); } catch (_) {}
           }
         }
@@ -2087,6 +2128,7 @@
         const localSaved = JSON.parse(localStorage.getItem('card_' + slug) || 'null');
         if (localSaved && typeof localSaved === 'object') {
           cfg = deepMerge(cfg, localSaved);
+          setConfigBack(tpl, cfg);
         }
       } catch (_) {}
     }

@@ -504,49 +504,57 @@
 
       const opt = e.target.closest('[data-dd-set]');
       if (opt) {
-        if (!cfg.invocation) cfg.invocation = {};
+        const curCfg = RY.config || cfg;
+        if (!curCfg.invocation) curCfg.invocation = {};
         if (opt.dataset.ddKind === 'symbol') {
-          cfg.invocation.symbol = opt.dataset.ddValue;
+          curCfg.invocation.symbol = opt.dataset.ddValue;
         } else if (opt.dataset.ddKind === 'inv') {
           const parts = opt.dataset.ddValue.split(':');
           if (parts.length === 1) {
-            cfg.invocation.script = parts[0];
+            curCfg.invocation.script = parts[0];
             if (parts[0] !== 'custom') {
-              cfg.invocation.custom = '';
+              curCfg.invocation.custom = '';
             }
           } else {
             const relKey = parts[0];
             const scrKey = parts[1];
-            cfg.invocation.religion = relKey;
-            cfg.invocation.script = scrKey;
-            cfg.invocation.custom = '';
+            curCfg.invocation.religion = relKey;
+            curCfg.invocation.script = scrKey;
+            curCfg.invocation.custom = '';
 
             // Auto-select corresponding tradition symbol
             if (TRADITION_SYMBOLS[relKey]) {
-              cfg.invocation.symbol = TRADITION_SYMBOLS[relKey];
+              curCfg.invocation.symbol = TRADITION_SYMBOLS[relKey];
             }
 
             // Sync intro blessing
-            if (cfg.introNote) {
+            if (curCfg.introNote) {
               if (relKey === 'hindu') {
-                cfg.introNote = cfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'Lord Shree Ganesh')
+                curCfg.introNote = curCfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'Lord Shree Ganesh')
                   .replace(/Waheguru Ji/gi, 'Lord Shree Ganesh')
                   .replace(/God Almighty/gi, 'Lord Shree Ganesh');
               } else if (relKey === 'swaminarayan') {
-                cfg.introNote = cfg.introNote.replace(/Lord Shree Ganesh/gi, 'Lord Shree Swaminarayan')
+                curCfg.introNote = curCfg.introNote.replace(/Lord Shree Ganesh/gi, 'Lord Shree Swaminarayan')
                   .replace(/Waheguru Ji/gi, 'Lord Shree Swaminarayan')
                   .replace(/God Almighty/gi, 'Lord Shree Swaminarayan');
               } else if (relKey === 'sikh') {
-                cfg.introNote = cfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'Waheguru Ji')
+                curCfg.introNote = curCfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'Waheguru Ji')
                   .replace(/Lord Shree Ganesh/gi, 'Waheguru Ji');
               } else if (relKey === 'christian') {
-                cfg.introNote = cfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'God Almighty')
+                curCfg.introNote = curCfg.introNote.replace(/Lord Shree Swaminarayan/gi, 'God Almighty')
                   .replace(/Lord Shree Ganesh/gi, 'God Almighty');
               }
             }
           }
         }
+        if (cfg !== curCfg) {
+          Object.assign(cfg, curCfg);
+        }
         kit.saveNow();
+        if (typeof RY.save === 'function') RY.save();
+        if (window.UniversalCardEngine && typeof window.UniversalCardEngine.saveCard === 'function') {
+          window.UniversalCardEngine.saveCard(null, curCfg, true);
+        }
         if (RY.render && typeof RY.render.gateCard === 'function') {
           RY.render.gateCard();
         } else if (RY.render && typeof RY.render.invocation === 'function') {
@@ -557,7 +565,6 @@
         if (ci) ci.focus();
         return;
       }
-
       pop.querySelectorAll('.inv-dd.is-open').forEach((d) => d.classList.remove('is-open'));
     });
 
@@ -569,7 +576,15 @@
       if (!cfg.invocation) cfg.invocation = {};
       cfg.invocation.custom = inp.value;
       cfg.invocation.script = 'custom';
+      const curCfg = RY.config || cfg;
+      if (!curCfg.invocation) curCfg.invocation = {};
+      curCfg.invocation.custom = inp.value;
+      curCfg.invocation.script = 'custom';
       kit.saveNow();
+      if (typeof RY.save === 'function') RY.save();
+      if (window.UniversalCardEngine && typeof window.UniversalCardEngine.saveCard === 'function') {
+        window.UniversalCardEngine.saveCard(null, curCfg, false);
+      }
       if (RY.render && typeof RY.render.invocation === 'function') {
         RY.render.invocation();
       }
