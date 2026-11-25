@@ -9169,12 +9169,23 @@ html:has(body.preview-modal-open)::-webkit-scrollbar {
 .pay-success-modal .exit-intent-panel,
 .pay-success-panel {
   max-width: 460px;
+  max-height: 92vh;
+  overflow-y: auto;
   text-align: center;
   background: linear-gradient(180deg, #1c1526 0%, #120c1f 100%);
   border: 1px solid rgba(223, 184, 119, 0.4);
   border-radius: 20px;
   padding: 34px 28px 28px;
   color: #f3edda;
+}
+@media (max-width: 480px) {
+  .exit-intent-modal {
+    padding: 12px;
+  }
+  .pay-success-modal .exit-intent-panel,
+  .pay-success-panel {
+    padding: 26px 18px 22px;
+  }
 }
 .pay-success-check {
   font-size: 2.6rem;

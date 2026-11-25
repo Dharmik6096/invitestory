@@ -76,8 +76,13 @@
       font-size: 14px;
     }
     .row:last-child { border-bottom: 0; }
-    .row span { color: var(--muted); }
-    .row strong { text-align: right; color: var(--ink); word-break: break-word; }
+    .row span { color: var(--muted); flex-shrink: 0; }
+    .row strong { text-align: right; color: var(--ink); overflow-wrap: anywhere; }
+    @media (max-width: 480px) {
+      .receipt-card { padding: 24px 18px; }
+      h1 { font-size: 23px; }
+      .summary { padding: 14px 14px; }
+    }
     .actions {
       display: flex;
       flex-direction: column;
