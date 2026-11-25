@@ -1595,6 +1595,12 @@ function updateOrderDrawerTotal() {
 }
 
 let orderDrawerCheckoutPending = false;
+window.addEventListener("pageshow", function (event) {
+  orderDrawerCheckoutPending = false;
+  if (event.persisted) {
+    document.body.style.overflow = "";
+  }
+});
 let razorpayLoader;
 function ensureRazorpayLoaded() {
   if (typeof Razorpay !== "undefined") return Promise.resolve(Razorpay);

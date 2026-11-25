@@ -198,21 +198,19 @@
                 }
             } catch (_) {}
 
-            // Always query Cloud API synchronously if slug is present, to guarantee fresh data across all browsers
-            if (slug) {
-                try {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET', '/api/card/?slug=' + encodeURIComponent(slug) + '&v=' + Date.now(), false);
-                    xhr.send(null);
-                    if (xhr.status === 200 && xhr.responseText) {
-                        var cloudJson = JSON.parse(xhr.responseText);
+            // Load card asynchronously in the background (non-blocking) for fast mobile rendering under high traffic
+            if (slug && !latestCardData) {
+                fetch('/api/card/?slug=' + encodeURIComponent(slug))
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (cloudJson) {
                         if (cloudJson && cloudJson.cardId) knownCardId = cloudJson.cardId;
                         if (cloudJson && cloudJson.data) {
                             latestCardData = cloudJson.data;
-                            try { localStorage.setItem('card_' + slug, JSON.stringify(cloudJson.data)); } catch(_) {}
+                            try { localStorage.setItem('card_' + slug, JSON.stringify(cloudJson.data)); } catch (_) {}
+                            syncDataToFrame(cloudJson.data);
                         }
-                    }
-                } catch(_) {}
+                    })
+                    .catch(function () {});
             }
 
             // Determine template endpoint

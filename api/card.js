@@ -60,6 +60,7 @@ module.exports = async function handler(req, res) {
 
   // GET: Fetch card JSON by slug
   if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=15, stale-while-revalidate=120');
     const slug = (req.query.slug || req.query.card || '').trim();
     if (!slug) {
       return res.status(400).json({ error: 'Missing slug parameter' });
