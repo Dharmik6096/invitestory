@@ -9,7 +9,7 @@ module.exports = function handler(req, res) {
   }
 
   return res.status(200).json({
-    enabled: true,
+    enabled: false,
     checkoutEnabled: true,
     checkoutContracts: [1, 2],
     deliveryV2Currencies: ["INR", "USD"],

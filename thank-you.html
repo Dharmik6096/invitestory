@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Order Confirmed | InviteStory</title>
+  <link rel="icon" type="image/png" href="/logo/noappicon.png">
+  <style>
+    :root {
+      --bg: #fdfaf5;
+      --card: #ffffff;
+      --ink: #241914;
+      --muted: #6d5b50;
+      --gold: #c09559;
+      --gold-dark: #9c743c;
+      --border: #eadfce;
+      --wa: #1f8f4d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top, #fffdf9, var(--bg));
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .receipt-card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(36, 25, 20, 0.08);
+      padding: 32px 28px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eef9f2;
+      color: #166534;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .summary {
+      background: #faf6ef;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(234, 223, 206, 0.7);
+      font-size: 14px;
+    }
+    .row:last-child { border-bottom: 0; }
+    .row span { color: var(--muted); }
+    .row strong { text-align: right; color: var(--ink); word-break: break-word; }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 0;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:active { transform: scale(0.99); }
+    .btn-wa { background: var(--wa); color: #fff; }
+    .btn-secondary { background: #f3ece1; color: var(--ink); }
+    .btn-print { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    @media print {
+      .actions { display: none; }
+      body { background: #fff; }
+      .receipt-card { box-shadow: none; border: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="receipt-card">
+    <div class="badge">Payment Confirmed</div>
+    <h1>Thank you for your order!</h1>
+    <p class="lead">Your InviteStory order is confirmed. Send your details on WhatsApp so our design team can start crafting your invitation.</p>
+
+    <section class="summary" aria-label="Order Receipt">
+      <div class="row"><span>Package</span><strong id="r-package">—</strong></div>
+      <div class="row"><span>Design</span><strong id="r-design">—</strong></div>
+      <div class="row"><span>Amount Paid</span><strong id="r-amount">—</strong></div>
+      <div class="row"><span>Payment ID</span><strong id="r-payment-id">—</strong></div>
+      <div class="row"><span>Extras / Services</span><strong id="r-addons">—</strong></div>
+      <div class="row"><span>Delivery</span><strong id="r-delivery">—</strong></div>
+    </section>
+
+    <div class="actions">
+      <a href="#" id="r-wa-btn" class="btn btn-wa" target="_blank" rel="noopener">Send Wedding Details on WhatsApp →</a>
+      <button type="button" class="btn btn-print" onclick="window.print()">Print / Save Receipt</button>
+      <a href="/" class="btn btn-secondary">Back to InviteStory</a>
+    </div>
+  </main>
+
+  <script src="/paid-order.js"></script>
+  <script>
+    (function () {
+      const q = new URLSearchParams(window.location.search);
+      let addons = [];
+      try { addons = JSON.parse(q.get('addons') || '[]'); } catch (_) {}
+      let deliverySnapshot = null;
+      try { deliverySnapshot = JSON.parse(q.get('delivery_snapshot') || 'null'); } catch (_) {}
+
+      const details = {
+        packageName: q.get('package') || 'InviteStory Invitation',
+        designName: q.get('design') || 'To be confirmed with your team',
+        amountText: q.get('amount') || '—',
+        paymentId: q.get('payment_id') || 'Confirmed',
+        orderId: q.get('order_id') || '',
+        currency: q.get('currency') || 'INR',
+        express: q.get('express') === '1',
+        previewNames: q.get('names') || '',
+        addons: Array.isArray(addons) ? addons : [],
+        checkoutVersion: q.get('checkout_version') === '2' ? 2 : undefined,
+        deliverySnapshot,
+        utm_source: q.get('utm_source') || '',
+        utm_campaign: q.get('utm_campaign') || '',
+        utm_term: q.get('utm_term') || '',
+        utm_content: q.get('utm_content') || ''
+      };
+
+      const order = window.InvitePaidOrder ? window.InvitePaidOrder.summary(details) : { addons: 'None selected', delivery: 'First draft within 48 hours' };
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('r-package', details.packageName);
+      set('r-design', details.designName || 'To be confirmed with your team');
+      set('r-amount', details.amountText);
+      set('r-payment-id', details.paymentId);
+      set('r-addons', order.addons);
+      set('r-delivery', order.delivery);
+
+      const isManualUpi = String(details.paymentId || '').startsWith('UPI-');
+      if (isManualUpi) {
+        const badgeEl = document.querySelector('.badge');
+        const h1El = document.querySelector('h1');
+        const leadEl = document.querySelector('.lead');
+        if (badgeEl) { badgeEl.textContent = 'Order Submitted — Pending Verification'; badgeEl.style.background = '#fef3c7'; badgeEl.style.color = '#92400e'; }
+        if (h1El) h1El.textContent = 'Almost done! Send your screenshot';
+        if (leadEl) leadEl.textContent = 'Please send your order summary and UPI payment screenshot on WhatsApp so our team can verify your payment and begin crafting your invitation.';
+      }
+
+      const msg = window.InvitePaidOrder
+        ? window.InvitePaidOrder.message(details)
+        : `Hello InviteStory, I have completed payment (${details.paymentId}) for ${details.designName}.`;
+      const waBtn = document.getElementById('r-wa-btn');
+      if (waBtn) {
+        waBtn.href = `https://wa.me/919727910473?text=${encodeURIComponent(msg)}`;
+      }
+    })();
+  </script>
+</body>
+</html>

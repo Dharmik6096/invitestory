@@ -25,6 +25,9 @@ const MIME_TYPES = {
 
 const cardApiHandler = require('./api/card.js');
 const uploadApiHandler = require('./api/upload.js');
+const websiteConfigHandler = require('./api/website/config.js');
+const websiteCheckoutHandler = require('./api/website/checkout.js');
+const websitePaymentStatusHandler = require('./api/website/payment-status.js');
 
 function parseBody(req) {
   return new Promise((resolve) => {
@@ -91,6 +94,30 @@ const server = http.createServer(async (req, res) => {
       };
     };
     return uploadApiHandler(req, res);
+  }
+
+  // 2.5 API: /api/website/*
+  if (pathname.startsWith('/api/website/')) {
+    req.query = parsedUrl.query;
+    if (req.method === 'POST') {
+      req.body = await parseBody(req);
+    }
+    res.status = (code) => {
+      res.statusCode = code;
+      return {
+        json: (data) => {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(data));
+        },
+        end: () => res.end()
+      };
+    };
+    if (pathname.startsWith('/api/website/config')) return websiteConfigHandler(req, res);
+    if (pathname.startsWith('/api/website/checkout')) return websiteCheckoutHandler(req, res);
+    if (pathname.startsWith('/api/website/payment-status')) return websitePaymentStatusHandler(req, res);
+    res.statusCode = 404;
+    res.end(JSON.stringify({ error: 'Not found' }));
+    return;
   }
 
   // 3. Static File Serving

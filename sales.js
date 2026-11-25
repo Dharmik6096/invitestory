@@ -127,7 +127,7 @@ function updateMobileBookingBar() {
   const mobile = window.matchMedia("(max-width: 760px)").matches;
   const hero = document.querySelector("#invitation-archive") || document.querySelector(".hero");
   const pastHero = !hero || hero.getBoundingClientRect().bottom < 80;
-  const overlay = document.querySelector(".interaction-sheet[open], #preview-modal.is-open, #order-drawer-modal.is-open, #wa-lightbox.active, #payment-success-modal.is-open");
+  const overlay = document.querySelector(".interaction-sheet[open], #preview-modal.is-open, #order-drawer-modal.is-open, #wa-lightbox.active, #upi-payment-modal.is-open, #payment-success-modal.is-open");
   const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "");
   const note = document.getElementById("pricing-selected-design");
   const noteRect = note?.getBoundingClientRect?.();

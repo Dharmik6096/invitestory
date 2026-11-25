@@ -10,6 +10,22 @@
       "destination": "/api/website/config.js"
     },
     {
+      "source": "/api/website/checkout/",
+      "destination": "/api/website/checkout.js"
+    },
+    {
+      "source": "/api/website/checkout",
+      "destination": "/api/website/checkout.js"
+    },
+    {
+      "source": "/api/website/payment-status/",
+      "destination": "/api/website/payment-status.js"
+    },
+    {
+      "source": "/api/website/payment-status",
+      "destination": "/api/website/payment-status.js"
+    },
+    {
       "source": "/api/card/",
       "destination": "/api/card.js"
     },

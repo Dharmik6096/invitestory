@@ -73,12 +73,81 @@
                 padding: 7px 18px;
             }
         }
+
+        .ist-viral-cta {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            z-index: 9999;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(28, 12, 18, 0.86);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #f8e3b4;
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            border-radius: 9999px;
+            padding: 7px 12px 7px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .ist-viral-cta a {
+            color: #f8e3b4;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ist-viral-cta a strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .ist-viral-cta:hover {
+            transform: translateY(-1px);
+            border-color: rgba(212, 175, 55, 0.85);
+        }
+
+        .ist-viral-close {
+            background: transparent;
+            border: 0;
+            color: rgba(248, 227, 180, 0.7);
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 2px;
+        }
+
+        .ist-viral-close:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .ist-viral-cta {
+                bottom: 10px;
+                right: 10px;
+                font-size: 11px;
+                padding: 6px 10px 6px 12px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
     <div class="guest-banner" id="guestGreeting"></div>
+
+    <div class="ist-viral-cta" id="istViralCta" style="display:none;">
+        <a id="istViralLink" href="/?utm_source=invite_card&utm_medium=guest_badge" target="_blank" rel="noopener">
+            <span>Crafted by <strong>InviteStory</strong> · Make Yours →</span>
+        </a>
+        <button type="button" class="ist-viral-close" id="istViralClose" aria-label="Dismiss">&times;</button>
+    </div>
 
     <iframe id="cardFrame" allow="autoplay; fullscreen" title="Wedding Invitation" style="width:100%;height:100%;border:0;display:block;"></iframe>
 
@@ -176,6 +245,21 @@
             if (params.has('admin') || params.get('admin') === '1') initialSearch += (initialSearch ? '&' : '?') + 'admin=1';
             initialSearch += (initialSearch ? '&' : '?') + '_v=' + Date.now();
             frame.src = tpl.src + initialSearch;
+
+            // Show subtle viral CTA badge for wedding guests (hidden in edit/admin mode)
+            var isEditor = params.has('edit') || params.get('edit') === '1' || params.has('admin') || params.get('admin') === '1';
+            var viralCta = document.getElementById('istViralCta');
+            var viralLink = document.getElementById('istViralLink');
+            var viralClose = document.getElementById('istViralClose');
+            if (viralCta && !isEditor) {
+                if (viralLink && slug) {
+                    viralLink.href = '/?utm_source=invite_card&utm_medium=guest_badge&utm_campaign=' + encodeURIComponent(slug);
+                }
+                setTimeout(function () { viralCta.style.display = 'inline-flex'; }, 2500);
+                if (viralClose) {
+                    viralClose.addEventListener('click', function () { viralCta.style.display = 'none'; });
+                }
+            }
 
             // Background cloud sync with postMessage bridge to iframe
             function syncDataToFrame(data) {

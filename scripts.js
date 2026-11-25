@@ -1,9 +1,11 @@
 /* Catalogue, invitation previews, booking and payment flow. */
   const askIcon = `<img src="assets/whatsapp.svg" width="18" height="18" alt="" aria-hidden="true">`;
 // --- PAYMENT CONFIGURATION ---
-window.RAZORPAY_KEY_ID = "rzp_live_TPCjiGiPIeo7SN";
-
-// Payment notifications belong in a server-side Razorpay payment.captured webhook.
+window.DIRECT_UPI = {
+  id: "pateldharmik14122004-1@oksbi",
+  name: "InviteStory",
+  qrImage: "assets/upi-qr.jpg?v=20261125-clean"
+};
 
 function getItemPrices(item) {
   return {
@@ -1255,6 +1257,15 @@ function showPaymentSuccess(details) {
   const modal = document.getElementById("payment-success-modal");
   if (!modal) return;
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const titleEl = document.getElementById("pay-success-title");
+  const subEl = modal.querySelector(".pay-success-sub");
+  if (details.manualUpi) {
+    if (titleEl) titleEl.textContent = "Order submitted — pending verification";
+    if (subEl) subEl.textContent = "Please send your order summary and payment screenshot on WhatsApp. Our team will verify your UPI payment and confirm your order.";
+  } else {
+    if (titleEl) titleEl.textContent = "Payment received!";
+    if (subEl) subEl.textContent = "Thank you for choosing InviteStory. Send us your order summary on WhatsApp. Our team will confirm your details and guide you through the next steps.";
+  }
   set("pay-success-package", details.packageName);
   set("pay-success-amount", details.amountText);
   set("pay-success-id", details.paymentId);
@@ -1704,7 +1715,6 @@ async function proceedFromOrderDrawerToCheckout(savedPayment) {
         }
         deliverySnapshot=secure.deliverySnapshot;
         checkoutClientKey=secure.clientKey;
-        options.order_id=secure.orderId;options.key=secure.keyId;options.amount=secure.amount;options.currency=secure.currency;
       }
     } catch (error) {
       trackPostHogEvent("checkout_unavailable", { content_ids: selectedContentIds, package_tier: tier, reason: "gateway_unavailable" });
@@ -1712,34 +1722,112 @@ async function proceedFromOrderDrawerToCheckout(savedPayment) {
       return;
     }
   }
-  await ensureRazorpayLoaded();
-  if (typeof Razorpay !== "undefined") {
-    trackConversionEvent("begin_checkout", { content_name: name, content_ids: selectedContentIds, package_tier: tier, content_type: "product", value: totalVal, currency: currencyCode });
-    const rzp = new Razorpay(options);
-    rzp.on("payment.failed", function () {
-      trackPostHogEvent("payment_failed", { content_ids: selectedContentIds, package_tier: tier, currency: currencyCode, value: totalVal });
-      const waUrl = `https://wa.me/919727910473?text=${encodeURIComponent(`Hi InviteStory! My payment for ${name} failed. Can you please assist me?`)}`;
-      showToast({
-        title: "Payment didn’t go through",
-        message: "Try again, or contact us on WhatsApp for help.",
-        type: "error",
-        action: { label: "Chat on WhatsApp", url: waUrl }
-      });
-    });
-    rzp.open();
-  } else {
-    trackPostHogEvent("checkout_unavailable", { content_ids: selectedContentIds, package_tier: tier, reason: "payment_sdk_unavailable" });
-    showToast({
-      title: "Opening checkout",
-      message: "Please wait a moment, then try again.",
-      type: "info"
-    });
-  }
+  trackConversionEvent("begin_checkout", { content_name: name, content_ids: selectedContentIds, package_tier: tier, content_type: "product", value: totalVal, currency: currencyCode });
+  openUpiPaymentModal({
+    packageName: packageName(tier),
+    amountText: isINR ? `₹${totalVal.toLocaleString("en-IN")}` : `$${totalVal}`,
+    totalVal,
+    currency: currencyCode,
+    designName: paidDesignName || name,
+    addons: paidAddons,
+    express: Boolean(expressChecked),
+    clientKey: checkoutClientKey,
+    ...(v2 ? {checkoutVersion:2,deliverySnapshot} : {})
+  });
   } catch(error) {
     showToast({title:"Checkout could not open",message:error.message,type:"error"});
   } finally {
     orderDrawerCheckoutPending = false;
   }
+}
+
+let pendingUpiOrder = null;
+function openUpiPaymentModal(order) {
+  pendingUpiOrder = order;
+  const modal = document.getElementById("upi-payment-modal");
+  if (!modal) return;
+  const amtEl = document.getElementById("upi-pay-amount");
+  const descEl = document.getElementById("upi-pay-desc");
+  const deepLink = document.getElementById("upi-app-deep-link");
+  const desktopHint = document.getElementById("upi-desktop-hint");
+  const utrInput = document.getElementById("upi-utr-input");
+  const utrError = document.getElementById("upi-utr-error");
+  const copyBtn = document.getElementById("upi-copy-btn");
+
+  if (amtEl) amtEl.textContent = order.amountText;
+  if (descEl) descEl.textContent = `${order.designName} · Scan QR or pay via GPay, PhonePe, Paytm`;
+  if (utrInput) utrInput.value = "";
+  if (utrError) { utrError.style.display = "none"; utrError.textContent = ""; }
+  if (copyBtn) copyBtn.textContent = "Copy";
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+  if (deepLink) {
+    if (order.currency === "INR" && isMobile) {
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(window.DIRECT_UPI.id)}&pn=${encodeURIComponent(window.DIRECT_UPI.name)}&am=${encodeURIComponent(String(order.totalVal))}&cu=INR&tn=${encodeURIComponent("InviteStory - " + order.designName)}`;
+      deepLink.href = upiUrl;
+      deepLink.style.display = "block";
+      if (desktopHint) desktopHint.style.display = "none";
+    } else {
+      deepLink.style.display = "none";
+      if (desktopHint) desktopHint.style.display = order.currency === "INR" ? "block" : "none";
+    }
+  }
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeUpiPaymentModal() {
+  const modal = document.getElementById("upi-payment-modal");
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function openQrZoom() {
+  const zoomModal = document.getElementById("upi-qr-zoom-modal");
+  if (!zoomModal) return;
+  const amt = document.getElementById("upi-zoom-amount");
+  if (amt) amt.textContent = pendingUpiOrder?.amountText || "";
+  zoomModal.classList.add("is-open");
+  zoomModal.setAttribute("aria-hidden", "false");
+}
+
+function closeQrZoom() {
+  const zoomModal = document.getElementById("upi-qr-zoom-modal");
+  if (!zoomModal) return;
+  zoomModal.classList.remove("is-open");
+  zoomModal.setAttribute("aria-hidden", "true");
+}
+
+function copyUpiId() {
+  const upi = window.DIRECT_UPI?.id || "pateldharmik14122004-1@oksbi";
+  const btn = document.getElementById("upi-copy-btn");
+  navigator.clipboard?.writeText(upi).then(() => {
+    if (btn) btn.textContent = "Copied!";
+    setTimeout(() => { if (btn) btn.textContent = "Copy"; }, 2000);
+  }).catch(() => {
+    if (btn) btn.textContent = upi;
+  });
+}
+
+function confirmUpiPayment() {
+  if (!pendingUpiOrder) return;
+  const order = {
+    ...pendingUpiOrder,
+    paymentId: "UPI (Attaching screenshot on WhatsApp — Unverified)"
+  };
+  if (order.clientKey && window.InviteWebsite?.paid) {
+    window.InviteWebsite.paid(order.clientKey);
+  }
+  closeUpiPaymentModal();
+  const waMsg = InvitePaidOrder.message(order);
+  window.open(`https://wa.me/919727910473?text=${encodeURIComponent(waMsg)}`, "_blank");
+  showToast({
+    title: "Attach screenshot on WhatsApp",
+    message: "Send your UPI payment screenshot in WhatsApp. Your order will be confirmed once verified.",
+    type: "info"
+  });
 }
 
 function askOrderDrawerOnWhatsApp() {
